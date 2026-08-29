@@ -1,0 +1,599 @@
+/* =========================================================
+   PAYMENT PAGE
+========================================================= */
+
+.payment-page {
+  min-height: 100vh;
+  padding: 70px 0 100px;
+
+  background:
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(194, 154, 87, 0.1),
+      transparent 30%
+    ),
+    linear-gradient(135deg, #faf8f4, #f5f1e9);
+}
+
+.payment-container {
+  width: min(1100px, 92%);
+  margin: 0 auto;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.payment-header {
+  text-align: center;
+  margin-bottom: 55px;
+
+  animation: paymentHeader 0.8s ease both;
+}
+
+.payment-header span {
+  display: inline-block;
+
+  margin-bottom: 12px;
+
+  color: #a27b3f;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.payment-header h1 {
+  margin: 0;
+
+  color: #292929;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(36px, 5vw, 52px);
+  font-weight: 500;
+}
+
+.payment-header p {
+  margin: 15px auto 0;
+
+  max-width: 500px;
+
+  color: #777;
+
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.payment-grid {
+  display: grid;
+
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+
+  gap: 35px;
+
+  align-items: start;
+}
+
+/* =========================================================
+   PAYMENT CARD
+========================================================= */
+
+.payment-card {
+  padding: 38px;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  border: 1px solid #e7dfd3;
+  border-radius: 12px;
+
+  box-shadow:
+    0 15px 45px rgba(45, 35, 20, 0.06),
+    0 2px 8px rgba(45, 35, 20, 0.025);
+
+  backdrop-filter: blur(10px);
+
+  animation: paymentLeft 0.8s 0.15s ease both;
+}
+
+.payment-card h2,
+.payment-summary h2 {
+  margin: 0 0 28px;
+
+  color: #292929;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.payment-card h2::after,
+.payment-summary h2::after {
+  content: "";
+
+  display: block;
+
+  width: 45px;
+  height: 2px;
+
+  margin-top: 12px;
+
+  background: #b28a4a;
+}
+
+/* =========================================================
+   PAYMENT OPTION
+========================================================= */
+
+.payment-option {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  min-height: 82px;
+
+  margin-bottom: 15px;
+  padding: 0 22px;
+
+  background: #fff;
+
+  border: 1px solid #ded6ca;
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease;
+}
+
+.payment-option::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 3px;
+  height: 100%;
+
+  background: #a27b3f;
+
+  transform: scaleY(0);
+
+  transform-origin: center;
+
+  transition: transform 0.35s ease;
+}
+
+.payment-option svg {
+  flex-shrink: 0;
+
+  width: 24px;
+  height: 24px;
+
+  color: #8d6b3b;
+
+  transition:
+    transform 0.35s ease,
+    color 0.35s ease;
+}
+
+.payment-option h4 {
+  margin: 0 0 5px;
+
+  color: #333;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.payment-option p {
+  margin: 0;
+
+  color: #999;
+
+  font-size: 12px;
+}
+
+/* =========================================================
+   PAYMENT HOVER
+========================================================= */
+
+.payment-option:hover {
+  border-color: #c5aa7c;
+
+  transform: translateX(5px);
+
+  box-shadow: 0 10px 25px rgba(45, 35, 20, 0.07);
+}
+
+.payment-option:hover svg {
+  transform: scale(1.12);
+}
+
+/* =========================================================
+   ACTIVE PAYMENT OPTION
+========================================================= */
+
+.payment-option.active {
+  background: linear-gradient(
+    100deg,
+    rgba(162, 123, 63, 0.1),
+    rgba(255, 255, 255, 0.96)
+  );
+
+  border-color: #a27b3f;
+
+  box-shadow: 0 10px 25px rgba(162, 123, 63, 0.1);
+}
+
+.payment-option.active::before {
+  transform: scaleY(1);
+}
+
+.payment-option.active svg {
+  color: #a27b3f;
+
+  transform: scale(1.08);
+}
+
+.payment-option.active h4 {
+  color: #8e6935;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.payment-summary {
+  position: sticky;
+  top: 25px;
+
+  padding: 32px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border: 1px solid #e7dfd3;
+  border-radius: 12px;
+
+  box-shadow:
+    0 15px 45px rgba(45, 35, 20, 0.07),
+    0 2px 8px rgba(45, 35, 20, 0.025);
+
+  backdrop-filter: blur(10px);
+
+  animation: paymentRight 0.8s 0.25s ease both;
+}
+
+/* =========================================================
+   SUMMARY ROW
+========================================================= */
+
+.summary-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 16px;
+
+  color: #777;
+
+  font-size: 13px;
+}
+
+.summary-row strong {
+  color: #444;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   PAYMENT METHOD ROW
+========================================================= */
+
+.summary-row:nth-of-type(5) {
+  padding: 12px 13px;
+
+  background: #faf7f1;
+
+  border-radius: 5px;
+
+  color: #8e6935;
+}
+
+.summary-row:nth-of-type(5) strong {
+  color: #a27b3f;
+
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+/* =========================================================
+   TOTAL
+========================================================= */
+
+.summary-row.total {
+  margin-top: 24px;
+  margin-bottom: 25px;
+  padding-top: 20px;
+
+  border-top: 1px solid #e7dfd4;
+
+  color: #292929;
+
+  font-size: 16px;
+}
+
+.summary-row.total strong {
+  color: #a27b3f;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   PAY BUTTON
+========================================================= */
+
+.pay-btn {
+  position: relative;
+
+  width: 100%;
+  height: 55px;
+
+  overflow: hidden;
+
+  border: 1px solid #a27b3f;
+  border-radius: 6px;
+
+  background: #a27b3f;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+
+  box-shadow: 0 10px 25px rgba(162, 123, 63, 0.2);
+
+  transition:
+    transform 0.35s ease,
+    background 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.pay-btn::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: -130%;
+
+  width: 80%;
+  height: 100%;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+
+  transition: left 0.7s ease;
+}
+
+.pay-btn:hover {
+  background: #8e6935;
+
+  transform: translateY(-3px);
+
+  box-shadow: 0 16px 32px rgba(162, 123, 63, 0.28);
+}
+
+.pay-btn:hover::before {
+  left: 140%;
+}
+
+.pay-btn:active {
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   SUCCESS FEEL
+========================================================= */
+
+.payment-card::after {
+  content: "🔒 Secure & encrypted payment";
+
+  display: block;
+
+  margin-top: 25px;
+
+  text-align: center;
+
+  color: #999;
+
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.payment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.payment-tags span {
+  background: #f5efe6;
+  color: #8c6a34;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #e5d7c2;
+}
+
+.payment-option {
+  position: relative;
+  transition: 0.3s ease;
+}
+
+.payment-option.active {
+  border-color: #a27b3f;
+  background: linear-gradient(135deg, #fffaf2, #f8f3ea);
+  box-shadow: 0 8px 24px rgba(162, 123, 63, 0.12);
+}
+
+.payment-check {
+  color: #a27b3f;
+  font-size: 22px;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes paymentHeader {
+  from {
+    opacity: 0;
+    transform: translateY(-25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes paymentLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes paymentRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .payment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-summary {
+    position: static;
+  }
+
+  .payment-card,
+  .payment-summary {
+    animation-name: paymentHeader;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .payment-page {
+    padding: 45px 0 70px;
+  }
+
+  .payment-header {
+    margin-bottom: 35px;
+  }
+
+  .payment-header h1 {
+    font-size: 36px;
+  }
+
+  .payment-card,
+  .payment-summary {
+    padding: 23px 20px;
+
+    border-radius: 9px;
+  }
+
+  .payment-card h2,
+  .payment-summary h2 {
+    font-size: 22px;
+  }
+
+  .payment-option {
+    min-height: 75px;
+
+    padding: 0 16px;
+
+    gap: 14px;
+  }
+
+  .payment-option svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .payment-option h4 {
+    font-size: 14px;
+  }
+
+  .payment-option p {
+    font-size: 11px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

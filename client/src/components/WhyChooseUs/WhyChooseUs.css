@@ -1,0 +1,425 @@
+/* =========================================================
+   WHY CHOOSE US
+========================================================= */
+
+.why {
+  position: relative;
+
+  padding: 100px 0;
+
+  background: #fff;
+
+  overflow: hidden;
+}
+
+/* Subtle decorative circles */
+
+.why::before {
+  content: "";
+
+  position: absolute;
+
+  top: -100px;
+  left: -100px;
+
+  width: 250px;
+  height: 250px;
+
+  border: 1px solid #eee5d7;
+
+  border-radius: 50%;
+
+  opacity: 0.7;
+}
+
+.why::after {
+  content: "";
+
+  position: absolute;
+
+  right: -120px;
+  bottom: -120px;
+
+  width: 280px;
+  height: 280px;
+
+  border: 1px solid #eee5d7;
+
+  border-radius: 50%;
+
+  opacity: 0.6;
+}
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.why .section-title {
+  position: relative;
+
+  z-index: 1;
+
+  max-width: 650px;
+
+  margin: 0 auto 55px;
+
+  text-align: center;
+}
+
+.why .section-title h2 {
+  margin: 0 0 14px;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(34px, 4vw, 46px);
+
+  line-height: 1.15;
+
+  font-weight: 500;
+
+  letter-spacing: -0.8px;
+
+  color: #222;
+}
+
+.why .section-title h2::after {
+  content: "";
+
+  display: block;
+
+  width: 45px;
+  height: 1px;
+
+  margin: 20px auto 0;
+
+  background: #a27b3f;
+}
+
+.why .section-title p {
+  margin: 18px auto 0;
+
+  font-size: 15px;
+
+  line-height: 1.8;
+
+  color: #777;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.why-grid {
+  position: relative;
+
+  z-index: 1;
+
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  max-width: 1100px;
+
+  margin: 0 auto;
+
+  border-top: 1px solid #e8e4dc;
+
+  border-bottom: 1px solid #e8e4dc;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.why-card {
+  position: relative;
+
+  min-height: 230px;
+
+  padding: 40px 30px;
+
+  text-align: center;
+
+  border-right: 1px solid #e8e4dc;
+
+  background: transparent;
+
+  opacity: 0;
+
+  animation: whyReveal 0.7s ease forwards;
+
+  transition:
+    background 0.35s ease,
+    transform 0.35s ease;
+}
+
+.why-card:last-child {
+  border-right: none;
+}
+
+/* =========================================================
+   STAGGERED ANIMATION
+========================================================= */
+
+.why-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.why-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.why-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.why-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.why-icon {
+  position: relative;
+
+  width: 58px;
+  height: 58px;
+
+  margin: 0 auto 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #d8c8ad;
+
+  border-radius: 50%;
+
+  background: #faf7f1;
+
+  color: #a27b3f;
+
+  font-size: 22px;
+
+  transition:
+    transform 0.4s ease,
+    background 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* Small decorative ring */
+
+.why-icon::before {
+  content: "";
+
+  position: absolute;
+
+  inset: -6px;
+
+  border: 1px dashed #dfd2bd;
+
+  border-radius: 50%;
+
+  opacity: 0;
+
+  transform: scale(0.7);
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.why-card h3 {
+  margin: 0 0 10px;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: 20px;
+
+  font-weight: 500;
+
+  color: #292929;
+
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.why-card p {
+  max-width: 210px;
+
+  margin: 0 auto;
+
+  font-size: 13px;
+
+  line-height: 1.7;
+
+  color: #808080;
+
+  transition: color 0.3s ease;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.why-card:hover {
+  background: #faf8f4;
+
+  transform: translateY(-5px);
+}
+
+.why-card:hover .why-icon {
+  background: #a27b3f;
+
+  border-color: #a27b3f;
+
+  color: #fff;
+
+  transform: translateY(-4px) scale(1.04);
+
+  box-shadow: 0 10px 25px rgba(162, 123, 63, 0.2);
+}
+
+.why-card:hover .why-icon::before {
+  opacity: 1;
+
+  transform: scale(1);
+}
+
+.why-card:hover h3 {
+  color: #a27b3f;
+
+  transform: translateY(-2px);
+}
+
+.why-card:hover p {
+  color: #666;
+}
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes whyReveal {
+  from {
+    opacity: 0;
+
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 950px) {
+  .why {
+    padding: 80px 0;
+  }
+
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+
+    border-bottom: none;
+  }
+
+  .why-card {
+    border-bottom: 1px solid #e8e4dc;
+  }
+
+  .why-card:nth-child(2) {
+    border-right: none;
+  }
+
+  .why-card:nth-child(4) {
+    border-right: none;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .why {
+    padding: 70px 0;
+  }
+
+  .why .section-title {
+    margin-bottom: 40px;
+  }
+
+  .why .section-title h2 {
+    font-size: 34px;
+  }
+
+  .why .section-title p {
+    padding: 0 15px;
+
+    font-size: 14px;
+  }
+
+  .why-grid {
+    grid-template-columns: 1fr;
+
+    margin: 0 15px;
+
+    border-top: 1px solid #e8e4dc;
+    border-bottom: 1px solid #e8e4dc;
+  }
+
+  .why-card {
+    min-height: auto;
+
+    padding: 35px 25px;
+
+    border-right: none;
+
+    border-bottom: 1px solid #e8e4dc;
+  }
+
+  .why-card:last-child {
+    border-bottom: none;
+  }
+
+  .why-icon {
+    width: 54px;
+    height: 54px;
+
+    margin-bottom: 18px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .why-card,
+  .why-icon,
+  .why-icon::before,
+  .why-card h3 {
+    animation: none;
+
+    transition: none;
+  }
+}

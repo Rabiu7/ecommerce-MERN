@@ -1,0 +1,432 @@
+/* =========================================================
+   NOT FOUND PAGE
+========================================================= */
+
+.not-found {
+  position: relative;
+
+  min-height: calc(100vh - 80px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 80px 20px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(162, 123, 63, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(162, 123, 63, 0.06),
+      transparent 30%
+    ),
+    #faf8f4;
+}
+
+/* =========================================================
+   DECORATIVE CIRCLES
+========================================================= */
+
+.not-found::before,
+.not-found::after {
+  content: "";
+
+  position: absolute;
+
+  border: 1px solid rgba(162, 123, 63, 0.15);
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  animation: floatingCircle 7s ease-in-out infinite;
+}
+
+.not-found::before {
+  width: 360px;
+  height: 360px;
+
+  top: -160px;
+  left: -120px;
+}
+
+.not-found::after {
+  width: 450px;
+  height: 450px;
+
+  right: -180px;
+  bottom: -220px;
+
+  animation-delay: -3s;
+}
+
+@keyframes floatingCircle {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(15px, -15px);
+  }
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.not-found-content {
+  position: relative;
+
+  z-index: 2;
+
+  max-width: 720px;
+
+  margin: auto;
+
+  text-align: center;
+
+  animation: contentReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes contentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   404
+========================================================= */
+
+.error-code {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 8px;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(110px, 18vw, 190px);
+
+  font-weight: 500;
+
+  line-height: 0.9;
+
+  letter-spacing: -10px;
+
+  color: #292929;
+
+  user-select: none;
+}
+
+.error-code span {
+  display: inline-block;
+
+  animation: numberFloat 4s ease-in-out infinite;
+}
+
+.error-code span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.error-code span:nth-child(2) {
+  animation-delay: -0.4s;
+}
+
+.error-code span:nth-child(3) {
+  animation-delay: -0.8s;
+}
+
+@keyframes numberFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+/* GOLD ZERO */
+
+.error-code .zero {
+  color: #a27b3f;
+
+  position: relative;
+}
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.not-found-label {
+  display: inline-block;
+
+  margin-top: 12px;
+  margin-bottom: 15px;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 3px;
+
+  color: #a27b3f;
+}
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.not-found-content h1 {
+  margin: 0 0 16px;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(30px, 4vw, 44px);
+
+  line-height: 1.2;
+
+  font-weight: 500;
+
+  color: #292929;
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.not-found-content p {
+  max-width: 560px;
+
+  margin: 0 auto;
+
+  font-size: 15px;
+
+  line-height: 1.8;
+
+  color: #777;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.not-found-buttons {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-top: 32px;
+}
+
+/* =========================================================
+   COMMON BUTTON
+========================================================= */
+
+.home-btn,
+.back-btn {
+  position: relative;
+
+  height: 48px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  padding: 0 24px;
+
+  border-radius: 5px;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.35s ease,
+    background 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.home-btn svg,
+.back-btn svg {
+  width: 16px;
+  height: 16px;
+
+  transition: transform 0.35s ease;
+}
+
+/* =========================================================
+   HOME BUTTON
+========================================================= */
+
+.home-btn {
+  border: 1px solid #a27b3f;
+
+  background: #a27b3f;
+
+  color: #fff;
+
+  text-decoration: none;
+
+  box-shadow: 0 8px 20px rgba(162, 123, 63, 0.18);
+}
+
+.home-btn:hover {
+  background: #8e6935;
+
+  transform: translateY(-3px);
+
+  box-shadow: 0 12px 28px rgba(162, 123, 63, 0.25);
+}
+
+.home-btn:hover svg {
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.back-btn {
+  border: 1px solid #ddd5c9;
+
+  background: #fff;
+
+  color: #444;
+}
+
+.back-btn:hover {
+  border-color: #292929;
+
+  background: #292929;
+
+  color: #fff;
+
+  transform: translateY(-3px);
+
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn:hover svg {
+  transform: translateX(-4px);
+}
+
+/* =========================================================
+   DECORATIVE LINE
+========================================================= */
+
+.not-found-content::after {
+  content: "";
+
+  display: block;
+
+  width: 55px;
+  height: 1px;
+
+  margin: 38px auto 0;
+
+  background: #d6c19f;
+
+  animation: lineExpand 0.8s 0.4s ease both;
+}
+
+@keyframes lineExpand {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+
+  to {
+    width: 55px;
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .not-found {
+    min-height: calc(100vh - 70px);
+
+    padding: 60px 18px;
+  }
+
+  .error-code {
+    font-size: 105px;
+
+    letter-spacing: -6px;
+  }
+
+  .not-found-content h1 {
+    font-size: 28px;
+  }
+
+  .not-found-content p {
+    font-size: 14px;
+  }
+
+  .not-found-buttons {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  .home-btn,
+  .back-btn {
+    width: 100%;
+
+    max-width: 280px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found::before,
+  .not-found::after,
+  .not-found-content,
+  .error-code span,
+  .not-found-content::after {
+    animation: none;
+  }
+
+  .home-btn,
+  .back-btn {
+    transition: none;
+  }
+}

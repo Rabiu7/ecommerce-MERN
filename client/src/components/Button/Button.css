@@ -1,0 +1,12 @@
+.custom-btn{
+    padding:12px 24px;
+    background:#0d6efd;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.custom-btn:hover{
+    background:#0b5ed7;
+}

@@ -1,0 +1,1049 @@
+/* =========================================================
+   ADMIN CATEGORIES
+========================================================= */
+
+.admin-categories {
+  width: 100%;
+  min-height: 100%;
+  padding: 30px;
+  background: #f7f8fa;
+  color: #1f2937;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.categories-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.categories-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #111827;
+}
+
+.categories-header p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   ADD CATEGORY BUTTON
+========================================================= */
+
+.add-category-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  height: 44px;
+  padding: 0 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #111827;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.add-category-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.add-category-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(17, 24, 39, 0.15);
+}
+
+.add-category-btn:active {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.categories-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 16px 18px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px 14px 0 0;
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.category-search {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  max-width: 380px;
+
+  height: 42px;
+
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.category-search:focus-within {
+  background: #ffffff;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+}
+
+.category-search > svg {
+  flex-shrink: 0;
+  margin-left: 13px;
+  color: #9ca3af;
+  width: 17px;
+  height: 17px;
+}
+
+.category-search input {
+  width: 100%;
+  height: 100%;
+
+  padding: 0 40px 0 10px;
+
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  color: #111827;
+  font-size: 14px;
+}
+
+.category-search input::placeholder {
+  color: #9ca3af;
+}
+
+.category-search button {
+  position: absolute;
+  right: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+  color: #9ca3af;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.category-search button:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* =========================================================
+   CATEGORY COUNT
+========================================================= */
+
+.category-count {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   TABLE CONTAINER
+========================================================= */
+
+.categories-table-container {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-top: 0;
+
+  border-radius: 0 0 14px 14px;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.categories-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  table-layout: auto;
+}
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.categories-table thead {
+  background: #f9fafb;
+}
+
+.categories-table th {
+  padding: 14px 18px;
+
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #6b7280;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  text-align: left;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.categories-table td {
+  padding: 15px 18px;
+
+  border-bottom: 1px solid #f1f3f5;
+
+  color: #374151;
+
+  font-size: 14px;
+
+  vertical-align: middle;
+}
+
+.categories-table tbody tr {
+  transition: background 0.18s ease;
+}
+
+.categories-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.categories-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* =========================================================
+   CATEGORY IMAGE
+========================================================= */
+
+.category-image {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  background: #f3f4f6;
+
+  flex-shrink: 0;
+}
+
+.category-image img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform 0.25s ease;
+}
+
+.categories-table tbody tr:hover .category-image img {
+  transform: scale(1.06);
+}
+
+.category-image span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  color: #6b7280;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   CATEGORY NAME
+========================================================= */
+
+.categories-table td strong {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.category-description {
+  display: block;
+
+  max-width: 300px;
+
+  overflow: hidden;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   PRODUCT COUNT
+========================================================= */
+
+.product-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 34px;
+  height: 27px;
+
+  padding: 0 9px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 7px;
+
+  background: #f9fafb;
+
+  color: #374151;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.category-actions button {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.category-actions button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.edit-btn {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.edit-btn:hover {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  border: 1px solid #fee2e2;
+  background: #fff7f7;
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.categories-loading {
+  min-height: 260px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #6b7280;
+
+  font-size: 14px;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.categories-empty {
+  min-height: 340px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  text-align: center;
+}
+
+.categories-empty > svg {
+  width: 42px;
+  height: 42px;
+
+  margin-bottom: 16px;
+
+  padding: 12px;
+
+  border-radius: 14px;
+
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.categories-empty h3 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.categories-empty p {
+  margin: 7px 0 20px;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+}
+
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+
+.category-modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(17, 24, 39, 0.48);
+
+  backdrop-filter: blur(5px);
+
+  animation: categoryOverlayIn 0.2s ease;
+}
+
+@keyframes categoryOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.category-modal {
+  width: 100%;
+  max-width: 570px;
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border: 1px solid rgba(229, 231, 235, 0.9);
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.16),
+    0 8px 25px rgba(0, 0, 0, 0.08);
+
+  animation: categoryModalIn 0.25s ease;
+}
+
+@keyframes categoryModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   MODAL HEADER
+========================================================= */
+
+.category-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 24px 25px 20px;
+
+  border-bottom: 1px solid #f0f1f3;
+}
+
+.category-modal-header h2 {
+  margin: 0;
+
+  color: #111827;
+
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.category-modal-header p {
+  margin: 6px 0 0;
+
+  color: #9ca3af;
+
+  font-size: 13px;
+}
+
+.category-modal-header > button {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #6b7280;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.category-modal-header > button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.category-form {
+  padding: 24px 25px 25px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group > label:not(.category-upload-box) {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 1px solid #dfe3e8;
+  border-radius: 9px;
+
+  background: #ffffff;
+
+  color: #111827;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.form-group input[type="text"] {
+  height: 44px;
+
+  padding: 0 13px;
+}
+
+.form-group textarea {
+  min-height: 105px;
+
+  padding: 12px 13px;
+
+  resize: vertical;
+
+  line-height: 1.5;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group textarea::placeholder {
+  color: #b0b6bf;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  border-color: #9ca3af;
+
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.055);
+}
+
+/* =========================================================
+   IMAGE UPLOAD
+========================================================= */
+
+.category-upload-box {
+  position: relative;
+
+  width: 100%;
+  min-height: 190px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border: 1.5px dashed #d1d5db;
+  border-radius: 12px;
+
+  background: #fafafa;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.category-upload-box:hover {
+  border-color: #9ca3af;
+  background: #f8f9fa;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px 20px;
+
+  text-align: center;
+}
+
+.upload-placeholder > svg {
+  width: 23px;
+  height: 23px;
+
+  margin-bottom: 12px;
+
+  color: #6b7280;
+}
+
+.upload-placeholder strong {
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.upload-placeholder span {
+  margin-top: 5px;
+
+  color: #9ca3af;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   IMAGE PREVIEW
+========================================================= */
+
+.category-image-preview {
+  width: 100%;
+  height: 190px;
+
+  display: block;
+
+  object-fit: contain;
+
+  background: #f8f9fa;
+}
+
+.selected-image-name {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #6b7280;
+
+  font-size: 11px;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   FORM ACTIONS
+========================================================= */
+
+.category-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  gap: 10px;
+
+  padding-top: 5px;
+}
+
+/* =========================================================
+   CANCEL BUTTON
+========================================================= */
+
+.cancel-btn {
+  height: 42px;
+
+  padding: 0 17px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #4b5563;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* =========================================================
+   SAVE BUTTON
+========================================================= */
+
+.save-category-btn {
+  height: 42px;
+
+  padding: 0 19px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #111827;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.save-category-btn:hover:not(:disabled) {
+  background: #000000;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 7px 18px rgba(17, 24, 39, 0.15);
+}
+
+.save-category-btn:disabled,
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.category-modal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.category-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.category-modal::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 20px;
+}
+
+.category-modal::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .admin-categories {
+    padding: 24px 20px;
+  }
+
+  .categories-table-container {
+    overflow-x: auto;
+  }
+
+  .categories-table {
+    min-width: 850px;
+  }
+
+  .categories-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .category-search {
+    max-width: none;
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .admin-categories {
+    padding: 18px 14px;
+  }
+
+  .categories-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .categories-header h1 {
+    font-size: 24px;
+  }
+
+  .add-category-btn {
+    width: 100%;
+  }
+
+  .categories-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+
+    padding: 13px;
+  }
+
+  .category-search {
+    max-width: none;
+  }
+
+  .category-count {
+    text-align: right;
+  }
+
+  .category-modal-overlay {
+    align-items: flex-end;
+
+    padding: 0;
+  }
+
+  .category-modal {
+    max-height: 92vh;
+
+    border-radius: 18px 18px 0 0;
+
+    animation: categoryMobileModalIn 0.25s ease;
+  }
+
+  @keyframes categoryMobileModalIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .category-modal-header {
+    padding: 20px;
+  }
+
+  .category-form {
+    padding: 20px;
+  }
+
+  .category-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .category-form-actions button {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-categories *,
+  .admin-categories *::before,
+  .admin-categories *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

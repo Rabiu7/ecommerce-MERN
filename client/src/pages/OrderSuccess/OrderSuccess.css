@@ -1,0 +1,562 @@
+/* =========================================================
+   ORDER SUCCESS PAGE
+========================================================= */
+
+.order-success {
+  min-height: calc(100vh - 80px);
+  padding: 70px 20px;
+  background: #faf9f7;
+}
+
+.success-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* =========================================================
+   SUCCESS ICON
+========================================================= */
+
+.success-icon {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #edf8f1;
+  color: #2e9b59;
+
+  font-size: 48px;
+
+  animation: successPop 0.6s ease;
+}
+
+.success-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+@keyframes successPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  70% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.success-container h1 {
+  margin: 0;
+
+  color: #29251f;
+
+  font-size: 34px;
+  font-weight: 700;
+
+  letter-spacing: -0.5px;
+}
+
+.success-message {
+  margin: 12px auto 35px;
+
+  max-width: 600px;
+
+  color: #777;
+
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   ORDER INFORMATION
+========================================================= */
+
+.order-box {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  background: #ffffff;
+
+  border: 1px solid #ebe7e0;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  margin-bottom: 30px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.order-box > div {
+  padding: 22px 18px;
+
+  border-right: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.order-box > div:nth-child(3n) {
+  border-right: none;
+}
+
+.order-box > div:nth-child(n + 4) {
+  border-bottom: none;
+}
+
+.order-box span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #8a8a8a;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.5px;
+}
+
+.order-box strong {
+  display: block;
+
+  color: #29251f;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.order-box .confirmed {
+  color: #2e9b59;
+}
+
+/* =========================================================
+   ORDERED PRODUCTS
+========================================================= */
+
+.ordered-products {
+  text-align: left;
+
+  background: #ffffff;
+
+  border: 1px solid #ebe7e0;
+
+  border-radius: 18px;
+
+  padding: 28px;
+
+  margin-bottom: 25px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.ordered-products h2 {
+  display: flex;
+
+  align-items: center;
+  gap: 10px;
+
+  margin: 0 0 22px;
+
+  color: #29251f;
+
+  font-size: 20px;
+}
+
+.ordered-products h2 svg {
+  color: #a27b3f;
+}
+
+/* =========================================================
+   PRODUCT
+========================================================= */
+
+.ordered-product {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 18px 0;
+
+  border-bottom: 1px solid #eee;
+}
+
+.ordered-product:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ordered-product:first-of-type {
+  padding-top: 0;
+}
+
+.ordered-product img {
+  width: 82px;
+  height: 82px;
+
+  object-fit: cover;
+
+  border-radius: 12px;
+
+  border: 1px solid #eee;
+
+  background: #f8f8f8;
+}
+
+.ordered-product-info {
+  flex: 1;
+  text-align: left;
+}
+
+.ordered-product-info h3 {
+  margin: 0 0 7px;
+
+  color: #29251f;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.ordered-product-info p {
+  margin: 4px 0;
+
+  color: #777;
+
+  font-size: 14px;
+}
+
+.ordered-product > strong {
+  color: #29251f;
+
+  font-size: 16px;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SHIPPING ADDRESS
+========================================================= */
+
+.shipping-box {
+  text-align: left;
+
+  padding: 25px 28px;
+
+  margin-bottom: 30px;
+
+  background: #ffffff;
+
+  border: 1px solid #ebe7e0;
+
+  border-radius: 18px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+.shipping-box h2 {
+  margin: 0 0 12px;
+
+  color: #29251f;
+
+  font-size: 19px;
+}
+
+.shipping-box p {
+  margin: 0;
+
+  color: #707070;
+
+  font-size: 14px;
+
+  line-height: 1.7;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.success-actions {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-top: 30px;
+}
+
+.primary-btn,
+.secondary-btn {
+  min-height: 48px;
+
+  padding: 0 22px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border-radius: 10px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.primary-btn {
+  border: 1px solid #a27b3f;
+
+  background: #a27b3f;
+
+  color: #ffffff;
+
+  box-shadow: 0 5px 15px rgba(162, 123, 63, 0.2);
+}
+
+.primary-btn:hover {
+  background: #8f6a35;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(162, 123, 63, 0.25);
+}
+
+.secondary-btn {
+  border: 1px solid #ddd5ca;
+
+  background: #ffffff;
+
+  color: #4a433a;
+}
+
+.secondary-btn:hover {
+  background: #f8f5f1;
+
+  border-color: #cbbda9;
+
+  transform: translateY(-2px);
+}
+
+.primary-btn svg,
+.secondary-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .order-success {
+    padding: 45px 15px;
+  }
+
+  .success-container h1 {
+    font-size: 27px;
+  }
+
+  .success-message {
+    font-size: 14px;
+  }
+
+  .order-box {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .order-box > div:nth-child(3n) {
+    border-right: 1px solid #eee;
+  }
+
+  .order-box > div:nth-child(2n) {
+    border-right: none;
+  }
+
+  .order-box > div:nth-child(n + 4) {
+    border-bottom: 1px solid #eee;
+  }
+
+  .order-box > div:last-child {
+    border-bottom: none;
+  }
+
+  .ordered-products {
+    padding: 20px;
+  }
+
+  .ordered-product {
+    gap: 12px;
+  }
+
+  .ordered-product img {
+    width: 68px;
+    height: 68px;
+  }
+
+  .ordered-product-info h3 {
+    font-size: 14px;
+  }
+
+  .ordered-product-info p {
+    font-size: 12px;
+  }
+
+  .ordered-product > strong {
+    font-size: 14px;
+  }
+
+  .shipping-box {
+    padding: 20px;
+  }
+
+  .success-actions {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+  .success-icon {
+    width: 70px;
+    height: 70px;
+  }
+
+  .success-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .success-container h1 {
+    font-size: 23px;
+  }
+
+  .order-box {
+    grid-template-columns: 1fr;
+  }
+
+  .order-box > div {
+    border-right: none !important;
+    border-bottom: 1px solid #eee !important;
+  }
+
+  .order-box > div:last-child {
+    border-bottom: none !important;
+  }
+
+  .order-box span {
+    font-size: 11px;
+  }
+
+  .order-box strong {
+    font-size: 15px;
+  }
+
+  .ordered-product {
+    display: grid;
+
+    grid-template-columns: 65px 1fr;
+  }
+
+  .ordered-product img {
+    width: 65px;
+    height: 65px;
+  }
+
+  .ordered-product > strong {
+    grid-column: 2;
+  }
+}
+
+/* =========================================================
+   PRINT / INVOICE
+========================================================= */
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .order-success {
+    padding: 0;
+
+    background: #ffffff;
+  }
+
+  .success-container {
+    max-width: 100%;
+  }
+
+  .success-icon {
+    width: 55px;
+    height: 55px;
+
+    box-shadow: none;
+  }
+
+  .success-container h1 {
+    font-size: 26px;
+  }
+
+  .success-actions {
+    display: none !important;
+  }
+
+  .order-box,
+  .ordered-products,
+  .shipping-box {
+    box-shadow: none;
+
+    border: 1px solid #ddd;
+  }
+
+  .ordered-products {
+    break-inside: avoid;
+  }
+
+  .ordered-product {
+    break-inside: avoid;
+  }
+}
