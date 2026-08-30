@@ -24,6 +24,8 @@ import OrderDetails from "../pages/OrderDetails/OrderDetails";
 
 import AdminLogin from "../pages/AdminLogin/AdminLogin";
 import Admin from "../pages/Admin/Admin";
+import AdminOrders from "../pages/AdminOrders/AdminOrders";
+import AdminCustomers from "../pages/AdminCustomers/AdminCustomers";
 
 import NotFound from "../pages/NotFound/NotFound";
 
@@ -136,11 +138,11 @@ function AppRoutes() {
           {/* Categories - add when ready */}
           <Route path="/admin/categories" element={<AdminCategories />} />
 
-          {/* Orders - add later */}
-          {/* <Route path="/admin/orders" element={<AdminOrders />} /> */}
+          {/* Orders */}
+          <Route path="/admin/orders" element={<AdminOrders />} />
 
           {/* Users - add later */}
-          {/* <Route path="/admin/users" element={<AdminUsers />} /> */}
+          <Route path="/admin/customers" element={<AdminCustomers />} />
 
           {/* Reviews - add later */}
           {/* <Route path="/admin/reviews" element={<AdminReviews />} /> */}

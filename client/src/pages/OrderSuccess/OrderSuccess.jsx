@@ -1,7 +1,7 @@
 import "./OrderSuccess.css";
 
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   FiCheckCircle,
@@ -16,17 +16,37 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function OrderSuccess() {
   const navigate = useNavigate();
+
+  const location = useLocation();
+
   const [searchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
+
   const [loading, setLoading] = useState(true);
+
   const [verifying, setVerifying] = useState(false);
 
+  const [verificationError, setVerificationError] = useState(false);
+
   // =====================================================
-  // CASHFREE ORDER ID
+  // GET CASHFREE ORDER ID
   // =====================================================
 
-  const cashfreeOrderId = searchParams.get("order_id");
+  const queryCashfreeOrderId = searchParams.get("order_id");
+
+  /*
+   * Cashfree should send:
+   *
+   * /order-success?order_id=HN_73_1788008553308
+   *
+   * We also keep a localStorage fallback because
+   * the browser may sometimes navigate/reload before
+   * the query parameter is available to our React state.
+   */
+
+  const cashfreeOrderId =
+    queryCashfreeOrderId || localStorage.getItem("cashfreeOrderId");
 
   // =====================================================
   // VERIFY PAYMENT
@@ -34,15 +54,27 @@ function OrderSuccess() {
 
   const verifyPayment = async () => {
     if (!cashfreeOrderId) {
-      toast.error("Cashfree order ID is missing.");
+      console.error("Cashfree Order ID is missing");
+
+      setVerificationError(true);
       setLoading(false);
+
+      toast.error("Cashfree order ID is missing.");
+
       return;
     }
 
     try {
       setVerifying(true);
+      setVerificationError(false);
+
+      console.log("====================================");
+
+      console.log("Cashfree Payment Verification");
 
       console.log("Cashfree Order ID:", cashfreeOrderId);
+
+      console.log("====================================");
 
       const response = await fetch(
         `${VITE_API_URL}/api/orders/verify-payment`,
@@ -51,6 +83,7 @@ function OrderSuccess() {
 
           headers: {
             "Content-Type": "application/json",
+
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
 
@@ -62,34 +95,39 @@ function OrderSuccess() {
 
       const data = await response.json();
 
-      console.log("Payment Verification:", data);
+      console.log("Payment Verification Response:", data);
 
       // =================================================
-      // PAYMENT SUCCESS
+      // SUCCESS
       // =================================================
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success && data.paymentStatus === "paid") {
+        console.log("✅ Payment successful");
+
         console.log("Local Order ID:", data.orderId);
+
         console.log("Cashfree Order ID:", data.cashfreeOrderId);
+
         console.log("Complete Order:", data.order);
 
-        // Backend MUST return complete order here
-        if (data.order) {
-          setOrder(data.order);
-        } else {
-          console.error("Backend returned order: null");
+        if (!data.order) {
+          console.error("Backend returned no complete order");
 
-          toast.error(
-            "Payment successful, but order details could not be loaded.",
+          throw new Error(
+            "Payment successful but order details could not be loaded.",
           );
-
-          return;
         }
 
-        // Store LOCAL order ID
+        setOrder(data.order);
+
+        // Save local order ID
         if (data.orderId) {
           localStorage.setItem("orderId", String(data.orderId));
         }
+
+        // Cashfree order is no longer needed
+        // after successful verification.
+        localStorage.removeItem("cashfreeOrderId");
 
         toast.success("Payment successful 🎉");
 
@@ -97,26 +135,44 @@ function OrderSuccess() {
       }
 
       // =================================================
-      // PAYMENT STILL PENDING
+      // PENDING
       // =================================================
 
-      if (response.status === 202) {
+      if (response.status === 202 || data.paymentStatus === "pending") {
+        console.log("⏳ Payment is still pending");
+
         toast.info(
-          "Your payment may still be processing. Please check My Orders after a few moments.",
+          "Payment is still being processed. Please check My Orders after a few moments.",
         );
 
         return;
       }
 
       // =================================================
-      // PAYMENT FAILED
+      // FAILED
       // =================================================
 
-      toast.error(data.message || "Payment verification failed");
+      if (data.paymentStatus === "failed") {
+        console.log("❌ Payment failed");
+
+        toast.error(data.message || "Payment failed.");
+
+        return;
+      }
+
+      // =================================================
+      // UNKNOWN
+      // =================================================
+
+      console.error("Unknown payment response:", data);
+
+      toast.error(data.message || "Unable to verify payment.");
     } catch (error) {
       console.error("Payment Verification Error:", error);
 
-      toast.error("Unable to verify payment");
+      setVerificationError(true);
+
+      toast.error(error.message || "Unable to verify payment");
     } finally {
       setLoading(false);
       setVerifying(false);
@@ -124,17 +180,92 @@ function OrderSuccess() {
   };
 
   // =====================================================
-  // RUN ON PAGE LOAD
+  // RUN VERIFICATION
   // =====================================================
 
   useEffect(() => {
     window.scrollTo(0, 0);
 
     verifyPayment();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cashfreeOrderId]);
 
   // =====================================================
-  // LOADING
+  // DOWNLOAD INVOICE
+  // =====================================================
+
+  const downloadInvoice = async () => {
+    if (!order?.id) {
+      toast.error("Order ID is not available.");
+
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      /*
+       * IMPORTANT:
+       *
+       * Your backend route is:
+       *
+       * GET /api/orders/:id/invoice
+       *
+       * :id is LOCAL ORDER ID.
+       *
+       * Therefore use order.id,
+       * NOT cashfreeOrderId.
+       */
+
+      const url = `${VITE_API_URL}/api/orders/` + `${order.id}/invoice`;
+
+      console.log("Downloading invoice:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+
+        headers: {
+          Authorization: "Bearer " + token,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+
+        console.error("Invoice response:", errorData);
+
+        throw new Error("Unable to download invoice");
+      }
+
+      const blob = await response.blob();
+
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = blobUrl;
+
+      link.download = `HomeNeeds-Invoice-${order.id}.pdf`;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(blobUrl);
+
+      toast.success("Invoice downloaded");
+    } catch (error) {
+      console.error("Invoice Error:", error);
+
+      toast.error("Unable to download invoice");
+    }
+  };
+
+  // =====================================================
+  // LOADING / VERIFYING
   // =====================================================
 
   if (loading || verifying) {
@@ -170,7 +301,7 @@ function OrderSuccess() {
   }
 
   // =====================================================
-  // PAYMENT PENDING / NO ORDER
+  // NO ORDER / PAYMENT PENDING
   // =====================================================
 
   if (!order) {
@@ -181,11 +312,16 @@ function OrderSuccess() {
             <FiCheckCircle />
           </div>
 
-          <h1>Payment Processing</h1>
+          <h1>
+            {verificationError
+              ? "Unable to Verify Payment"
+              : "Payment Processing"}
+          </h1>
 
           <p className="success-message">
-            Your payment may still be processing. Please check My Orders after a
-            few moments.
+            {verificationError
+              ? "We could not confirm your payment right now. Please check My Orders before trying again."
+              : "Your payment may still be processing. Please check My Orders after a few moments."}
           </p>
 
           <div className="order-box">
@@ -236,54 +372,6 @@ function OrderSuccess() {
   const items = order.items || [];
 
   const address = order.shipping_address || {};
-
-  // =====================================================
-  // DOWNLOAD INVOICE
-  // =====================================================
-
-  const downloadInvoice = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const url = `${VITE_API_URL}/api/orders/${cashfreeOrderId}/invoice`;
-
-      const response = await fetch(url, {
-        method: "GET",
-
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to download invoice");
-      }
-
-      const blob = await response.blob();
-
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-
-      link.href = blobUrl;
-
-      link.download = `HomeNeeds-Invoice-${localOrderId}.pdf`;
-
-      document.body.appendChild(link);
-
-      link.click();
-
-      link.remove();
-
-      window.URL.revokeObjectURL(blobUrl);
-
-      toast.success("Invoice downloaded");
-    } catch (error) {
-      console.error("Invoice Error:", error);
-
-      toast.error("Unable to download invoice");
-    }
-  };
 
   // =====================================================
   // SUCCESS PAGE

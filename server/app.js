@@ -20,6 +20,8 @@ const reviewRoutes = require("./routes/reviewsRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const adminOrderRoutes = require("./routes/adminOrderRoutes");
+const adminCustomerRoutes = require("./routes/adminCustomerRoutes");
 
 // Auth API
 app.use("/api/auth", authRoutes);
@@ -42,8 +44,12 @@ app.use("/api/profile", profileRoutes);
 // Order API
 app.use("/api/orders", orderRoutes);
 
+app.use("/api/admin/orders", adminOrderRoutes);
+
 // Admin API
 app.use("/api/admin", adminRoutes);
+
+app.use("/api/admin/customers", adminCustomerRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

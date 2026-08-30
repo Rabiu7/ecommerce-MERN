@@ -1,64 +1,131 @@
 const db = require("../config/database");
 
 const User = {
-  create: (user, callback) => {
+  // =========================================================
+  // ADMIN - GET ALL CUSTOMERS
+  // =========================================================
+
+  getAllCustomers(callback) {
     const sql = `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        u.created_at,
 
-        INSERT INTO users
+        COUNT(o.id) AS total_orders,
 
-        (name,email,phone,password)
+        COALESCE(SUM(o.total_amount), 0) AS total_spent
 
-        VALUES (?,?,?,?)
+      FROM users u
 
-        `;
+      LEFT JOIN orders o
+        ON o.user_id = u.id
 
-    db.query(
-      sql,
+      WHERE u.role = 'customer'
 
-      [user.name, user.email, user.phone, user.password],
+      GROUP BY
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        u.created_at
 
-      callback,
-    );
+      ORDER BY u.created_at DESC
+    `;
+
+    db.query(sql, callback);
   },
 
-  findByEmail: (email, callback) => {
+  // =========================================================
+  // ADMIN - GET CUSTOMER BY ID
+  // =========================================================
+
+  getCustomerById(customerId, callback) {
     const sql = `
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        created_at
 
-        SELECT *
+      FROM users
 
-        FROM users
+      WHERE id = ?
+      AND role = 'customer'
 
-        WHERE email = ?
+      LIMIT 1
+    `;
 
-        `;
-
-    db.query(
-      sql,
-
-      [email],
-
-      callback,
-    );
+    db.query(sql, [customerId], callback);
   },
 
-  findById: (id, callback) => {
+  // =========================================================
+  // ADMIN - GET CUSTOMER ORDERS
+  // =========================================================
+
+  getCustomerOrders(customerId, callback) {
     const sql = `
+      SELECT
+        id,
+        total_amount,
+        payment_method,
+        payment_status,
+        order_status,
+        shipping_address,
+        created_at
 
-        SELECT id,name,email,phone,role
+      FROM orders
 
-        FROM users
+      WHERE user_id = ?
 
-        WHERE id = ?
+      ORDER BY created_at DESC
+    `;
 
-        `;
+    db.query(sql, [customerId], callback);
+  },
 
-    db.query(
-      sql,
+  // =========================================================
+  // FIND USER BY EMAIL
+  // =========================================================
 
-      [id],
+  findByEmail(email, callback) {
+    const sql = `
+    SELECT
+      id,
+      name,
+      email,
+      phone,
+      password,
+      role,
+      created_at
+    FROM users
+    WHERE email = ?
+    LIMIT 1
+  `;
 
-      callback,
-    );
+    db.query(sql, [email], callback);
+  },
+
+  // =========================================================
+  // CREATE USER
+  // =========================================================
+
+  create(user, callback) {
+    const sql = `
+    INSERT INTO users
+    (
+      name,
+      email,
+      phone,
+      password
+    )
+    VALUES (?, ?, ?, ?)
+  `;
+
+    db.query(sql, [user.name, user.email, user.phone, user.password], callback);
   },
 };
 

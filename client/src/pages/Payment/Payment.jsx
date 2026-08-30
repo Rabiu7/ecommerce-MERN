@@ -13,13 +13,12 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Payment() {
   const navigate = useNavigate();
-
   const location = useLocation();
 
   const { user } = useAuth();
 
+  const [cashfreeReady, setCashfreeReady] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("ONLINE");
-
   const [processing, setProcessing] = useState(false);
 
   const {
@@ -36,127 +35,42 @@ function Payment() {
   // =====================================================
 
   useEffect(() => {
-    if (document.querySelector("#cashfree-sdk")) {
+    if (window.Cashfree) {
+      console.log("Cashfree SDK already available");
+      setCashfreeReady(true);
+      return;
+    }
+
+    const existingScript = document.querySelector("#cashfree-sdk");
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => {
+        console.log("Cashfree SDK loaded");
+        setCashfreeReady(true);
+      });
+
       return;
     }
 
     const script = document.createElement("script");
 
     script.id = "cashfree-sdk";
-
     script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-
     script.async = true;
+
+    script.onload = () => {
+      console.log("Cashfree SDK loaded");
+      setCashfreeReady(true);
+    };
+
+    script.onerror = () => {
+      console.error("Cashfree SDK failed to load");
+
+      toast.error("Unable to load Cashfree payment gateway.");
+    };
 
     document.body.appendChild(script);
   }, []);
-
-  // =====================================================
-  // VERIFY PAYMENT AFTER CASHFREE REDIRECT
-  // =====================================================
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-
-    const orderId = params.get("order_id");
-
-    if (!orderId) {
-      return;
-    }
-
-    verifyReturnedPayment(orderId);
-  }, [location.search]);
-
-  // =====================================================
-  // VERIFY RETURNED PAYMENT
-  // =====================================================
-
-  const verifyReturnedPayment = async (orderId) => {
-    try {
-      setProcessing(true);
-
-      toast.info("Checking payment status...");
-
-      const response = await fetch(
-        `${VITE_API_URL}/api/orders/verify-payment`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-
-            Authorization: "Bearer " + localStorage.getItem("token"),
-          },
-
-          body: JSON.stringify({
-            orderId,
-          }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.message || "Unable to verify payment");
-
-        return;
-      }
-
-      // =================================================
-      // PAYMENT SUCCESS
-      // =================================================
-
-      if (data.paymentStatus === "Paid") {
-        toast.success("Payment successful 🎉");
-
-        navigate("/order-success", {
-          replace: true,
-
-          state: {
-            orderId: data.orderId,
-
-            totalAmount: data.totalAmount,
-
-            paymentMethod: data.paymentMethod,
-
-            paymentStatus: data.paymentStatus,
-
-            orderStatus: data.orderStatus,
-
-            shippingAddress: data.shippingAddress,
-
-            cashfreePaymentId: data.cashfreePaymentId,
-          },
-        });
-
-        return;
-      }
-
-      // =================================================
-      // PAYMENT PENDING
-      // =================================================
-
-      if (data.paymentStatus === "Pending") {
-        toast.warning("Payment is still pending.");
-
-        return;
-      }
-
-      // =================================================
-      // PAYMENT FAILED
-      // =================================================
-
-      if (data.paymentStatus === "Failed") {
-        toast.error("Payment failed.");
-      }
-    } catch (error) {
-      console.error("Payment Verification Error:", error);
-
-      toast.error("Unable to verify payment");
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   // =====================================================
   // HANDLE COD
@@ -192,15 +106,18 @@ function Payment() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        toast.error(data.message || "Unable to place order");
+      console.log("COD response:", data);
 
-        return;
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to place order");
       }
 
       toast.success("Order placed successfully 🎉");
 
+      // COD doesn't go through Cashfree.
       navigate("/order-success", {
+        replace: true,
+
         state: {
           orderId: data.orderId,
 
@@ -213,12 +130,14 @@ function Payment() {
           orderStatus: data.orderStatus,
 
           shippingAddress: data.shippingAddress,
+
+          order: data.order,
         },
       });
     } catch (error) {
       console.error("COD Error:", error);
 
-      toast.error("Unable to place order");
+      toast.error(error.message || "Unable to place order");
     } finally {
       setProcessing(false);
     }
@@ -255,8 +174,10 @@ function Payment() {
 
     const data = await response.json();
 
+    console.log("Backend Cashfree response:", data);
+
     if (!response.ok) {
-      throw new Error(data.message || "Unable to create payment");
+      throw new Error(data.message || "Unable to create Cashfree order");
     }
 
     return data;
@@ -270,17 +191,25 @@ function Payment() {
     try {
       setProcessing(true);
 
+      console.log("=================================");
+      console.log("1️⃣ Online payment started");
+      console.log("=================================");
+
       // =================================================
       // CHECK SDK
       // =================================================
 
-      if (!window.Cashfree) {
+      if (!cashfreeReady || !window.Cashfree) {
         toast.error(
           "Cashfree payment gateway is still loading. Please try again.",
         );
 
+        setProcessing(false);
+
         return;
       }
+
+      console.log("2️⃣ Cashfree SDK is ready");
 
       // =================================================
       // CREATE BACKEND ORDER
@@ -288,31 +217,91 @@ function Payment() {
 
       const orderData = await createCashfreeOrder();
 
+      console.log("3️⃣ Backend order response:", orderData);
+
+      // =================================================
+      // CHECK PAYMENT SESSION
+      // =================================================
+
       if (!orderData.paymentSessionId) {
         throw new Error("Cashfree payment session was not created");
       }
+
+      console.log("4️⃣ Payment Session ID:", orderData.paymentSessionId);
+
+      // =================================================
+      // SAVE CASHFREE ORDER ID
+      // =================================================
+
+      if (orderData.cashfreeOrderId) {
+        localStorage.setItem("cashfreeOrderId", orderData.cashfreeOrderId);
+
+        console.log("Cashfree Order ID:", orderData.cashfreeOrderId);
+      }
+
+      // =================================================
+      // CASHFREE MODE
+      // =================================================
+
+      const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE || "sandbox";
+
+      console.log("Cashfree Mode:", cashfreeMode);
 
       // =================================================
       // INITIALIZE CASHFREE
       // =================================================
 
       const cashfree = window.Cashfree({
-        mode: import.meta.env.VITE_CASHFREE_MODE || "sandbox",
+        mode: cashfreeMode,
       });
 
+      console.log("5️⃣ Cashfree initialized");
+
       // =================================================
-      // OPEN CASHFREE CHECKOUT
+      // CHECKOUT OPTIONS
       // =================================================
 
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
 
         redirectTarget: "_self",
+
+        mode: cashfreeMode,
       };
 
-      await cashfree.checkout(checkoutOptions);
+      console.log("6️⃣ Opening Cashfree with:", checkoutOptions);
+
+      // =================================================
+      // OPEN CHECKOUT
+      // =================================================
+
+      const result = await cashfree.checkout(checkoutOptions);
+
+      console.log("7️⃣ Cashfree checkout result:", result);
+
+      // =================================================
+      // HANDLE SDK ERROR
+      // =================================================
+
+      if (result?.error) {
+        console.error("Cashfree Checkout Error:", result.error);
+
+        toast.error(result.error.message || "Unable to open Cashfree checkout");
+
+        setProcessing(false);
+
+        return;
+      }
+
+      // =================================================
+      // CHECK SDK WARNING
+      // =================================================
+
+      if (result?.warning) {
+        console.warn("Cashfree Checkout Warning:", result.warning);
+      }
     } catch (error) {
-      console.error("Cashfree Payment Error:", error);
+      console.error("❌ Cashfree Payment Error:", error);
 
       toast.error(error.message || "Unable to start payment");
 
@@ -345,9 +334,7 @@ function Payment() {
   return (
     <section className="payment-page">
       <div className="payment-container">
-        {/* =============================================
-            HEADER
-        ============================================= */}
+        {/* HEADER */}
 
         <div className="payment-header">
           <h1>Payment</h1>
@@ -356,9 +343,9 @@ function Payment() {
         </div>
 
         <div className="payment-grid">
-          {/* ===========================================
+          {/* ==========================================
               PAYMENT METHODS
-          =========================================== */}
+          ========================================== */}
 
           <div className="payment-card">
             <h2>Select Payment Method</h2>
@@ -382,11 +369,8 @@ function Payment() {
 
                 <div className="payment-tags">
                   <span>UPI</span>
-
                   <span>Cards</span>
-
                   <span>Wallet</span>
-
                   <span>Netbanking</span>
                 </div>
               </div>
@@ -420,9 +404,9 @@ function Payment() {
             </div>
           </div>
 
-          {/* ===========================================
+          {/* ==========================================
               SUMMARY
-          =========================================== */}
+          ========================================== */}
 
           <div className="payment-summary">
             <h2>Order Summary</h2>
@@ -471,7 +455,10 @@ function Payment() {
               <strong>₹{Number(amount).toFixed(2)}</strong>
             </div>
 
+            {/* PAYMENT BUTTON */}
+
             <button
+              type="button"
               className="pay-btn"
               onClick={handlePayment}
               disabled={processing}
@@ -487,13 +474,9 @@ function Payment() {
               <h4>Secure Checkout</h4>
 
               <p>✔ UPI</p>
-
               <p>✔ Cards</p>
-
               <p>✔ Wallets</p>
-
               <p>✔ Netbanking</p>
-
               <p>✔ Cash On Delivery</p>
             </div>
           </div>

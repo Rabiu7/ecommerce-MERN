@@ -210,6 +210,88 @@ const Order = {
 
     db.query(sql, [userId], callback);
   },
+
+  // =========================================================
+  // ADMIN - GET ALL ORDERS
+  // =========================================================
+
+  getAllOrders(callback) {
+    const sql = `
+      SELECT
+        o.id,
+        o.user_id,
+        o.total_amount,
+        o.payment_method,
+        o.payment_status,
+        o.order_status,
+        o.shipping_address,
+        o.cashfree_order_id,
+        o.cashfree_payment_id,
+        o.created_at,
+
+        u.name AS customer_name,
+        u.email AS customer_email,
+        u.phone AS customer_phone
+
+      FROM orders o
+
+      LEFT JOIN users u
+        ON u.id = o.user_id
+
+      ORDER BY o.created_at DESC
+    `;
+
+    db.query(sql, callback);
+  },
+
+  // =========================================================
+  // ADMIN - GET ORDER BY ID
+  // =========================================================
+
+  getAdminOrderById(orderId, callback) {
+    const sql = `
+      SELECT
+        o.id,
+        o.user_id,
+        o.total_amount,
+        o.payment_method,
+        o.payment_status,
+        o.order_status,
+        o.shipping_address,
+        o.cashfree_order_id,
+        o.cashfree_payment_id,
+        o.created_at,
+
+        u.name AS customer_name,
+        u.email AS customer_email,
+        u.phone AS customer_phone
+
+      FROM orders o
+
+      LEFT JOIN users u
+        ON u.id = o.user_id
+
+      WHERE o.id = ?
+
+      LIMIT 1
+    `;
+
+    db.query(sql, [orderId], callback);
+  },
+
+  // =========================================================
+  // ADMIN - UPDATE ORDER STATUS
+  // =========================================================
+
+  updateOrderStatus(orderId, orderStatus, callback) {
+    const sql = `
+      UPDATE orders
+      SET order_status = ?
+      WHERE id = ?
+    `;
+
+    db.query(sql, [orderStatus, orderId], callback);
+  },
 };
 
 module.exports = Order;

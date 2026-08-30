@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductCard({ id, image, title, category, price, rating }) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();

@@ -78,7 +78,7 @@ function AdminLayout() {
             <span>Orders</span>
           </NavLink>
 
-          <NavLink to="/admin/users" onClick={() => setSidebarOpen(false)}>
+          <NavLink to="/admin/customers" onClick={() => setSidebarOpen(false)}>
             <FiUsers />
             <span>Customers</span>
           </NavLink>
