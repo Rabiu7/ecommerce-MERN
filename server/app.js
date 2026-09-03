@@ -13,12 +13,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
-// Routes AFTER CORS
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/reviews", reviewRoutes);
 
 app.use(express.json());
 
@@ -71,6 +65,11 @@ app.get("/", (req, res) => {
     message: "Home Needs Store API Running 🚀",
   });
 });
+
+// Routes AFTER CORS
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Server
 const PORT = process.env.PORT || 5000;
