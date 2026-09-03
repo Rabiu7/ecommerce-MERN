@@ -7,8 +7,6 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const cors = require("cors");
-
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://your-shop.vercel.app"],
