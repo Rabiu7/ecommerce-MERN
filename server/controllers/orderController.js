@@ -114,10 +114,8 @@ function createLocalOrder(
 // =========================================================
 
 function getCompleteOrder(orderId, userId, callback) {
-  Order.getOrderByCashfreeId(orderId, userId, async (err, orders) => {
-    if (err) {
-      return callback(err);
-    }
+  Order.getOrderById(orderId, userId, (err, orders) => {
+    if (err) return callback(err);
 
     if (!orders || orders.length === 0) {
       return callback(null, null);
@@ -126,15 +124,11 @@ function getCompleteOrder(orderId, userId, callback) {
     const order = orders[0];
 
     Order.getOrderItems(orderId, (itemErr, items) => {
-      if (itemErr) {
-        return callback(itemErr);
-      }
+      if (itemErr) return callback(itemErr);
 
       callback(null, {
         ...order,
-
         shipping_address: parseShippingAddress(order.shipping_address),
-
         items: items || [],
       });
     });
@@ -470,29 +464,42 @@ exports.verifyPayment = async (req, res) => {
     // =====================================================
 
     if (order.payment_status === "paid") {
-      return res.json({
-        success: true,
+      return getCompleteOrder(
+        order.id,
+        userId,
+        (completeErr, completeOrder) => {
+          if (completeErr) {
+            console.error("Complete Order Error:", completeErr);
 
-        orderId: order.id,
+            return res.status(500).json({
+              message: "Payment already confirmed but failed to load order",
+            });
+          }
 
-        cashfreeOrderId: order.cashfree_order_id,
+          if (!completeOrder) {
+            return res.status(404).json({
+              message:
+                "Payment confirmed but order details could not be loaded",
+            });
+          }
 
-        totalAmount: Number(order.total_amount),
-
-        paymentMethod: order.payment_method,
-
-        paymentStatus: "paid",
-
-        orderStatus: order.order_status,
-
-        shippingAddress: parseShippingAddress(order.shipping_address),
-
-        cashfreePaymentId: order.cashfree_payment_id,
-
-        order: order,
-
-        message: "Payment already confirmed",
-      });
+          return res.json({
+            success: true,
+            orderId: order.id,
+            cashfreeOrderId: order.cashfree_order_id,
+            totalAmount: Number(order.total_amount),
+            paymentMethod: order.payment_method,
+            paymentStatus: "paid",
+            orderStatus: completeOrder.order_status,
+            shippingAddress: parseShippingAddress(
+              completeOrder.shipping_address,
+            ),
+            cashfreePaymentId: completeOrder.cashfree_payment_id,
+            order: completeOrder,
+            message: "Payment already confirmed",
+          });
+        },
+      );
     }
 
     // =====================================================
@@ -588,27 +595,34 @@ exports.verifyPayment = async (req, res) => {
                 });
               }
 
+              if (!completeOrder) {
+                console.error(
+                  "Complete order is empty for local order ID:",
+                  order.id,
+                );
+
+                return res.status(500).json({
+                  message:
+                    "Payment successful but order details could not be loaded",
+                });
+              }
+
+              console.log(
+                "Complete Order:",
+                JSON.stringify(completeOrder, null, 2),
+              );
+
               return res.json({
                 success: true,
-
                 orderId: order.id,
-
                 cashfreeOrderId: order.cashfree_order_id,
-
                 totalAmount: Number(order.total_amount),
-
                 paymentMethod: order.payment_method,
-
                 paymentStatus: "paid",
-
                 orderStatus: "Confirmed",
-
                 shippingAddress: parseShippingAddress(order.shipping_address),
-
                 cashfreePaymentId: paymentId,
-
                 order: completeOrder,
-
                 message: "Payment verified successfully",
               });
             });

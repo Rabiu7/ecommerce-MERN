@@ -1,10 +1,19 @@
 const User = require("../models/User");
 
 // GET PROFILE
+const db = require("../config/database");
+
+// GET PROFILE
 exports.getProfile = (req, res) => {
   const { userId } = req.params;
 
-  User.findById(userId, (err, result) => {
+  const sql = `
+    SELECT id, name, email, phone, role
+    FROM users
+    WHERE id = ?
+  `;
+
+  db.query(sql, [userId], (err, result) => {
     if (err) {
       console.error("Get profile error:", err);
 

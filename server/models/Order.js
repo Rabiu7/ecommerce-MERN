@@ -111,6 +111,18 @@ const Order = {
     db.query(sql, [cashfreeOrderId, userId], callback);
   },
 
+  getOrderById(orderId, userId, callback) {
+    const sql = `
+    SELECT *
+    FROM orders
+    WHERE id = ?
+    AND user_id = ?
+    LIMIT 1
+  `;
+
+    db.query(sql, [orderId, userId], callback);
+  },
+
   // =========================================================
   // GET ORDER ITEMS
   // =========================================================
