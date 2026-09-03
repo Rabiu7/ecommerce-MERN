@@ -7,15 +7,18 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://ecommerce-mern-hazel.vercel.app/",
-    ],
-    credentials: true,
-  }),
-);
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://ecommerce-mern-hazel.vercel.app"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+// Routes AFTER CORS
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use(express.json());
 
