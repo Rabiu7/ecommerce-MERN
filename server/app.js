@@ -77,6 +77,6 @@ console.log("Cashfree App ID:", process.env.CASHFREE_APP_ID);
 console.log("Cashfree Secret exists:", !!process.env.CASHFREE_SECRET_KEY);
 console.log("Cashfree Environment:", process.env.CASHFREE_ENV);
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
