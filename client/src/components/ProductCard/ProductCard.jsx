@@ -56,14 +56,14 @@ function ProductCard({ id, image, title, category, price, rating }) {
     <div className="product-card">
       <div className="product-image">
         <img src={image} alt={title} />
-
-        <button className="wishlist">
-          <FiHeart />
-        </button>
       </div>
 
       <div className="product-content">
         <span className="category">{category}</span>
+
+        <button className="wishlist" aria-label="Add to wishlist">
+          <FiHeart />
+        </button>
 
         <h3>{title}</h3>
 

@@ -16,6 +16,8 @@ import { useState } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 
+import { toast } from "react-toastify";
+
 import "./Navbar.css";
 
 function Navbar() {
@@ -33,6 +35,16 @@ function Navbar() {
     logout();
     closeMenu();
     navigate("/");
+  };
+
+  const handleCartClick = () => {
+    if (!isAuthenticated) {
+      // Show your toast here
+      toast.error("Please login to access your cart");
+      return;
+    }
+
+    navigate("/cart");
   };
 
   return (
@@ -55,9 +67,20 @@ function Navbar() {
             Products
           </NavLink>
 
-          <NavLink to="/cart" onClick={closeMenu}>
+          <Link
+            to={isAuthenticated ? "/cart" : "#"}
+            onClick={(e) => {
+              if (!isAuthenticated) {
+                e.preventDefault();
+                toast.error("Please login to access your cart");
+                return;
+              }
+
+              closeMenu();
+            }}
+          >
             Cart
-          </NavLink>
+          </Link>
 
           {isAuthenticated && (
             <NavLink to="/orders" onClick={closeMenu}>
@@ -91,11 +114,15 @@ function Navbar() {
         <div className="nav-icons">
           {/* CART */}
 
-          <Link to="/cart" className="icon cart-icon">
+          <button
+            type="button"
+            className="icon cart-icon"
+            onClick={handleCartClick}
+          >
             <FiShoppingCart />
 
             {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </Link>
+          </button>
 
           {/* USER */}
 

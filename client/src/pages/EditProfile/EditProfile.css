@@ -1,0 +1,364 @@
+/* =====================================================
+   EDIT PROFILE PAGE
+===================================================== */
+
+.edit-profile-page {
+  min-height: calc(100vh - 80px);
+  background: #faf9f7;
+  padding: 70px 20px;
+}
+
+.edit-profile-container {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.edit-profile-heading {
+  margin-bottom: 35px;
+}
+
+.edit-profile-heading > span {
+  display: block;
+  color: #a27b3f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.edit-profile-heading h1 {
+  margin: 0;
+  color: #333;
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.edit-profile-heading p {
+  margin-top: 10px;
+  color: #777;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+.back-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  border: none;
+  background: transparent;
+
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+
+  padding: 0;
+  margin-bottom: 30px;
+
+  cursor: pointer;
+
+  transition: color 0.25s ease;
+}
+
+.back-profile-btn:hover {
+  color: #a27b3f;
+}
+
+.back-profile-btn svg {
+  font-size: 17px;
+}
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.edit-profile-card {
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 18px;
+
+  padding: 40px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* =====================================================
+   CARD HEADER
+===================================================== */
+
+.edit-card-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+
+  border-bottom: 1px solid #eee;
+}
+
+.edit-avatar {
+  width: 58px;
+  height: 58px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f3ede3;
+  color: #a27b3f;
+
+  font-size: 24px;
+}
+
+.edit-card-header span {
+  display: block;
+
+  color: #a27b3f;
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 1.5px;
+  margin-bottom: 5px;
+}
+
+.edit-card-header h2 {
+  margin: 0;
+
+  color: #333;
+  font-size: 23px;
+}
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #444;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =====================================================
+   INPUT FIELDS
+===================================================== */
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+.input-wrapper > svg {
+  position: absolute;
+
+  left: 16px;
+  top: 50%;
+
+  width: 18px;
+  height: 18px;
+
+  transform: translateY(-50%);
+
+  color: #a27b3f;
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+.edit-profile-card .input-wrapper input {
+  display: block;
+
+  width: 100%;
+  height: 48px;
+
+  box-sizing: border-box;
+
+  /* IMPORTANT */
+  padding: 0 16px 0 50px !important;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  background: #fff;
+
+  color: #333;
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.edit-profile-card .input-wrapper input:focus {
+  border-color: #a27b3f;
+
+  box-shadow: 0 0 0 3px rgba(162, 123, 63, 0.1);
+}
+
+.edit-profile-card .input-wrapper input::placeholder {
+  color: #aaa;
+}
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.edit-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  margin-top: 35px;
+  padding-top: 25px;
+
+  border-top: 1px solid #eee;
+}
+
+.cancel-profile-btn,
+.save-profile-btn {
+  min-height: 46px;
+
+  padding: 0 22px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s ease;
+}
+
+.cancel-profile-btn {
+  background: #fff;
+
+  border: 1px solid #ddd;
+
+  color: #555;
+}
+
+.cancel-profile-btn:hover {
+  border-color: #a27b3f;
+  color: #a27b3f;
+}
+
+.save-profile-btn {
+  background: #a27b3f;
+
+  border: 1px solid #a27b3f;
+
+  color: #fff;
+}
+
+.save-profile-btn:hover {
+  background: #8d6834;
+  border-color: #8d6834;
+
+  transform: translateY(-1px);
+}
+
+.save-profile-btn:disabled,
+.cancel-profile-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+.edit-profile-loading {
+  min-height: 500px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  color: #777;
+}
+
+.edit-profile-loader {
+  width: 35px;
+  height: 35px;
+
+  border: 3px solid #eee;
+  border-top-color: #a27b3f;
+
+  border-radius: 50%;
+
+  animation: editProfileSpin 0.8s linear infinite;
+
+  margin-bottom: 15px;
+}
+
+@keyframes editProfileSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 600px) {
+  .edit-profile-page {
+    padding: 45px 16px;
+  }
+
+  .edit-profile-heading h1 {
+    font-size: 30px;
+  }
+
+  .edit-profile-card {
+    padding: 25px 20px;
+    border-radius: 14px;
+  }
+
+  .edit-card-header h2 {
+    font-size: 20px;
+  }
+
+  .edit-profile-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-profile-btn,
+  .save-profile-btn {
+    width: 100%;
+  }
+}

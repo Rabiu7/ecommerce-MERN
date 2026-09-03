@@ -3,6 +3,8 @@ import "./Register.css";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { toast } from "react-toastify";
+
 import {
   FiUser,
   FiMail,
@@ -42,7 +44,7 @@ function Register() {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      return alert("Passwords do not match");
+      return toast.error("Passwords do not match");
     }
 
     try {
@@ -55,11 +57,11 @@ function Register() {
         password: formData.password,
       });
 
-      alert("Registration Successful");
+      toast.success("Registration Successful");
 
       navigate("/login");
     } catch (err) {
-      alert(err.response?.data?.message || "Registration Failed");
+      toast.error(err.response?.data?.message || "Registration Failed");
     } finally {
       setLoading(false);
     }

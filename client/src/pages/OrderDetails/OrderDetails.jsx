@@ -162,7 +162,7 @@ function OrderDetails() {
           <h2>Delivery Address</h2>
 
           <p>
-            <strong>{address.name || ""}</strong>
+            <strong>{address.fullName || address.name || "Customer"}</strong>
           </p>
 
           <p>{address.address || ""}</p>

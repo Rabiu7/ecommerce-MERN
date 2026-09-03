@@ -34,6 +34,8 @@ function Orders() {
 
       const data = await response.json();
 
+      console.log("Fetched Orders:", data);
+
       setOrders(data);
     } catch (error) {
       console.log(error);

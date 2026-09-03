@@ -103,6 +103,19 @@ export function AuthProvider({ children }) {
     setCartCount(0);
   };
 
+  const updateUser = (updatedData) => {
+    setUser((prev) => {
+      const updatedUser = {
+        ...prev,
+        ...updatedData,
+      };
+
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      return updatedUser;
+    });
+  };
+
   /* =========================================================
      FETCH CART COUNT
   ========================================================= */
@@ -148,6 +161,7 @@ export function AuthProvider({ children }) {
         user,
         login,
         logout,
+        updateUser,
         loading,
         isAuthenticated: !!user,
         cartCount,

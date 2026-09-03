@@ -1,13 +1,11 @@
 import api from "./api";
 
-export const getProfile = async () => {
-  const token = localStorage.getItem("token");
+export const getProfile = async (userId) => {
+  const response = await api.get(`/profile/${userId}`);
+  return response.data;
+};
 
-  const response = await api.get("/profile", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
+export const updateProfile = async (userId, data) => {
+  const response = await api.put(`/profile/${userId}`, data);
   return response.data;
 };

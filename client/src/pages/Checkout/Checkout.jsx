@@ -7,7 +7,9 @@ import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+import { getAddress, saveAddress } from "../../services/addressService";
+
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Checkout() {
   const navigate = useNavigate();
@@ -28,13 +30,14 @@ function Checkout() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.id) {
       navigate("/login");
       return;
     }
 
     fetchCart();
-  }, []);
+    fetchSavedAddress();
+  }, [isAuthenticated, user?.id]);
 
   const fetchCart = async () => {
     try {
@@ -47,6 +50,26 @@ function Checkout() {
       console.log(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSavedAddress = async () => {
+    try {
+      const data = await getAddress(user.id);
+
+      setAddress({
+        fullName: data.full_name || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        city: data.city || "",
+        state: data.state || "",
+        pincode: data.pincode || "",
+      });
+    } catch (error) {
+      // 404 simply means the user has no saved address yet.
+      if (error.response?.status !== 404) {
+        console.error("Failed to fetch saved address:", error);
+      }
     }
   };
 
@@ -68,7 +91,7 @@ function Checkout() {
 
   const total = subtotal + shipping + gst;
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (
       !address.fullName ||
       !address.phone ||
@@ -81,16 +104,24 @@ function Checkout() {
       return;
     }
 
-    navigate("/payment", {
-      state: {
-        amount: total,
-        subtotal,
-        gst,
-        shipping,
-        address,
-        cartItems,
-      },
-    });
+    try {
+      await saveAddress(user.id, address);
+
+      navigate("/payment", {
+        state: {
+          amount: total,
+          subtotal,
+          gst,
+          shipping,
+          address,
+          cartItems,
+        },
+      });
+    } catch (error) {
+      console.error("Save address error:", error);
+
+      toast.error(error.response?.data?.message || "Failed to save address");
+    }
   };
 
   if (loading) {
