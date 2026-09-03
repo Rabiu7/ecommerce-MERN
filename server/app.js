@@ -20,7 +20,7 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
-const CartRoutes = require("./routes/CartRoutes");
+const CartRoutes = require("./routes/cartRoutes");
 const reviewRoutes = require("./routes/reviewsRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const addressRoutes = require("./routes/addressRoutes");
