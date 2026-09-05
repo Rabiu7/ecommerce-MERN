@@ -827,9 +827,13 @@ exports.getOrders = (req, res) => {
 // GET /api/orders/:id/invoice
 // =========================================================
 
+// =========================================================
+// GENERATE PROFESSIONAL INVOICE PDF
+// GET /api/orders/:id/invoice
+// =========================================================
+
 exports.generateInvoice = (req, res) => {
   const userId = req.user.id;
-
   const orderId = req.params.id;
 
   getCompleteOrder(orderId, userId, (err, order) => {
@@ -848,174 +852,663 @@ exports.generateInvoice = (req, res) => {
     }
 
     const doc = new PDFDocument({
-      margin: 50,
+      size: "A4",
+      margin: 40,
+      bufferPages: true,
     });
 
     const filename = `HomeNeeds-Invoice-${order.id}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
 
-    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     doc.pipe(res);
+
+    // =====================================================
+    // COLORS
+    // =====================================================
+
+    const BRAND = "#a27b3f";
+    const BRAND_DARK = "#8d6834";
+    const BRAND_LIGHT = "#f3ede3";
+
+    const TEXT = "#333333";
+    const SECONDARY = "#777777";
+    const BORDER = "#e5e5e5";
+    const WHITE = "#ffffff";
+    const SUCCESS = "#4f8662";
+
+    // =====================================================
+    // PAGE CONSTANTS
+    // =====================================================
+
+    const PAGE_WIDTH = 595.28;
+    const PAGE_HEIGHT = 841.89;
+
+    const LEFT = 40;
+    const RIGHT = 555;
+
+    const CONTENT_WIDTH = RIGHT - LEFT;
+
+    // =====================================================
+    // ADDRESS
+    // =====================================================
+
+    const address = parseShippingAddress(order.shipping_address);
+
+    const customerName = address.fullName || address.name || "Customer";
+
+    const customerPhone = address.phone || "";
+
+    const addressLine = address.address || "";
+
+    const cityStatePin = [address.city, address.state, address.pincode]
+      .filter(Boolean)
+      .join(", ");
+
+    // =====================================================
+    // PAYMENT
+    // =====================================================
+
+    const isCOD = String(order.payment_method || "").toUpperCase() === "COD";
+
+    const paymentMethod = isCOD ? "Cash on Delivery" : "Online Payment";
+
+    const paymentStatus = isCOD
+      ? "Pay on Delivery"
+      : String(order.payment_status || "Paid");
+
+    const orderStatus = order.order_status || "Confirmed";
+
+    // =====================================================
+    // CALCULATE AMOUNTS
+    // =====================================================
+
+    let subtotal = 0;
+
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    items.forEach((item) => {
+      const price = Number(item.price || 0);
+      const quantity = Number(item.quantity || 0);
+
+      subtotal += price * quantity;
+    });
+
+    subtotal = Math.round(subtotal * 100) / 100;
+
+    const gst = Math.round(subtotal * 0.18 * 100) / 100;
+
+    const shipping = subtotal >= 1000 ? 0 : 99;
+
+    const calculatedTotal = Math.round((subtotal + gst + shipping) * 100) / 100;
+
+    // Prefer database total if available
+    const grandTotal = Number(order.total_amount || calculatedTotal);
+
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
+
+    const formatCurrency = (amount) => `Rs. ${Number(amount || 0).toFixed(2)}`;
+
+    const formatDate = (date) =>
+      new Date(date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
+    const drawLine = (y, color = BORDER) => {
+      doc
+        .strokeColor(color)
+        .lineWidth(1)
+        .moveTo(LEFT, y)
+        .lineTo(RIGHT, y)
+        .stroke();
+    };
+
+    const drawRoundedBox = (x, y, width, height, fill, stroke = BORDER) => {
+      doc.roundedRect(x, y, width, height, 8).fillAndStroke(fill, stroke);
+    };
 
     // =====================================================
     // HEADER
     // =====================================================
 
-    doc.fontSize(26).font("Helvetica-Bold").text("HomeNeeds", {
-      align: "left",
+    doc.roundedRect(LEFT, 35, CONTENT_WIDTH, 95, 10).fill(BRAND_LIGHT);
+
+    // Brand
+    doc
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(25)
+      .text("HomeNeeds", LEFT + 20, 55);
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(10)
+      .text("Home & Lifestyle Store", LEFT + 21, 88);
+
+    // Invoice title
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(24)
+      .text("INVOICE", 400, 53, {
+        width: 130,
+        align: "right",
+      });
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text(`Invoice #${order.id}`, 400, 87, {
+        width: 130,
+        align: "right",
+      });
+
+    // =====================================================
+    // ORDER META
+    // =====================================================
+
+    let y = 150;
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("ORDER INFORMATION", LEFT, y);
+
+    y += 20;
+
+    const metaWidth = CONTENT_WIDTH / 3;
+
+    // Date
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(8)
+      .text("ORDER DATE", LEFT, y);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(formatDate(order.created_at), LEFT, y + 12);
+
+    // Payment
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(8)
+      .text("PAYMENT METHOD", LEFT + metaWidth, y);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(paymentMethod, LEFT + metaWidth, y + 12);
+
+    // Status
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(8)
+      .text("ORDER STATUS", LEFT + metaWidth * 2, y);
+
+    doc
+      .fillColor(SUCCESS)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(orderStatus, LEFT + metaWidth * 2, y + 12);
+
+    y += 45;
+
+    drawLine(y);
+
+    // =====================================================
+    // BILL TO / SHIPPING ADDRESS
+    // =====================================================
+
+    y += 20;
+
+    const boxGap = 15;
+    const boxWidth = (CONTENT_WIDTH - boxGap) / 2;
+
+    const boxHeight = 125;
+
+    // Bill To
+    drawRoundedBox(LEFT, y, boxWidth, boxHeight, WHITE);
+
+    doc
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text("BILL TO", LEFT + 15, y + 15);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(11)
+      .text(customerName, LEFT + 15, y + 38);
+
+    if (customerPhone) {
+      doc
+        .fillColor(SECONDARY)
+        .font("Helvetica")
+        .fontSize(9)
+        .text(`Phone: ${customerPhone}`, LEFT + 15, y + 60);
+    }
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text("Thank you for choosing HomeNeeds.", LEFT + 15, y + 82, {
+        width: boxWidth - 30,
+      });
+
+    // Shipping
+    const shippingX = LEFT + boxWidth + boxGap;
+
+    drawRoundedBox(shippingX, y, boxWidth, boxHeight, WHITE);
+
+    doc
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text("SHIPPING ADDRESS", shippingX + 15, y + 15);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(11)
+      .text(customerName, shippingX + 15, y + 38);
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text(addressLine, shippingX + 15, y + 59, {
+        width: boxWidth - 30,
+      });
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text(cityStatePin, shippingX + 15, y + 80, {
+        width: boxWidth - 30,
+      });
+
+    if (customerPhone) {
+      doc
+        .fillColor(SECONDARY)
+        .font("Helvetica")
+        .fontSize(9)
+        .text(`Phone: ${customerPhone}`, shippingX + 15, y + 99);
+    }
+
+    y += boxHeight + 30;
+
+    // =====================================================
+    // ORDER ITEMS TITLE
+    // =====================================================
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text("Order Items", LEFT, y);
+
+    y += 20;
+
+    // =====================================================
+    // TABLE
+    // =====================================================
+
+    const col = {
+      sno: LEFT,
+      product: LEFT + 35,
+      qty: 370,
+      price: 425,
+      total: 490,
+    };
+
+    const tableWidth = CONTENT_WIDTH;
+
+    const headerHeight = 30;
+
+    // Table Header
+    doc.roundedRect(LEFT, y, tableWidth, headerHeight, 6).fill(BRAND);
+
+    doc.fillColor(WHITE).font("Helvetica-Bold").fontSize(8);
+
+    doc.text("S.NO", col.sno + 8, y + 10);
+
+    doc.text("PRODUCT", col.product, y + 10);
+
+    doc.text("QTY", col.qty, y + 10, {
+      width: 35,
+      align: "center",
     });
 
-    doc.fontSize(10).font("Helvetica").text("Home & Lifestyle Store");
-
-    doc.moveDown();
-
-    doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", {
+    doc.text("UNIT PRICE", col.price - 10, y + 10, {
+      width: 65,
       align: "right",
     });
 
-    doc.moveDown();
+    doc.text("AMOUNT", col.total - 5, y + 10, {
+      width: 65,
+      align: "right",
+    });
+
+    y += headerHeight;
 
     // =====================================================
-    // ORDER INFORMATION
+    // TABLE ROWS
     // =====================================================
 
-    doc.fontSize(11).font("Helvetica");
+    items.forEach((item, index) => {
+      const quantity = Number(item.quantity || 0);
 
-    doc.text(`Invoice / Order ID: #${order.id}`);
+      const price = Number(item.price || 0);
 
-    doc.text(`Date: ${new Date(order.created_at).toLocaleDateString("en-IN")}`);
+      const itemTotal = quantity * price;
 
-    doc.text(`Payment Method: ${order.payment_method}`);
-
-    doc.text(`Payment Status: ${order.payment_status}`);
-
-    doc.text(`Order Status: ${order.order_status}`);
-
-    doc.moveDown();
-
-    // =====================================================
-    // SHIPPING ADDRESS
-    // =====================================================
-
-    const address = parseShippingAddress(order.shipping_address);
-
-    doc.fontSize(14).font("Helvetica-Bold").text("Shipping Address");
-
-    doc.fontSize(11).font("Helvetica");
-
-    doc.text(address.name || "");
-
-    doc.text(address.address || "");
-
-    doc.text(`${address.city || ""}, ${address.state || ""}`);
-
-    doc.text(`PIN: ${address.pincode || ""}`);
-
-    doc.text(`Phone: ${address.phone || ""}`);
-
-    doc.moveDown();
-
-    // =====================================================
-    // PRODUCTS
-    // =====================================================
-
-    doc.fontSize(14).font("Helvetica-Bold").text("Order Items");
-
-    doc.moveDown();
-
-    let y = doc.y;
-
-    doc.fontSize(10).font("Helvetica-Bold");
-
-    doc.text("Product", 50, y);
-
-    doc.text("Qty", 320, y);
-
-    doc.text("Price", 380, y);
-
-    doc.text("Total", 460, y);
-
-    y += 25;
-
-    doc.font("Helvetica");
-
-    let subtotal = 0;
-
-    order.items.forEach((item) => {
-      const itemTotal = Number(item.price) * Number(item.quantity);
-
-      subtotal += itemTotal;
-
-      doc.text(item.name || "Product", 50, y, {
-        width: 250,
-      });
-
-      doc.text(String(item.quantity), 320, y);
-
-      doc.text(`₹${Number(item.price).toFixed(2)}`, 380, y);
-
-      doc.text(`₹${itemTotal.toFixed(2)}`, 460, y);
-
-      y += 30;
-
-      if (y > 700) {
+      // Page break
+      if (y > 710) {
         doc.addPage();
 
         y = 50;
+
+        // Repeat table header
+        doc.roundedRect(LEFT, y, tableWidth, headerHeight, 6).fill(BRAND);
+
+        doc.fillColor(WHITE).font("Helvetica-Bold").fontSize(8);
+
+        doc.text("S.NO", col.sno + 8, y + 10);
+
+        doc.text("PRODUCT", col.product, y + 10);
+
+        doc.text("QTY", col.qty, y + 10, {
+          width: 35,
+          align: "center",
+        });
+
+        doc.text("UNIT PRICE", col.price - 10, y + 10, {
+          width: 65,
+          align: "right",
+        });
+
+        doc.text("AMOUNT", col.total - 5, y + 10, {
+          width: 65,
+          align: "right",
+        });
+
+        y += headerHeight;
       }
+
+      const rowHeight = 38;
+
+      // Alternate row background
+      if (index % 2 === 0) {
+        doc.rect(LEFT, y, tableWidth, rowHeight).fill("#faf9f7");
+      }
+
+      // Bottom border
+      doc
+        .strokeColor(BORDER)
+        .lineWidth(0.7)
+        .moveTo(LEFT, y + rowHeight)
+        .lineTo(LEFT + tableWidth, y + rowHeight)
+        .stroke();
+
+      doc.fillColor(SECONDARY).font("Helvetica").fontSize(9);
+
+      // S.No
+      doc.text(String(index + 1), col.sno + 8, y + 13);
+
+      // Product
+      doc
+        .fillColor(TEXT)
+        .font("Helvetica-Bold")
+        .fontSize(9)
+        .text(item.name || "Product", col.product, y + 9, {
+          width: 180,
+          height: 22,
+          ellipsis: true,
+        });
+
+      // Qty
+      doc
+        .fillColor(SECONDARY)
+        .font("Helvetica")
+        .fontSize(9)
+        .text(String(quantity), col.qty, y + 13, {
+          width: 35,
+          align: "center",
+        });
+
+      // Price
+      doc.text(formatCurrency(price), col.price - 10, y + 13, {
+        width: 65,
+        align: "right",
+      });
+
+      // Total
+      doc
+        .fillColor(TEXT)
+        .font("Helvetica-Bold")
+        .text(formatCurrency(itemTotal), col.total - 5, y + 13, {
+          width: 65,
+          align: "right",
+        });
+
+      y += rowHeight;
     });
 
     // =====================================================
-    // TOTAL
+    // TOTAL SECTION
     // =====================================================
 
-    const gst = subtotal * 0.18;
-
-    const shipping = subtotal >= 1000 ? 0 : 99;
-
-    const total = subtotal + gst + shipping;
-
-    y += 10;
-
-    doc.moveTo(350, y).lineTo(550, y).stroke();
-
-    y += 15;
-
-    doc.font("Helvetica").text("Subtotal:", 350, y);
-
-    doc.text(`₹${subtotal.toFixed(2)}`, 460, y);
-
-    y += 20;
-
-    doc.text("GST:", 350, y);
-
-    doc.text(`₹${gst.toFixed(2)}`, 460, y);
-
-    y += 20;
-
-    doc.text("Shipping:", 350, y);
-
-    doc.text(shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`, 460, y);
+    if (y > 650) {
+      doc.addPage();
+      y = 50;
+    }
 
     y += 25;
 
-    doc.font("Helvetica-Bold").fontSize(13).text("Grand Total:", 350, y);
+    const summaryX = 345;
+    const summaryWidth = 210;
 
-    doc.text(`₹${total.toFixed(2)}`, 460, y);
+    // Summary box
+    drawRoundedBox(summaryX, y, summaryWidth, 170, BRAND_LIGHT, "#e5dccd");
+
+    let summaryY = y + 18;
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text("Subtotal", summaryX + 15, summaryY);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text(formatCurrency(subtotal), summaryX + 100, summaryY, {
+        width: 95,
+        align: "right",
+      });
+
+    summaryY += 27;
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text("GST (18%)", summaryX + 15, summaryY);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .text(formatCurrency(gst), summaryX + 100, summaryY, {
+        width: 95,
+        align: "right",
+      });
+
+    summaryY += 27;
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text("Shipping", summaryX + 15, summaryY);
+
+    doc
+      .fillColor(shipping === 0 ? SUCCESS : TEXT)
+      .font("Helvetica-Bold")
+      .text(
+        shipping === 0 ? "FREE" : formatCurrency(shipping),
+        summaryX + 100,
+        summaryY,
+        {
+          width: 95,
+          align: "right",
+        },
+      );
+
+    summaryY += 25;
+
+    doc
+      .strokeColor("#d8cdbd")
+      .lineWidth(1)
+      .moveTo(summaryX + 15, summaryY)
+      .lineTo(summaryX + summaryWidth - 15, summaryY)
+      .stroke();
+
+    summaryY += 17;
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(11)
+      .text("Grand Total", summaryX + 15, summaryY);
+
+    doc
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text(formatCurrency(grandTotal), summaryX + 85, summaryY - 2, {
+        width: 110,
+        align: "right",
+      });
+
+    // =====================================================
+    // PAYMENT INFORMATION
+    // =====================================================
+
+    const paymentBoxY = y;
+
+    drawRoundedBox(LEFT, paymentBoxY, 285, 170, WHITE);
+
+    doc
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(9)
+      .text("PAYMENT INFORMATION", LEFT + 15, paymentBoxY + 18);
+
+    doc
+      .fillColor(TEXT)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(paymentMethod, LEFT + 15, paymentBoxY + 45);
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(9)
+      .text("Payment Status", LEFT + 15, paymentBoxY + 70);
+
+    doc
+      .fillColor(isCOD ? BRAND : SUCCESS)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text(paymentStatus, LEFT + 15, paymentBoxY + 86);
+
+    if (order.cashfree_payment_id) {
+      doc
+        .fillColor(SECONDARY)
+        .font("Helvetica")
+        .fontSize(8)
+        .text("Payment Reference", LEFT + 15, paymentBoxY + 115);
+
+      doc
+        .fillColor(TEXT)
+        .font("Helvetica-Bold")
+        .fontSize(8)
+        .text(String(order.cashfree_payment_id), LEFT + 15, paymentBoxY + 130, {
+          width: 250,
+          ellipsis: true,
+        });
+    }
 
     // =====================================================
     // FOOTER
     // =====================================================
 
+    const footerY = PAGE_HEIGHT - 55;
+
+    drawLine(footerY - 10);
+
     doc
-      .fontSize(9)
+      .fillColor(BRAND)
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("HomeNeeds", LEFT, footerY);
+
+    doc
+      .fillColor(SECONDARY)
       .font("Helvetica")
-      .text("Thank you for shopping with HomeNeeds!", 50, 750, {
-        align: "center",
-        width: 500,
+      .fontSize(8)
+      .text("Thank you for shopping with us.", LEFT + 75, footerY + 1);
+
+    doc
+      .fillColor(SECONDARY)
+      .font("Helvetica")
+      .fontSize(8)
+      .text("This is a computer-generated invoice.", 350, footerY + 1, {
+        width: 205,
+        align: "right",
       });
+
+    // =====================================================
+    // PAGE NUMBERS
+    // =====================================================
+
+    const range = doc.bufferedPageRange();
+
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+
+      doc
+        .fillColor(SECONDARY)
+        .font("Helvetica")
+        .fontSize(7)
+        .text(`Page ${i + 1} of ${range.count}`, LEFT, PAGE_HEIGHT - 30, {
+          width: CONTENT_WIDTH,
+          align: "center",
+        });
+    }
+
+    // =====================================================
+    // FINISH PDF
+    // =====================================================
 
     doc.end();
   });
