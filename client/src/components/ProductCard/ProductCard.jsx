@@ -11,7 +11,6 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductCard({ id, image, title, category, price, rating }) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
-
   const navigate = useNavigate();
 
   const addToCart = async () => {
@@ -42,49 +41,84 @@ function ProductCard({ id, image, title, category, price, rating }) {
 
       if (response.ok) {
         toast.success(data.message);
-
         fetchCartCount(user.id);
       } else {
-        toast.error(data.message);
+        toast.error(data.message || "Failed to add product to cart.");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("Add to cart error:", error);
+      toast.error("Unable to add product to cart.");
     }
   };
 
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    toast.info("Wishlist feature coming soon.");
+  };
+
+  const productRating = Number(rating || 0);
+
   return (
-    <div className="product-card">
-      <div className="product-image">
-        <img src={image} alt={title} />
-      </div>
+    <article className="product-card">
+      {/* IMAGE */}
+      <div className="product-card-image">
+        <Link to={`/products/${id}`}>
+          <img src={image} alt={title} loading="lazy" />
+        </Link>
 
-      <div className="product-content">
-        <span className="category">{category}</span>
-
-        <button className="wishlist" aria-label="Add to wishlist">
+        <button
+          type="button"
+          className="product-wishlist"
+          onClick={handleWishlist}
+          aria-label="Add to wishlist"
+        >
           <FiHeart />
         </button>
+      </div>
 
-        <h3>{title}</h3>
-
-        <div className="rating">
-          <FaStar />
-          <span>{rating}</span>
+      {/* CONTENT */}
+      <div className="product-card-body">
+        {/* CATEGORY */}
+        <div className="product-card-category">
+          {category || "Home Essentials"}
         </div>
 
-        <div className="product-footer">
-          <h2>₹{Number(price).toFixed(2)}</h2>
+        {/* TITLE */}
+        <Link to={`/products/${id}`} className="product-card-title">
+          {title}
+        </Link>
 
-          <button className="cart-button" onClick={addToCart}>
+        {/* RATING */}
+        <div className="product-card-rating">
+          <FaStar />
+
+          <span>{productRating > 0 ? productRating.toFixed(1) : "New"}</span>
+        </div>
+
+        {/* PRICE + CART */}
+        <div className="product-card-footer">
+          <div className="product-card-price">
+            ₹{Number(price || 0).toFixed(2)}
+          </div>
+
+          <button
+            type="button"
+            className="product-card-cart"
+            onClick={addToCart}
+            aria-label="Add to cart"
+          >
             <FiShoppingCart />
           </button>
         </div>
 
-        <Link to={`/products/${id}`} className="details-button">
+        {/* DETAILS */}
+        <Link to={`/products/${id}`} className="product-card-details">
           View Details
         </Link>
       </div>
-    </div>
+    </article>
   );
 }
 

@@ -1,8 +1,19 @@
 import "./Checkout.css";
+import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiMapPin, FiPhone, FiUser } from "react-icons/fi";
+
+import {
+  FiMapPin,
+  FiPhone,
+  FiUser,
+  FiHome,
+  FiArrowLeft,
+  FiShield,
+  FiTruck,
+} from "react-icons/fi";
+
 import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
@@ -17,8 +28,8 @@ function Checkout() {
   const { user, isAuthenticated } = useAuth();
 
   const [cartItems, setCartItems] = useState([]);
-
   const [loading, setLoading] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   const [address, setAddress] = useState({
     fullName: "",
@@ -29,15 +40,30 @@ function Checkout() {
     pincode: "",
   });
 
+  // =========================================================
+  // LOAD CHECKOUT DATA
+  // =========================================================
+
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
       navigate("/login");
       return;
     }
 
-    fetchCart();
-    fetchSavedAddress();
+    fetchCheckoutData();
   }, [isAuthenticated, user?.id]);
+
+  const fetchCheckoutData = async () => {
+    setLoading(true);
+
+    await Promise.all([fetchCart(), fetchSavedAddress()]);
+
+    setLoading(false);
+  };
+
+  // =========================================================
+  // FETCH CART
+  // =========================================================
 
   const fetchCart = async () => {
     try {
@@ -45,13 +71,22 @@ function Checkout() {
 
       const data = await response.json();
 
-      setCartItems(data);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
+      if (response.ok) {
+        setCartItems(Array.isArray(data) ? data : []);
+      } else {
+        setCartItems([]);
+        toast.error(data.message || "Failed to load cart.");
+      }
+    } catch (error) {
+      console.error("Fetch cart error:", error);
+
+      toast.error("Unable to load your cart.");
     }
   };
+
+  // =========================================================
+  // FETCH SAVED ADDRESS
+  // =========================================================
 
   const fetchSavedAddress = async () => {
     try {
@@ -66,22 +101,31 @@ function Checkout() {
         pincode: data.pincode || "",
       });
     } catch (error) {
-      // 404 simply means the user has no saved address yet.
       if (error.response?.status !== 404) {
         console.error("Failed to fetch saved address:", error);
       }
     }
   };
 
+  // =========================================================
+  // HANDLE INPUT
+  // =========================================================
+
   const handleChange = (e) => {
-    setAddress({
-      ...address,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setAddress((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
+  // =========================================================
+  // CALCULATIONS
+  // =========================================================
+
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
     0,
   );
 
@@ -91,18 +135,33 @@ function Checkout() {
 
   const total = subtotal + shipping + gst;
 
+  // =========================================================
+  // PLACE ORDER
+  // =========================================================
+
   const placeOrder = async () => {
-    if (
-      !address.fullName ||
-      !address.phone ||
-      !address.address ||
-      !address.city ||
-      !address.state ||
-      !address.pincode
-    ) {
-      toast.error("Please fill all address fields");
+    if (placingOrder) return;
+
+    const requiredFields = [
+      address.fullName,
+      address.phone,
+      address.address,
+      address.city,
+      address.state,
+      address.pincode,
+    ];
+
+    if (requiredFields.some((field) => !field.trim())) {
+      toast.error("Please fill all address fields.");
       return;
     }
+
+    if (cartItems.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
+    }
+
+    setPlacingOrder(true);
 
     try {
       await saveAddress(user.id, address);
@@ -120,138 +179,348 @@ function Checkout() {
     } catch (error) {
       console.error("Save address error:", error);
 
-      toast.error(error.response?.data?.message || "Failed to save address");
+      toast.error(error.response?.data?.message || "Failed to save address.");
+    } finally {
+      setPlacingOrder(false);
     }
   };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
       <section className="checkout-page">
-        <div className="container">
-          <h2>Loading...</h2>
+        <div className="checkout-container">
+          <div className="checkout-loading">
+            <div className="checkout-loader"></div>
+            <p>Preparing your checkout...</p>
+          </div>
         </div>
       </section>
     );
   }
 
-  return (
-    <section className="checkout-page">
-      <div className="container">
-        <div className="checkout-header">
-          <h1>Checkout</h1>
+  // =========================================================
+  // EMPTY CART
+  // =========================================================
 
-          <p>Complete your purchase securely.</p>
-        </div>
+  if (cartItems.length === 0) {
+    return (
+      <section className="checkout-page">
+        <div className="checkout-container">
+          <div className="checkout-empty">
+            <FiShoppingCart className="empty-cart-icon" />
 
-        <div className="checkout-grid">
-          <div className="shipping-card">
-            <h2>Shipping Address</h2>
+            <h2>Your cart is empty</h2>
 
-            <div className="input-box">
-              <FiUser />
+            <p>Add some products before proceeding to checkout.</p>
 
-              <input
-                name="fullName"
-                placeholder="Full Name"
-                value={address.fullName}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-box">
-              <FiPhone />
-
-              <input
-                name="phone"
-                placeholder="Phone Number"
-                value={address.phone}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-box">
-              <FiMapPin />
-
-              <textarea
-                name="address"
-                placeholder="Street Address"
-                value={address.address}
-                onChange={handleChange}
-              />
-            </div>
-
-            <input
-              className="simple-input"
-              name="city"
-              placeholder="City"
-              value={address.city}
-              onChange={handleChange}
-            />
-
-            <input
-              className="simple-input"
-              name="state"
-              placeholder="State"
-              value={address.state}
-              onChange={handleChange}
-            />
-
-            <input
-              className="simple-input"
-              name="pincode"
-              placeholder="Pincode"
-              value={address.pincode}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="summary-card">
-            <h2>Order Summary</h2>
-
-            {cartItems.map((item) => (
-              <div className="summary-item" key={item.id}>
-                <img src={item.image} alt={item.name} />
-
-                <div>
-                  <h4>{item.name}</h4>
-
-                  <p>Qty : {item.quantity}</p>
-                </div>
-
-                <h4>₹{(Number(item.price) * item.quantity).toFixed(2)}</h4>
-              </div>
-            ))}
-
-            <hr />
-
-            <div className="price-row">
-              <span>Subtotal</span>
-
-              <span>₹{subtotal.toFixed(2)}</span>
-            </div>
-
-            <div className="price-row">
-              <span>GST (18%)</span>
-
-              <span>₹{gst.toFixed(2)}</span>
-            </div>
-
-            <div className="price-row">
-              <span>Shipping</span>
-
-              <span>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
-            </div>
-
-            <div className="price-row total">
-              <span>Total</span>
-
-              <span>₹{total.toFixed(2)}</span>
-            </div>
-
-            <button className="place-order-btn" onClick={placeOrder}>
-              Place Order
+            <button
+              onClick={() => navigate("/products")}
+              className="back-shopping-btn"
+            >
+              Continue Shopping
             </button>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // =========================================================
+  // RENDER
+  // =========================================================
+
+  return (
+    <section className="checkout-page">
+      <div className="checkout-container">
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+
+        <div className="checkout-header">
+          <button
+            type="button"
+            className="checkout-back"
+            onClick={() => navigate("/cart")}
+          >
+            <FiArrowLeft />
+            <span>Back to Cart</span>
+          </button>
+
+          <div className="checkout-heading">
+            <span className="checkout-eyebrow">SECURE CHECKOUT</span>
+
+            <h1>Complete Your Order</h1>
+
+            <p>Review your details and complete your purchase securely.</p>
+          </div>
+        </div>
+
+        {/* =====================================================
+            CHECKOUT STEPS
+        ===================================================== */}
+
+        <CheckoutSteps currentStep={1} />
+
+        {/* =====================================================
+            MAIN GRID
+        ===================================================== */}
+
+        <div className="checkout-grid">
+          {/* ===================================================
+              LEFT SIDE
+          =================================================== */}
+
+          <div className="checkout-left">
+            {/* ADDRESS CARD */}
+
+            <div className="checkout-card address-card">
+              <div className="card-heading">
+                <div className="heading-icon">
+                  <FiMapPin />
+                </div>
+
+                <div>
+                  <h2>Delivery Address</h2>
+
+                  <p>Where should we deliver your order?</p>
+                </div>
+              </div>
+
+              {/* FORM */}
+
+              <div className="checkout-form">
+                {/* FULL NAME */}
+
+                <div className="form-group full-width">
+                  <label htmlFor="fullName">Full Name</label>
+
+                  <div className="form-input">
+                    <FiUser />
+
+                    <input
+                      id="fullName"
+                      type="text"
+                      name="fullName"
+                      placeholder="Enter your full name"
+                      value={address.fullName}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                {/* PHONE */}
+
+                <div className="form-group full-width">
+                  <label htmlFor="phone">Phone Number</label>
+
+                  <div className="form-input">
+                    <FiPhone />
+
+                    <input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      placeholder="Enter your phone number"
+                      value={address.phone}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                {/* ADDRESS */}
+
+                <div className="form-group full-width">
+                  <label htmlFor="address">Street Address</label>
+
+                  <div className="form-input textarea-wrapper">
+                    <FiHome />
+
+                    <textarea
+                      id="address"
+                      name="address"
+                      placeholder="House / Flat number, Street, Area"
+                      value={address.address}
+                      onChange={handleChange}
+                      rows="4"
+                    />
+                  </div>
+                </div>
+
+                {/* CITY */}
+
+                <div className="form-group">
+                  <label htmlFor="city">City</label>
+
+                  <input
+                    id="city"
+                    className="plain-input"
+                    type="text"
+                    name="city"
+                    placeholder="City"
+                    value={address.city}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* STATE */}
+
+                <div className="form-group">
+                  <label htmlFor="state">State</label>
+
+                  <input
+                    id="state"
+                    className="plain-input"
+                    type="text"
+                    name="state"
+                    placeholder="State"
+                    value={address.state}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* PINCODE */}
+
+                <div className="form-group">
+                  <label htmlFor="pincode">Pincode</label>
+
+                  <input
+                    id="pincode"
+                    className="plain-input"
+                    type="text"
+                    name="pincode"
+                    placeholder="6-digit pincode"
+                    value={address.pincode}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* DELIVERY INFO */}
+
+            <div className="checkout-benefits">
+              <div className="benefit-item">
+                <FiTruck />
+
+                <div>
+                  <strong>Reliable Delivery</strong>
+                  <span>
+                    Your order will be carefully packed and delivered.
+                  </span>
+                </div>
+              </div>
+
+              <div className="benefit-item">
+                <FiShield />
+
+                <div>
+                  <strong>Secure Checkout</strong>
+                  <span>Your payment and personal details are protected.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ===================================================
+              RIGHT SIDE
+          =================================================== */}
+
+          <aside className="checkout-right">
+            <div className="order-summary">
+              {/* SUMMARY HEADER */}
+
+              <div className="summary-header">
+                <div>
+                  <span>YOUR ORDER</span>
+
+                  <h2>Order Summary</h2>
+                </div>
+
+                <div className="item-count">
+                  {cartItems.length}
+                  {cartItems.length === 1 ? " Item" : " Items"}
+                </div>
+              </div>
+
+              {/* PRODUCTS */}
+
+              <div className="summary-products">
+                {cartItems.map((item) => (
+                  <div className="summary-product" key={item.id}>
+                    <div className="summary-product-image">
+                      <img src={item.image} alt={item.name} />
+                    </div>
+
+                    <div className="summary-product-info">
+                      <h3>{item.name}</h3>
+
+                      <span>Qty: {item.quantity}</span>
+                    </div>
+
+                    <div className="summary-product-price">
+                      ₹
+                      {(
+                        Number(item.price || 0) * Number(item.quantity || 0)
+                      ).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* PRICE BREAKDOWN */}
+
+              <div className="price-breakdown">
+                <div className="summary-price-row">
+                  <span>Subtotal</span>
+                  <strong>₹{subtotal.toFixed(2)}</strong>
+                </div>
+
+                <div className="summary-price-row">
+                  <span>GST (18%)</span>
+                  <strong>₹{gst.toFixed(2)}</strong>
+                </div>
+
+                <div className="summary-price-row">
+                  <span>Shipping</span>
+
+                  <strong className={shipping === 0 ? "free-shipping" : ""}>
+                    {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
+                  </strong>
+                </div>
+              </div>
+
+              {/* TOTAL */}
+
+              <div className="summary-total">
+                <div>
+                  <span>Total Amount</span>
+                  <small>Inclusive of GST</small>
+                </div>
+
+                <strong>₹{total.toFixed(2)}</strong>
+              </div>
+
+              {/* PLACE ORDER */}
+
+              <button
+                type="button"
+                className="place-order-btn"
+                onClick={placeOrder}
+                disabled={placingOrder}
+              >
+                {placingOrder ? "Saving Address..." : "Continue to Payment"}
+              </button>
+
+              <p className="secure-note">
+                <FiShield />
+                Secure & encrypted checkout
+              </p>
+            </div>
+          </aside>
         </div>
       </div>
     </section>

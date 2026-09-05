@@ -1,9 +1,11 @@
 import "./OrderSuccess.css";
+import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
+  FiCheck,
   FiCheckCircle,
   FiShoppingBag,
   FiPackage,
@@ -11,6 +13,10 @@ import {
   FiMapPin,
   FiCreditCard,
   FiArrowRight,
+  FiTruck,
+  FiCalendar,
+  FiHome,
+  FiShield,
 } from "react-icons/fi";
 
 import { toast } from "react-toastify";
@@ -19,6 +25,7 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function OrderSuccess() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
@@ -26,8 +33,18 @@ function OrderSuccess() {
   const [verifying, setVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState(false);
 
-  // Prevent duplicate verification in React StrictMode
   const verificationStarted = useRef(false);
+
+  // =====================================================
+  // COD ORDER DATA
+  // =====================================================
+
+  const codOrder = location.state?.order;
+  const codOrderId = location.state?.orderId;
+  const codPaymentMethod = location.state?.paymentMethod;
+
+  const isCODOrder =
+    codPaymentMethod === "COD" || codOrder?.payment_method === "COD";
 
   // =====================================================
   // CASHFREE ORDER ID
@@ -39,7 +56,7 @@ function OrderSuccess() {
     queryCashfreeOrderId || localStorage.getItem("cashfreeOrderId");
 
   // =====================================================
-  // VERIFY PAYMENT
+  // VERIFY CASHFREE PAYMENT
   // =====================================================
 
   const verifyPayment = async () => {
@@ -88,13 +105,9 @@ function OrderSuccess() {
       // =================================================
 
       if (response.ok && data.success && data.paymentStatus === "paid") {
-        console.log("✅ Payment successful");
-        console.log("Local Order ID:", data.orderId);
-        console.log("Cashfree Order ID:", data.cashfreeOrderId);
+        console.log("Payment successful");
 
         if (!data.order) {
-          console.error("Backend returned no complete order");
-
           throw new Error(
             "Payment successful but order details could not be loaded.",
           );
@@ -102,12 +115,10 @@ function OrderSuccess() {
 
         setOrder(data.order);
 
-        // Save local order ID
         if (data.orderId) {
           localStorage.setItem("orderId", String(data.orderId));
         }
 
-        // Cashfree ID is no longer required
         localStorage.removeItem("cashfreeOrderId");
 
         toast.success("Payment successful 🎉");
@@ -157,11 +168,31 @@ function OrderSuccess() {
   };
 
   // =====================================================
-  // RUN VERIFICATION ONCE
+  // INITIALIZE ORDER
   // =====================================================
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    // -----------------------------------------------
+    // COD
+    // -----------------------------------------------
+
+    if (isCODOrder && codOrder) {
+      console.log("COD order detected");
+
+      setOrder(codOrder);
+      setLoading(false);
+      setVerifying(false);
+
+      localStorage.setItem("orderId", String(codOrderId || codOrder.id));
+
+      return;
+    }
+
+    // -----------------------------------------------
+    // ONLINE PAYMENT
+    // -----------------------------------------------
 
     if (verificationStarted.current) {
       return;
@@ -172,7 +203,7 @@ function OrderSuccess() {
     verifyPayment();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cashfreeOrderId]);
+  }, [isCODOrder, codOrder, codOrderId]);
 
   // =====================================================
   // DOWNLOAD INVOICE
@@ -235,53 +266,59 @@ function OrderSuccess() {
   if (loading || verifying) {
     return (
       <section className="order-success-page">
-        <div className="success-loading">
-          <div className="loading-check">
-            <FiCheckCircle />
+        <div className="success-loading-card">
+          <div className="success-loading-icon">
+            <FiShield />
           </div>
 
-          <h1>Confirming Your Payment</h1>
+          <span className="success-eyebrow">SECURE CHECKOUT</span>
 
-          <p>Please wait while we securely confirm your payment.</p>
+          <h1>Confirming Your Order</h1>
 
-          <div className="loading-order-id">
-            {cashfreeOrderId || "Processing..."}
-          </div>
+          <p>Please wait while we securely confirm your order details.</p>
 
-          <div className="loading-spinner" />
+          {cashfreeOrderId && (
+            <div className="loading-reference">
+              <span>Payment Reference</span>
+              <strong>{cashfreeOrderId}</strong>
+            </div>
+          )}
+
+          <div className="success-spinner" />
         </div>
       </section>
     );
   }
 
   // =====================================================
-  // PAYMENT NOT CONFIRMED
+  // PAYMENT / ORDER NOT CONFIRMED
   // =====================================================
 
   if (!order) {
     return (
       <section className="order-success-page">
-        <div className="success-empty">
-          <div className="empty-icon">
+        <div className="order-problem-card">
+          <div className="problem-icon">
             <FiCreditCard />
           </div>
 
-          <span className="success-label">PAYMENT STATUS</span>
+          <span className="success-eyebrow">ORDER STATUS</span>
 
           <h1>
             {verificationError
-              ? "We're Unable to Confirm Your Payment"
+              ? "We Couldn't Confirm Your Order"
               : "Your Payment Is Processing"}
           </h1>
 
           <p>
             {verificationError
-              ? "We couldn't confirm your payment right now. Don't worry — please check your order history before trying again."
+              ? "We couldn't confirm your payment right now. Please check your order history before trying again."
               : "Your payment may still be processing. Please check your order history after a few moments."}
           </p>
 
-          <div className="success-empty-actions">
+          <div className="problem-actions">
             <button
+              type="button"
               className="success-primary-btn"
               onClick={() => navigate("/orders")}
             >
@@ -291,6 +328,7 @@ function OrderSuccess() {
             </button>
 
             <button
+              type="button"
               className="success-secondary-btn"
               onClick={() => navigate("/products")}
             >
@@ -307,7 +345,11 @@ function OrderSuccess() {
   // ORDER DATA
   // =====================================================
 
-  const localOrderId = order.id;
+  const localOrderId = order.id || codOrderId;
+
+  const paymentMethod = order.payment_method || codPaymentMethod || "ONLINE";
+
+  const isCOD = paymentMethod === "COD";
 
   const totalAmount = Number(order.total_amount || 0);
 
@@ -315,11 +357,17 @@ function OrderSuccess() {
 
   const address = order.shipping_address || {};
 
+  // =====================================================
+  // ESTIMATED DELIVERY
+  // =====================================================
+
   const getEstimatedDelivery = (orderDate) => {
     const start = new Date(orderDate);
+
     start.setDate(start.getDate() + 5);
 
     const end = new Date(orderDate);
+
     end.setDate(end.getDate() + 7);
 
     const formatDate = (date) =>
@@ -334,177 +382,313 @@ function OrderSuccess() {
   const estimatedDelivery = getEstimatedDelivery(order.created_at);
 
   // =====================================================
+  // PAYMENT LABEL
+  // =====================================================
+
+  const paymentStatus = isCOD
+    ? "Pay on Delivery"
+    : order.payment_status || "Paid";
+
+  // =====================================================
   // SUCCESS PAGE
   // =====================================================
 
   return (
     <section className="order-success-page">
       <div className="success-wrapper">
-        {/* =============================================
-            SUCCESS HEADER
-        ============================================= */}
+        {/* =================================================
+            STEP PROGRESS
+        ================================================= */}
 
-        <div className="success-header">
-          <div className="success-check">
-            <FiCheckCircle />
+        <CheckoutSteps currentStep={3} />
+
+        {/* =================================================
+            HERO
+        ================================================= */}
+
+        <div className="success-hero">
+          <div className="success-hero-icon">
+            <FiCheck />
           </div>
 
-          <span className="success-label">PAYMENT CONFIRMED</span>
+          <span className="success-eyebrow">
+            {isCOD ? "ORDER CONFIRMED" : "PAYMENT CONFIRMED"}
+          </span>
 
-          <h1>Order placed successfully</h1>
+          <h1>Your order is on its way</h1>
 
           <p>
-            Thank you for shopping with HomeNeeds. Your order has been confirmed
-            and is now being prepared.
+            {isCOD
+              ? "Thank you for shopping with HomeNeeds. Your Cash on Delivery order has been successfully placed."
+              : "Thank you for shopping with HomeNeeds. Your payment has been successfully received and your order is being prepared."}
           </p>
         </div>
 
-        {/* =============================================
-            ORDER SUMMARY
-        ============================================= */}
+        {/* =================================================
+            ORDER REFERENCE
+        ================================================= */}
 
-        <div className="order-summary-card">
-          <div className="order-summary-main">
-            <div>
-              <span>ORDER NUMBER</span>
+        <div className="order-reference-card">
+          <div className="order-reference-main">
+            <span>ORDER NUMBER</span>
 
-              <h2>#{localOrderId}</h2>
+            <h2>#{localOrderId}</h2>
+          </div>
+
+          <div className={isCOD ? "order-status cod" : "order-status paid"}>
+            <span className="status-dot" />
+
+            {isCOD ? "Payment on Delivery" : "Payment Confirmed"}
+          </div>
+        </div>
+
+        {/* =================================================
+            QUICK ORDER INFO
+        ================================================= */}
+
+        <div className="order-info-grid">
+          <div className="order-info-card">
+            <div className="order-info-icon">
+              <FiTruck />
             </div>
 
-            <div className="confirmed-badge">
-              <span />
-              {order.payment_status || "Paid"}
+            <div>
+              <span>DELIVERY</span>
+
+              <strong>{estimatedDelivery}</strong>
+
+              <small>Estimated delivery</small>
             </div>
           </div>
 
-          <div className="order-summary-divider" />
-
-          <div className="order-summary-details">
-            <div>
+          <div className="order-info-card">
+            <div className="order-info-icon">
               <FiCreditCard />
-
-              <div>
-                <span>Payment</span>
-                <strong>{order.payment_method || "Online Payment"}</strong>
-              </div>
             </div>
 
             <div>
-              <FiPackage />
+              <span>PAYMENT</span>
 
-              <div>
-                <span>Estimated Delivery</span>
-                <strong>{estimatedDelivery}</strong>
-              </div>
+              <strong>{isCOD ? "Cash on Delivery" : "Online Payment"}</strong>
+
+              <small>{paymentStatus}</small>
             </div>
+          </div>
 
-            <div>
+          <div className="order-info-card">
+            <div className="order-info-icon">
               <FiShoppingBag />
+            </div>
+
+            <div>
+              <span>TOTAL</span>
+
+              <strong>₹{totalAmount.toFixed(2)}</strong>
+
+              <small>
+                {items.length} {items.length === 1 ? "item" : "items"}
+              </small>
+            </div>
+          </div>
+        </div>
+
+        {/* =================================================
+            MAIN CONTENT
+        ================================================= */}
+
+        <div className="success-content-grid">
+          {/* =============================================
+              LEFT
+          ============================================= */}
+
+          <div className="success-main-column">
+            {/* ORDER ITEMS */}
+
+            <div className="success-card">
+              <div className="success-card-header">
+                <div>
+                  <span className="success-card-eyebrow">YOUR PURCHASE</span>
+
+                  <h2>Ordered Items</h2>
+                </div>
+
+                <div className="success-card-header-icon">
+                  <FiPackage />
+                </div>
+              </div>
+
+              <div className="ordered-items">
+                {items.length > 0 ? (
+                  items.map((item) => {
+                    const itemTotal =
+                      Number(item.price || 0) * Number(item.quantity || 0);
+
+                    return (
+                      <div className="ordered-item" key={item.id}>
+                        <div className="ordered-item-image">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name || "Product"}
+                            />
+                          ) : (
+                            <FiShoppingBag />
+                          )}
+                        </div>
+
+                        <div className="ordered-item-details">
+                          <h3>{item.name || "Product"}</h3>
+
+                          <span>Quantity: {item.quantity}</span>
+
+                          <span>
+                            Unit Price: ₹{Number(item.price || 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        <strong className="ordered-item-total">
+                          ₹{itemTotal.toFixed(2)}
+                        </strong>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="empty-items">
+                    <FiShoppingBag />
+
+                    <p>No order items found.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SHIPPING ADDRESS */}
+
+            <div className="success-card">
+              <div className="success-card-header">
+                <div>
+                  <span className="success-card-eyebrow">DELIVERY DETAILS</span>
+
+                  <h2>Shipping Address</h2>
+                </div>
+
+                <div className="success-card-header-icon">
+                  <FiMapPin />
+                </div>
+              </div>
+
+              <div className="shipping-address">
+                <div className="shipping-address-icon">
+                  <FiHome />
+                </div>
+
+                <div>
+                  <h3>{address.fullName || address.name || "Customer"}</h3>
+
+                  <p>{address.address || ""}</p>
+
+                  <p>
+                    {address.city || ""}
+                    {address.city && address.state ? ", " : ""}
+                    {address.state || ""} {address.pincode || ""}
+                  </p>
+
+                  {address.phone && <span>Phone: {address.phone}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* =============================================
+              RIGHT SUMMARY
+          ============================================= */}
+
+          <aside className="success-side-column">
+            <div className="success-summary-card">
+              <div className="success-summary-header">
+                <div>
+                  <span>ORDER DETAILS</span>
+
+                  <h2>Order Summary</h2>
+                </div>
+
+                <FiPackage />
+              </div>
+
+              <div className="success-summary-body">
+                <div className="success-summary-row">
+                  <span>Items</span>
+
+                  <strong>{items.length}</strong>
+                </div>
+
+                <div className="success-summary-row">
+                  <span>Payment</span>
+
+                  <strong>{isCOD ? "COD" : "Online"}</strong>
+                </div>
+
+                <div className="success-summary-divider" />
+
+                <div className="success-total">
+                  <div>
+                    <span>Total Amount</span>
+
+                    <small>
+                      {isCOD
+                        ? "Pay when your order arrives"
+                        : "Payment completed securely"}
+                    </small>
+                  </div>
+
+                  <strong>₹{totalAmount.toFixed(2)}</strong>
+                </div>
+              </div>
+
+              {/* PAYMENT STATUS */}
+
+              <div className="payment-status-box">
+                <div className="payment-status-icon">
+                  {isCOD ? <FiTruck /> : <FiCheckCircle />}
+                </div>
+
+                <div>
+                  <strong>
+                    {isCOD ? "Cash on Delivery" : "Payment Successful"}
+                  </strong>
+
+                  <span>
+                    {isCOD
+                      ? "Please pay the delivery partner when your order arrives."
+                      : "Your payment has been successfully confirmed."}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* DELIVERY NOTE */}
+
+            <div className="delivery-note">
+              <div className="delivery-note-icon">
+                <FiCalendar />
+              </div>
 
               <div>
-                <span>Total Amount</span>
-                <strong>₹{totalAmount.toFixed(2)}</strong>
+                <strong>Estimated Delivery</strong>
+
+                <span>{estimatedDelivery}</span>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
 
-        {/* =============================================
-            ORDERED ITEMS
-        ============================================= */}
-
-        <div className="success-section">
-          <div className="section-heading">
-            <div className="section-heading-icon">
-              <FiPackage />
-            </div>
-
-            <div>
-              <span>YOUR PURCHASE</span>
-              <h2>Ordered Items</h2>
-            </div>
-          </div>
-
-          <div className="products-card">
-            {items.length > 0 ? (
-              items.map((item) => {
-                const itemTotal =
-                  Number(item.price || 0) * Number(item.quantity || 0);
-
-                return (
-                  <div className="success-product" key={item.id}>
-                    <div className="product-image">
-                      {item.image ? (
-                        <img src={item.image} alt={item.name || "Product"} />
-                      ) : (
-                        <FiShoppingBag />
-                      )}
-                    </div>
-
-                    <div className="product-info">
-                      <h3>{item.name || "Product"}</h3>
-
-                      <span>Quantity: {item.quantity}</span>
-
-                      <span>Price: ₹{Number(item.price || 0).toFixed(2)}</span>
-                    </div>
-
-                    <div className="product-price">₹{itemTotal.toFixed(2)}</div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="empty-items">
-                <FiShoppingBag />
-                <p>No order items found.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* =============================================
-            DELIVERY ADDRESS
-        ============================================= */}
-
-        <div className="success-section">
-          <div className="section-heading">
-            <div className="section-heading-icon">
-              <FiMapPin />
-            </div>
-
-            <div>
-              <span>DELIVERY DETAILS</span>
-              <h2>Shipping Address</h2>
-            </div>
-          </div>
-
-          <div className="address-card">
-            <div className="address-icon">
-              <FiMapPin />
-            </div>
-
-            <div className="address-content">
-              <h3>{address.fullName || address.name || "Customer"}</h3>
-
-              <p>{address.address || ""}</p>
-
-              <p>
-                {address.city || ""}
-                {address.city && address.state ? ", " : ""}
-                {address.state || ""} {address.pincode || ""}
-              </p>
-
-              {address.phone && <span>Phone: {address.phone}</span>}
-            </div>
-          </div>
-        </div>
-
-        {/* =============================================
+        {/* =================================================
             ACTIONS
-        ============================================= */}
+        ================================================= */}
 
         <div className="success-actions">
           <button
+            type="button"
             className="success-primary-btn"
             onClick={() => navigate("/orders")}
           >
@@ -513,12 +697,17 @@ function OrderSuccess() {
             <FiArrowRight />
           </button>
 
-          <button className="success-secondary-btn" onClick={downloadInvoice}>
+          <button
+            type="button"
+            className="success-secondary-btn"
+            onClick={downloadInvoice}
+          >
             <FiDownload />
             Download Invoice
           </button>
 
           <button
+            type="button"
             className="success-secondary-btn"
             onClick={() => navigate("/products")}
           >
@@ -527,7 +716,18 @@ function OrderSuccess() {
           </button>
         </div>
 
-        <p className="success-footer">Thank you for choosing HomeNeeds.</p>
+        {/* =================================================
+            FOOTER
+        ================================================= */}
+
+        <div className="success-footer">
+          <FiShield />
+
+          <span>
+            Thank you for choosing
+            <strong> HomeNeeds</strong>.
+          </span>
+        </div>
       </div>
     </section>
   );

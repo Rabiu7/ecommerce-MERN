@@ -4,7 +4,7 @@ import MainLayout from "../layouts/MainLayout/MainLayout";
 import AdminLayout from "../layouts/AdminLayout/AdminLayout";
 
 import ProtectedRoute from "./ProtectedRoute";
-import ProtectedAdminRoute from "./ProtectedAdminRoute";
+import ProtectedAdminRoute from "./ProtectedAdminRoute/ProtectedAdminRoute";
 
 import AdminProducts from "../pages/AdminProducts/AdminProducts";
 import AdminCategories from "../pages/AdminCategories/AdminCategories";
@@ -27,6 +27,12 @@ import AdminLogin from "../pages/AdminLogin/AdminLogin";
 import Admin from "../pages/Admin/Admin";
 import AdminOrders from "../pages/AdminOrders/AdminOrders";
 import AdminCustomers from "../pages/AdminCustomers/AdminCustomers";
+import AdminReviews from "../pages/AdminReviews/AdminReviews";
+
+import HelpCenter from "../pages/HelpCenter/HelpCenter";
+import ShippingPolicy from "../pages/ShippingPolicy/ShippingPolicy";
+import ReturnsRefunds from "../pages/ReturnsRefunds/ReturnsRefunds";
+import PrivacyPolicy from "../pages/PrivacyPolicy/PrivacyPolicy";
 
 import NotFound from "../pages/NotFound/NotFound";
 
@@ -40,17 +46,11 @@ function AppRoutes() {
       <Route element={<MainLayout />}>
         {/* Public */}
         <Route path="/" element={<Home />} />
-
         <Route path="/products" element={<Products />} />
-
         <Route path="/products/:id" element={<ProductDetails />} />
-
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
-
         {/* Protected Customer Routes */}
-
         <Route
           path="/cart"
           element={
@@ -59,7 +59,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/checkout"
           element={
@@ -68,7 +67,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/orders"
           element={
@@ -77,7 +75,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/orders/:id"
           element={
@@ -86,7 +83,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/profile"
           element={
@@ -95,7 +91,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/profile/edit"
           element={
@@ -104,7 +99,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/payment"
           element={
@@ -113,7 +107,6 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/order-success"
           element={
@@ -122,6 +115,11 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        {/* CUSTOMER SERVICE */}
+        <Route path="/help" element={<HelpCenter />} />{" "}
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />{" "}
+        <Route path="/returns-refunds" element={<ReturnsRefunds />} />{" "}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       </Route>
 
       {/* =====================================================
@@ -155,7 +153,7 @@ function AppRoutes() {
           <Route path="/admin/customers" element={<AdminCustomers />} />
 
           {/* Reviews - add later */}
-          {/* <Route path="/admin/reviews" element={<AdminReviews />} /> */}
+          <Route path="/admin/reviews" element={<AdminReviews />} />
         </Route>
       </Route>
 

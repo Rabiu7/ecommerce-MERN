@@ -1,0 +1,237 @@
+.privacy-page {
+  background: #f8f7f3;
+}
+
+/* =========================================================
+   INTRO
+========================================================= */
+
+.privacy-intro {
+  padding: 110px 0;
+}
+
+.privacy-intro-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 50px;
+  max-width: 900px;
+  align-items: start;
+}
+
+.privacy-main-icon {
+  width: 75px;
+  height: 75px;
+  padding: 22px;
+  box-sizing: border-box;
+  background: #efebe1;
+  color: #b08c4b;
+}
+
+.privacy-intro-grid > div:last-child > span {
+  display: block;
+  margin-bottom: 18px;
+  color: #b08c4b;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+}
+
+.privacy-intro h2 {
+  max-width: 700px;
+  margin: 0 0 25px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(38px, 5vw, 55px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.privacy-intro h2 em {
+  color: #b08c4b;
+  font-weight: 400;
+}
+
+.privacy-intro p {
+  max-width: 700px;
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+/* =========================================================
+   DATA CARDS
+========================================================= */
+
+.privacy-data {
+  padding: 100px 0;
+  background: #efede7;
+}
+
+.privacy-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.privacy-card {
+  padding: 35px 28px;
+  background: #fff;
+}
+
+.privacy-card > svg {
+  margin-bottom: 28px;
+  color: #b08c4b;
+  font-size: 23px;
+}
+
+.privacy-card h3 {
+  margin: 0 0 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.privacy-card p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* =========================================================
+   DETAILS
+========================================================= */
+
+.privacy-details {
+  padding: 100px 0;
+}
+
+.privacy-details article {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 30px;
+  padding: 45px 0;
+  border-top: 1px solid #dedbd3;
+}
+
+.privacy-details article:last-child {
+  border-bottom: 1px solid #dedbd3;
+}
+
+.privacy-details article > span {
+  color: #b08c4b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.privacy-details h2 {
+  margin: 0 0 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.privacy-details p {
+  max-width: 750px;
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+/* =========================================================
+   CONTACT
+========================================================= */
+
+.privacy-contact {
+  padding: 100px 0;
+  background: #1c1c19;
+  color: #fff;
+}
+
+.privacy-contact-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px;
+  max-width: 750px;
+}
+
+.privacy-contact-box > svg {
+  flex-shrink: 0;
+  color: #d6b77b;
+  font-size: 30px;
+}
+
+.privacy-contact-box > div > span {
+  display: block;
+  margin-bottom: 12px;
+  color: #d6b77b;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.privacy-contact-box h2 {
+  margin: 0 0 12px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 36px;
+  font-weight: 400;
+}
+
+.privacy-contact-box p {
+  margin: 0 0 15px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.privacy-contact-box a {
+  color: #d6b77b;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.privacy-contact-box a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+  .privacy-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .privacy-intro,
+  .privacy-data,
+  .privacy-details,
+  .privacy-contact {
+    padding: 70px 0;
+  }
+
+  .privacy-intro-grid {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .privacy-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .privacy-details article {
+    grid-template-columns: 45px 1fr;
+    gap: 15px;
+    padding: 30px 0;
+  }
+
+  .privacy-details h2 {
+    font-size: 23px;
+  }
+
+  .privacy-contact-box {
+    flex-direction: column;
+  }
+}

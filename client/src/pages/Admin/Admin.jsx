@@ -42,10 +42,10 @@ function Admin() {
       console.log("Dashboard statistics:", data);
 
       setStatistics({
-        totalRevenue: Number(data.totalRevenue || 0),
-        totalOrders: Number(data.totalOrders || 0),
-        totalUsers: Number(data.totalUsers || 0),
-        totalProducts: Number(data.totalProducts || 0),
+        totalRevenue: Number(data.revenue || 0),
+        totalOrders: Number(data.orders || 0),
+        totalUsers: Number(data.users || 0),
+        totalProducts: Number(data.products || 0),
       });
     } catch (error) {
       console.error("Dashboard statistics error:", error);

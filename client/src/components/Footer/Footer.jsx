@@ -17,34 +17,59 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="container footer-container">
+        {/* BRAND */}
         <div className="footer-box footer-brand">
-          <img src={logo} alt="HomeNeeds" className="footer-logo" />
+          <Link to="/" className="footer-logo-link">
+            <img src={logo} alt="HomeNeeds" className="footer-logo" />
+          </Link>
 
           <p>
             Elevate your everyday living with premium home essentials, kitchen
             accessories, storage solutions, and modern décor.
           </p>
 
+          {/* SOCIAL MEDIA */}
           <div className="footer-social">
-            <a href="#">
+            <a
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
               <FiFacebook />
             </a>
 
-            <a href="#">
+            <a
+              href="https://www.instagram.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
               <FiInstagram />
             </a>
 
-            <a href="#">
+            <a
+              href="https://twitter.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Twitter"
+            >
               <FiTwitter />
             </a>
 
-            <a href="#">
+            <a
+              href="https://www.linkedin.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+            >
               <FiLinkedin />
             </a>
           </div>
         </div>
 
-        <div className="footer-box footer-brand">
+        {/* QUICK LINKS */}
+        <div className="footer-box">
           <h3>Quick Links</h3>
 
           <Link to="/">Home</Link>
@@ -56,38 +81,49 @@ function Footer() {
           <Link to="/login">Login</Link>
         </div>
 
-        <div className="footer-box footer-brand">
+        {/* CUSTOMER SERVICE */}
+        <div className="footer-box">
           <h3>Customer Service</h3>
 
-          <Link to="#">Help Center</Link>
+          <Link to="/help">Help Center</Link>
 
-          <Link to="#">Shipping Policy</Link>
+          <Link to="/shipping-policy">Shipping Policy</Link>
 
-          <Link to="#">Returns & Refunds</Link>
+          <Link to="/returns-refunds">Returns & Refunds</Link>
 
-          <Link to="#">Privacy Policy</Link>
+          <Link to="/privacy-policy">Privacy Policy</Link>
         </div>
 
-        <div className="footer-box footer-brand">
+        {/* CONTACT */}
+        <div className="footer-box">
           <h3>Contact</h3>
 
-          <p>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Chennai,Tamil+Nadu,India"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-contact-link"
+          >
             <FiMapPin />
-            Chennai, Tamil Nadu, India
-          </p>
+            <span>Chennai, Tamil Nadu, India</span>
+          </a>
 
-          <p>
+          <a href="tel:+919876543210" className="footer-contact-link">
             <FiPhone />
-            +91 98765 43210
-          </p>
+            <span>+91 98765 43210</span>
+          </a>
 
-          <p>
+          <a
+            href="mailto:support@homeneeds.com"
+            className="footer-contact-link"
+          >
             <FiMail />
-            support@homeneeds.com
-          </p>
+            <span>support@homeneeds.com</span>
+          </a>
         </div>
       </div>
 
+      {/* COPYRIGHT */}
       <div className="footer-bottom">
         <p>
           © 2026 <strong>HomeNeeds Store</strong>. All Rights Reserved.

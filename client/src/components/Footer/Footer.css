@@ -271,6 +271,55 @@
 }
 
 /* =========================================================
+   FOOTER LOGO LINK
+========================================================= */
+
+.footer-logo-link {
+  display: inline-block;
+}
+
+/* =========================================================
+   CONTACT LINKS
+========================================================= */
+
+.footer-contact-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0 0 16px;
+
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.58);
+
+  text-decoration: none;
+
+  transition: color 0.3s ease;
+}
+
+.footer-contact-link svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 16px;
+  color: #d6b77b;
+
+  transition: transform 0.3s ease;
+}
+
+.footer-contact-link:hover {
+  color: #d6b77b;
+}
+
+.footer-contact-link:hover svg {
+  transform: scale(1.12);
+}
+
+/* Don't apply normal footer-link underline to contact links */
+.footer-contact-link::before {
+  display: none;
+}
+
+/* =========================================================
    CONTACT
 ========================================================= */
 

@@ -1,9 +1,18 @@
 import "./Payment.css";
+import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { FiSmartphone, FiTruck, FiCheckCircle } from "react-icons/fi";
+import {
+  FiSmartphone,
+  FiTruck,
+  FiCheckCircle,
+  FiArrowLeft,
+  FiShield,
+  FiMapPin,
+  FiCreditCard,
+} from "react-icons/fi";
 
 import { toast } from "react-toastify";
 
@@ -65,7 +74,6 @@ function Payment() {
 
     script.onerror = () => {
       console.error("Cashfree SDK failed to load");
-
       toast.error("Unable to load Cashfree payment gateway.");
     };
 
@@ -85,7 +93,6 @@ function Payment() {
 
         headers: {
           "Content-Type": "application/json",
-
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
 
@@ -96,9 +103,7 @@ function Payment() {
 
           customer: {
             name: user?.name || "",
-
             email: user?.email || "",
-
             phone: user?.phone || address?.phone || "",
           },
         }),
@@ -114,23 +119,16 @@ function Payment() {
 
       toast.success("Order placed successfully 🎉");
 
-      // COD doesn't go through Cashfree.
       navigate("/order-success", {
         replace: true,
 
         state: {
           orderId: data.orderId,
-
           totalAmount: data.totalAmount,
-
           paymentMethod: data.paymentMethod,
-
           paymentStatus: data.paymentStatus,
-
           orderStatus: data.orderStatus,
-
           shippingAddress: data.shippingAddress,
-
           order: data.order,
         },
       });
@@ -153,7 +151,6 @@ function Payment() {
 
       headers: {
         "Content-Type": "application/json",
-
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
 
@@ -164,9 +161,7 @@ function Payment() {
 
         customer: {
           name: user?.name || "",
-
           email: user?.email || "",
-
           phone: user?.phone || address?.phone || "",
         },
       }),
@@ -195,10 +190,6 @@ function Payment() {
       console.log("1️⃣ Online payment started");
       console.log("=================================");
 
-      // =================================================
-      // CHECK SDK
-      // =================================================
-
       if (!cashfreeReady || !window.Cashfree) {
         toast.error(
           "Cashfree payment gateway is still loading. Please try again.",
@@ -211,17 +202,9 @@ function Payment() {
 
       console.log("2️⃣ Cashfree SDK is ready");
 
-      // =================================================
-      // CREATE BACKEND ORDER
-      // =================================================
-
       const orderData = await createCashfreeOrder();
 
       console.log("3️⃣ Backend order response:", orderData);
-
-      // =================================================
-      // CHECK PAYMENT SESSION
-      // =================================================
 
       if (!orderData.paymentSessionId) {
         throw new Error("Cashfree payment session was not created");
@@ -229,27 +212,15 @@ function Payment() {
 
       console.log("4️⃣ Payment Session ID:", orderData.paymentSessionId);
 
-      // =================================================
-      // SAVE CASHFREE ORDER ID
-      // =================================================
-
       if (orderData.cashfreeOrderId) {
         localStorage.setItem("cashfreeOrderId", orderData.cashfreeOrderId);
 
         console.log("Cashfree Order ID:", orderData.cashfreeOrderId);
       }
 
-      // =================================================
-      // CASHFREE MODE
-      // =================================================
-
       const cashfreeMode = import.meta.env.VITE_CASHFREE_MODE || "sandbox";
 
       console.log("Cashfree Mode:", cashfreeMode);
-
-      // =================================================
-      // INITIALIZE CASHFREE
-      // =================================================
 
       const cashfree = window.Cashfree({
         mode: cashfreeMode,
@@ -257,31 +228,17 @@ function Payment() {
 
       console.log("5️⃣ Cashfree initialized");
 
-      // =================================================
-      // CHECKOUT OPTIONS
-      // =================================================
-
       const checkoutOptions = {
         paymentSessionId: orderData.paymentSessionId,
-
         redirectTarget: "_self",
-
         mode: cashfreeMode,
       };
 
       console.log("6️⃣ Opening Cashfree with:", checkoutOptions);
 
-      // =================================================
-      // OPEN CHECKOUT
-      // =================================================
-
       const result = await cashfree.checkout(checkoutOptions);
 
       console.log("7️⃣ Cashfree checkout result:", result);
-
-      // =================================================
-      // HANDLE SDK ERROR
-      // =================================================
 
       if (result?.error) {
         console.error("Cashfree Checkout Error:", result.error);
@@ -292,10 +249,6 @@ function Payment() {
 
         return;
       }
-
-      // =================================================
-      // CHECK SDK WARNING
-      // =================================================
 
       if (result?.warning) {
         console.warn("Cashfree Checkout Warning:", result.warning);
@@ -320,11 +273,25 @@ function Payment() {
 
     if (paymentMethod === "COD") {
       await handleCOD();
-
       return;
     }
 
     await handleOnlinePayment();
+  };
+
+  // =====================================================
+  // BACK TO CHECKOUT
+  // =====================================================
+
+  const goBackToCheckout = () => {
+    if (processing) return;
+
+    navigate("/checkout", {
+      state: {
+        address,
+        cartItems,
+      },
+    });
   };
 
   // =====================================================
@@ -334,128 +301,274 @@ function Payment() {
   return (
     <section className="payment-page">
       <div className="payment-container">
-        {/* HEADER */}
+        {/* =================================================
+            TOP HEADER
+        ================================================= */}
 
-        <div className="payment-header">
-          <h1>Payment</h1>
-
-          <p>Complete your payment securely</p>
+        <div className="payment-topbar">
+          <button
+            type="button"
+            className="payment-back-btn"
+            onClick={goBackToCheckout}
+            disabled={processing}
+          >
+            <FiArrowLeft />
+            Back to Checkout
+          </button>
         </div>
 
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div className="payment-header">
+          <span className="payment-eyebrow">SECURE CHECKOUT</span>
+
+          <h1>Complete Your Payment</h1>
+
+          <p>
+            Choose your preferred payment method and securely complete your
+            order.
+          </p>
+        </div>
+
+        {/* =================================================
+            CHECKOUT STEPS
+        ================================================= */}
+
+        <CheckoutSteps currentStep={2} />
+
+        {/* =================================================
+            MAIN GRID
+        ================================================= */}
+
         <div className="payment-grid">
-          {/* ==========================================
-              PAYMENT METHODS
-          ========================================== */}
+          {/* =================================================
+              LEFT COLUMN
+          ================================================= */}
 
-          <div className="payment-card">
-            <h2>Select Payment Method</h2>
+          <div className="payment-left">
+            {/* DELIVERY CARD */}
 
-            {/* ONLINE */}
+            <div className="delivery-preview-card">
+              <div className="card-heading">
+                <div>
+                  <span className="card-eyebrow">DELIVERY</span>
 
-            <div
-              className={
-                paymentMethod === "ONLINE"
-                  ? "payment-option active"
-                  : "payment-option"
-              }
-              onClick={() => !processing && setPaymentMethod("ONLINE")}
-            >
-              <FiSmartphone />
-
-              <div>
-                <h4>Online Payment</h4>
-
-                <p>UPI, Cards, Wallets, Netbanking & Pay Later</p>
-
-                <div className="payment-tags">
-                  <span>UPI</span>
-                  <span>Cards</span>
-                  <span>Wallet</span>
-                  <span>Netbanking</span>
+                  <h2>Shipping Address</h2>
                 </div>
+
+                <FiMapPin />
               </div>
 
-              {paymentMethod === "ONLINE" && (
-                <FiCheckCircle className="payment-check" />
-              )}
+              <div className="delivery-details">
+                <strong>{address.fullName || user?.name}</strong>
+
+                <p>{address.address}</p>
+
+                <p>
+                  {address.city}, {address.state} - {address.pincode}
+                </p>
+
+                <p className="delivery-phone">
+                  <FiSmartphone />
+                  {address.phone || user?.phone}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="change-address-btn"
+                onClick={goBackToCheckout}
+                disabled={processing}
+              >
+                Change Address
+              </button>
             </div>
 
-            {/* COD */}
+            {/* PAYMENT METHODS */}
 
-            <div
-              className={
-                paymentMethod === "COD"
-                  ? "payment-option active"
-                  : "payment-option"
-              }
-              onClick={() => !processing && setPaymentMethod("COD")}
-            >
-              <FiTruck />
+            <div className="payment-card">
+              <div className="card-heading">
+                <div>
+                  <span className="card-eyebrow">PAYMENT</span>
 
-              <div>
-                <h4>Cash on Delivery</h4>
+                  <h2>Select Payment Method</h2>
+                </div>
 
-                <p>Pay after your order is delivered</p>
+                <FiCreditCard />
               </div>
 
-              {paymentMethod === "COD" && (
-                <FiCheckCircle className="payment-check" />
-              )}
+              {/* ONLINE PAYMENT */}
+
+              <button
+                type="button"
+                className={
+                  paymentMethod === "ONLINE"
+                    ? "payment-option active"
+                    : "payment-option"
+                }
+                onClick={() => !processing && setPaymentMethod("ONLINE")}
+                disabled={processing}
+              >
+                <div className="payment-option-icon">
+                  <FiSmartphone />
+                </div>
+
+                <div className="payment-option-content">
+                  <div className="payment-option-title">
+                    <h4>Online Payment</h4>
+
+                    <span className="recommended-badge">Recommended</span>
+                  </div>
+
+                  <p>UPI, Cards, Wallets, Netbanking & Pay Later</p>
+
+                  <div className="payment-tags">
+                    <span>UPI</span>
+                    <span>Cards</span>
+                    <span>Wallet</span>
+                    <span>Netbanking</span>
+                  </div>
+                </div>
+
+                <div className="payment-radio">
+                  {paymentMethod === "ONLINE" && <FiCheckCircle />}
+                </div>
+              </button>
+
+              {/* COD */}
+
+              <button
+                type="button"
+                className={
+                  paymentMethod === "COD"
+                    ? "payment-option active"
+                    : "payment-option"
+                }
+                onClick={() => !processing && setPaymentMethod("COD")}
+                disabled={processing}
+              >
+                <div className="payment-option-icon">
+                  <FiTruck />
+                </div>
+
+                <div className="payment-option-content">
+                  <h4>Cash on Delivery</h4>
+
+                  <p>Pay after your order is delivered</p>
+
+                  <span className="cod-note">Available for this order</span>
+                </div>
+
+                <div className="payment-radio">
+                  {paymentMethod === "COD" && <FiCheckCircle />}
+                </div>
+              </button>
+            </div>
+
+            {/* SECURITY */}
+
+            <div className="payment-security">
+              <div className="security-icon">
+                <FiShield />
+              </div>
+
+              <div>
+                <h4>Your payment is secure</h4>
+
+                <p>
+                  Your payment information is processed securely. We never store
+                  your card details.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* ==========================================
-              SUMMARY
-          ========================================== */}
+          {/* =================================================
+              RIGHT COLUMN - ORDER SUMMARY
+          ================================================= */}
 
-          <div className="payment-summary">
-            <h2>Order Summary</h2>
+          <aside className="payment-summary">
+            <div className="summary-header">
+              <div>
+                <span className="card-eyebrow">YOUR ORDER</span>
 
-            <div className="summary-row">
-              <span>Items</span>
+                <h2>Order Summary</h2>
+              </div>
 
-              <strong>{cartItems.length}</strong>
+              <span className="item-count">
+                {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
+              </span>
             </div>
 
-            <div className="summary-row">
-              <span>Subtotal</span>
+            {/* PRODUCTS */}
 
-              <strong>₹{Number(subtotal).toFixed(2)}</strong>
+            <div className="payment-products">
+              {cartItems.map((item) => (
+                <div className="payment-product" key={item.id}>
+                  <div className="payment-product-image">
+                    <img src={item.image} alt={item.name} />
+                  </div>
+
+                  <div className="payment-product-info">
+                    <h4>{item.name}</h4>
+
+                    <p>Qty: {item.quantity}</p>
+                  </div>
+
+                  <strong>
+                    ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                  </strong>
+                </div>
+              ))}
             </div>
 
-            <div className="summary-row">
-              <span>GST</span>
+            {/* PRICE BREAKDOWN */}
 
-              <strong>₹{Number(gst).toFixed(2)}</strong>
+            <div className="summary-breakdown">
+              <div className="summary-row">
+                <span>Subtotal</span>
+
+                <strong>₹{Number(subtotal).toFixed(2)}</strong>
+              </div>
+
+              <div className="summary-row">
+                <span>GST</span>
+
+                <strong>₹{Number(gst).toFixed(2)}</strong>
+              </div>
+
+              <div className="summary-row">
+                <span>Shipping</span>
+
+                <strong className={Number(shipping) === 0 ? "free-text" : ""}>
+                  {Number(shipping) === 0
+                    ? "FREE"
+                    : `₹${Number(shipping).toFixed(2)}`}
+                </strong>
+              </div>
+
+              <div className="summary-row">
+                <span>Payment Method</span>
+
+                <strong>{paymentMethod === "ONLINE" ? "Online" : "COD"}</strong>
+              </div>
             </div>
 
-            <div className="summary-row">
-              <span>Shipping</span>
+            {/* TOTAL */}
 
-              <strong>
-                {Number(shipping) === 0
-                  ? "FREE"
-                  : `₹${Number(shipping).toFixed(2)}`}
-              </strong>
-            </div>
+            <div className="payment-total">
+              <div>
+                <span>Total Amount</span>
 
-            <div className="summary-row">
-              <span>Payment</span>
-
-              <strong>
-                {paymentMethod === "ONLINE"
-                  ? "Online Payment"
-                  : "Cash on Delivery"}
-              </strong>
-            </div>
-
-            <div className="summary-row total">
-              <span>Total</span>
+                <small>Inclusive of applicable taxes</small>
+              </div>
 
               <strong>₹{Number(amount).toFixed(2)}</strong>
             </div>
 
-            {/* PAYMENT BUTTON */}
+            {/* BUTTON */}
 
             <button
               type="button"
@@ -470,16 +583,12 @@ function Payment() {
                   : `Continue to Cashfree • ₹${Number(amount).toFixed(2)}`}
             </button>
 
-            <div className="secure-box">
-              <h4>Secure Checkout</h4>
+            <div className="payment-trust">
+              <FiShield />
 
-              <p>✔ UPI</p>
-              <p>✔ Cards</p>
-              <p>✔ Wallets</p>
-              <p>✔ Netbanking</p>
-              <p>✔ Cash On Delivery</p>
+              <span>Secure & encrypted payment</span>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </section>

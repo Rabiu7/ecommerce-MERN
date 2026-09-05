@@ -1,0 +1,174 @@
+/* =========================================================
+   ADMIN AUTH LOADING
+========================================================= */
+
+.admin-auth-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #1c1c19;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   DECORATIVE CIRCLES
+========================================================= */
+
+.admin-auth-loading::before {
+  content: "";
+
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  top: -300px;
+  right: -180px;
+
+  border: 1px solid rgba(214, 183, 123, 0.12);
+
+  border-radius: 50%;
+}
+
+.admin-auth-loading::after {
+  content: "";
+
+  position: absolute;
+
+  width: 400px;
+  height: 400px;
+
+  bottom: -280px;
+  left: -180px;
+
+  border: 1px solid rgba(214, 183, 123, 0.1);
+
+  border-radius: 50%;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.admin-loading-content {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.admin-loading-logo {
+  width: 58px;
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 25px;
+
+  border: 1px solid rgba(214, 183, 123, 0.5);
+
+  color: #d6b77b;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+
+  border-radius: 50%;
+}
+
+/* =========================================================
+   SPINNER
+========================================================= */
+
+.admin-loading-spinner {
+  width: 34px;
+  height: 34px;
+
+  margin-bottom: 25px;
+
+  border: 2px solid rgba(255, 255, 255, 0.12);
+
+  border-top-color: #d6b77b;
+
+  border-radius: 50%;
+
+  animation: adminSpin 0.8s linear infinite;
+}
+
+@keyframes adminSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   TEXT
+========================================================= */
+
+.admin-loading-content h2 {
+  margin: 0 0 8px;
+
+  color: #fff;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: 25px;
+  font-weight: 400;
+}
+
+.admin-loading-content p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 12px;
+
+  letter-spacing: 0.4px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .admin-loading-logo {
+    width: 52px;
+    height: 52px;
+
+    font-size: 24px;
+  }
+
+  .admin-loading-spinner {
+    width: 30px;
+    height: 30px;
+  }
+
+  .admin-loading-content h2 {
+    font-size: 22px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-loading-spinner {
+    animation: none;
+  }
+}

@@ -1,13 +1,22 @@
 import "./Cart.css";
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FiTrash2, FiShoppingBag, FiArrowLeft } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
+
+import {
+  FiTrash2,
+  FiShoppingBag,
+  FiArrowLeft,
+  FiMinus,
+  FiPlus,
+  FiShield,
+  FiTruck,
+  FiRefreshCw,
+} from "react-icons/fi";
+
 import { useAuth } from "../../context/AuthContext";
 
-import { useNavigate } from "react-router-dom";
-
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Cart() {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
@@ -16,15 +25,20 @@ function Cart() {
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.id) {
       fetchCart();
       fetchCartCount(user.id);
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
+
+  // =====================================================
+  // FETCH CART
+  // =====================================================
 
   const fetchCart = async () => {
     try {
@@ -32,65 +46,117 @@ function Cart() {
 
       const data = await response.json();
 
-      setCartItems(data);
+      setCartItems(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.log(error);
+      console.error("Fetch cart error:", error);
+      setCartItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const increaseQty = async (item) => {
-    await fetch(`${VITE_API_URL}/api/cart/${item.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        quantity: item.quantity + 1,
-      }),
-    });
+  // =====================================================
+  // UPDATE QUANTITY
+  // =====================================================
 
-    fetchCart();
+  const updateQuantity = async (item, quantity) => {
+    if (quantity < 1 || updatingId === item.id) {
+      return;
+    }
+
+    try {
+      setUpdatingId(item.id);
+
+      await fetch(`${VITE_API_URL}/api/cart/${item.id}`, {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          quantity,
+        }),
+      });
+
+      await fetchCart();
+      fetchCartCount(user.id);
+    } catch (error) {
+      console.error("Update quantity error:", error);
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
-  const decreaseQty = async (item) => {
-    if (item.quantity <= 1) return;
-
-    await fetch(`${VITE_API_URL}/api/cart/${item.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        quantity: item.quantity - 1,
-      }),
-    });
-
-    fetchCart();
-  };
+  // =====================================================
+  // REMOVE ITEM
+  // =====================================================
 
   const removeItem = async (id) => {
-    await fetch(`${VITE_API_URL}/api/cart/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      setUpdatingId(id);
 
-    fetchCart();
+      await fetch(`${VITE_API_URL}/api/cart/${id}`, {
+        method: "DELETE",
+      });
+
+      await fetchCart();
+      fetchCartCount(user.id);
+    } catch (error) {
+      console.error("Remove cart item error:", error);
+    } finally {
+      setUpdatingId(null);
+    }
   };
+
+  // =====================================================
+  // CALCULATIONS
+  // =====================================================
+
+  const totalItems = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+    0,
+  );
+
+  const FREE_SHIPPING_LIMIT = 1000;
+
+  const shipping = subtotal >= FREE_SHIPPING_LIMIT || subtotal === 0 ? 0 : 99;
+
+  const total = subtotal + shipping;
+
+  const remainingForFreeShipping = FREE_SHIPPING_LIMIT - subtotal;
+
+  const shippingProgress = Math.min(
+    (subtotal / FREE_SHIPPING_LIMIT) * 100,
+    100,
+  );
+
+  // =====================================================
+  // NOT LOGGED IN
+  // =====================================================
 
   if (!isAuthenticated) {
     return (
       <section className="cart-page">
-        <div className="container">
-          <div className="empty-cart">
-            <FiShoppingBag className="empty-icon" />
+        <div className="cart-container">
+          <div className="cart-empty-state">
+            <div className="cart-empty-icon">
+              <FiShoppingBag />
+            </div>
 
-            <h2>Please Login</h2>
+            <span className="cart-eyebrow">SHOPPING BAG</span>
 
-            <p>Login to view your shopping cart.</p>
+            <h1>Please Login</h1>
 
-            <Link to="/login" className="checkout-btn">
-              Login
+            <p>Login to access your shopping bag and continue shopping.</p>
+
+            <Link to="/login" className="cart-primary-btn">
+              Login to Continue
             </Link>
           </div>
         </div>
@@ -98,134 +164,344 @@ function Cart() {
     );
   }
 
+  // =====================================================
+  // LOADING
+  // =====================================================
+
   if (loading) {
-    return <div className="orders-loading">Loading Orders...</div>;
+    return (
+      <section className="cart-page">
+        <div className="cart-container">
+          <div className="cart-loading">
+            <div className="cart-loading-spinner"></div>
+            <p>Loading your shopping bag...</p>
+          </div>
+        </div>
+      </section>
+    );
   }
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + Number(item.price) * item.quantity,
-    0,
-  );
+  // =====================================================
+  // EMPTY CART
+  // =====================================================
 
-  const shipping = subtotal >= 1000 ? 0 : 99;
+  if (cartItems.length === 0) {
+    return (
+      <section className="cart-page">
+        <div className="cart-container">
+          <div className="cart-page-header">
+            <div>
+              <span className="cart-eyebrow">YOUR SHOPPING BAG</span>
 
-  const total = subtotal + shipping;
+              <h1>Shopping Bag</h1>
+            </div>
+
+            <Link to="/products" className="cart-continue-btn">
+              <FiArrowLeft />
+              Continue Shopping
+            </Link>
+          </div>
+
+          <div className="cart-empty-state">
+            <div className="cart-empty-icon">
+              <FiShoppingBag />
+            </div>
+
+            <h2>Your Shopping Bag is Empty</h2>
+
+            <p>Discover something beautiful for your home.</p>
+
+            <Link to="/products" className="cart-primary-btn">
+              Start Shopping
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // =====================================================
+  // MAIN CART
+  // =====================================================
 
   return (
     <section className="cart-page">
-      <div className="container">
-        <div className="cart-header">
-          <div>
-            <h1>Shopping Cart</h1>
+      <div className="cart-container">
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
-            <p>{cartItems.length} Items in your cart</p>
+        <div className="cart-page-header">
+          <div>
+            <span className="cart-eyebrow">YOUR SHOPPING BAG</span>
+
+            <h1>Shopping Bag</h1>
+
+            <p>
+              {totalItems} {totalItems === 1 ? "item" : "items"} ready for
+              checkout
+            </p>
           </div>
 
-          <Link to="/products" className="continue-btn">
+          <Link to="/products" className="cart-continue-btn">
             <FiArrowLeft />
             Continue Shopping
           </Link>
         </div>
 
-        {cartItems.length === 0 ? (
-          <div className="empty-cart">
-            <FiShoppingBag className="empty-icon" />
+        {/* =================================================
+            FREE SHIPPING MESSAGE
+        ================================================= */}
 
-            <h2>Your Cart is Empty</h2>
+        <div className="shipping-progress-card">
+          <div className="shipping-progress-top">
+            <div className="shipping-progress-title">
+              <FiTruck />
 
-            <p>Add some beautiful products to start shopping.</p>
-
-            <Link to="/products" className="checkout-btn">
-              Shop Now
-            </Link>
-          </div>
-        ) : (
-          <div className="cart-layout">
-            <div className="cart-items">
-              {cartItems.map((item) => (
-                <div className="cart-card" key={item.id}>
-                  <img src={item.image} alt={item.name} />
-
-                  <div className="cart-info">
-                    <span className="stock">In Stock</span>
-
-                    <h2>{item.name}</h2>
-
-                    <p>{item.description}</p>
-
-                    <h3>₹{Number(item.price).toFixed(2)}</h3>
-
-                    <div className="qty-box">
-                      <button onClick={() => decreaseQty(item)}>-</button>
-
-                      <span>{item.quantity}</span>
-
-                      <button onClick={() => increaseQty(item)}>+</button>
-                    </div>
-                  </div>
-
-                  <div className="cart-right">
-                    <h2>₹{(Number(item.price) * item.quantity).toFixed(2)}</h2>
-
-                    <button
-                      className="delete-btn"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <span>
+                {remainingForFreeShipping > 0
+                  ? `Add ₹${remainingForFreeShipping.toFixed(
+                      2,
+                    )} more for FREE shipping`
+                  : "You've unlocked FREE shipping"}
+              </span>
             </div>
 
-            <div className="summary-card">
-              <h2>Order Summary</h2>
+            <strong>₹{FREE_SHIPPING_LIMIT}</strong>
+          </div>
 
-              <div className="summary-row">
-                <span>Items</span>
+          <div className="shipping-progress-track">
+            <div
+              className="shipping-progress-fill"
+              style={{
+                width: `${shippingProgress}%`,
+              }}
+            ></div>
+          </div>
+        </div>
 
-                <span>{cartItems.length}</span>
+        {/* =================================================
+            CART LAYOUT
+        ================================================= */}
+
+        <div className="cart-layout">
+          {/* =================================================
+              PRODUCTS
+          ================================================= */}
+
+          <div className="cart-products-section">
+            <div className="cart-section-heading">
+              <div>
+                <h2>Your Items</h2>
+
+                <span>
+                  {cartItems.length}{" "}
+                  {cartItems.length === 1 ? "product" : "products"}
+                </span>
+              </div>
+            </div>
+
+            <div className="cart-products">
+              {cartItems.map((item) => {
+                const itemTotal =
+                  Number(item.price || 0) * Number(item.quantity || 0);
+
+                const isUpdating = updatingId === item.id;
+
+                return (
+                  <article className="cart-product" key={item.id}>
+                    {/* IMAGE */}
+
+                    <Link
+                      to={`/products/${item.product_id || item.id}`}
+                      className="cart-product-image"
+                    >
+                      <img src={item.image} alt={item.name} />
+                    </Link>
+
+                    {/* DETAILS */}
+
+                    <div className="cart-product-details">
+                      <span className="cart-stock">
+                        <span></span>
+                        In Stock
+                      </span>
+
+                      <Link
+                        to={`/products/${item.product_id || item.id}`}
+                        className="cart-product-name"
+                      >
+                        {item.name}
+                      </Link>
+
+                      {item.description && (
+                        <p className="cart-product-description">
+                          {item.description}
+                        </p>
+                      )}
+
+                      <div className="cart-product-bottom">
+                        <div className="cart-product-price">
+                          ₹{Number(item.price || 0).toFixed(2)}
+                        </div>
+
+                        {/* QUANTITY */}
+
+                        <div className="cart-quantity">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateQuantity(item, Number(item.quantity) - 1)
+                            }
+                            disabled={isUpdating || Number(item.quantity) <= 1}
+                            aria-label="Decrease quantity"
+                          >
+                            <FiMinus />
+                          </button>
+
+                          <span>{item.quantity}</span>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateQuantity(item, Number(item.quantity) + 1)
+                            }
+                            disabled={isUpdating}
+                            aria-label="Increase quantity"
+                          >
+                            <FiPlus />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* RIGHT SIDE */}
+
+                    <div className="cart-product-right">
+                      <strong>₹{itemTotal.toFixed(2)}</strong>
+
+                      <button
+                        type="button"
+                        className="cart-remove-btn"
+                        onClick={() => removeItem(item.id)}
+                        disabled={isUpdating}
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        {isUpdating ? (
+                          <FiRefreshCw className="spin" />
+                        ) : (
+                          <FiTrash2 />
+                        )}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* =================================================
+                TRUST FEATURES
+            ================================================= */}
+
+            <div className="cart-trust-grid">
+              <div className="cart-trust-item">
+                <FiShield />
+
+                <div>
+                  <strong>Secure Checkout</strong>
+                  <span>Safe & protected payments</span>
+                </div>
               </div>
 
-              <div className="summary-row">
+              <div className="cart-trust-item">
+                <FiTruck />
+
+                <div>
+                  <strong>Fast Delivery</strong>
+                  <span>Reliable doorstep delivery</span>
+                </div>
+              </div>
+
+              <div className="cart-trust-item">
+                <FiRefreshCw />
+
+                <div>
+                  <strong>Easy Returns</strong>
+                  <span>Simple return process</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* =================================================
+              SUMMARY
+          ================================================= */}
+
+          <aside className="cart-summary">
+            <div className="cart-summary-header">
+              <div>
+                <span className="cart-eyebrow">CHECKOUT</span>
+
+                <h2>Order Summary</h2>
+              </div>
+
+              <span className="cart-summary-count">{totalItems}</span>
+            </div>
+
+            <div className="cart-summary-rows">
+              <div className="cart-summary-row">
                 <span>Subtotal</span>
 
-                <span>₹{subtotal.toFixed(2)}</span>
+                <strong>₹{subtotal.toFixed(2)}</strong>
               </div>
 
-              <div className="summary-row">
+              <div className="cart-summary-row">
                 <span>Shipping</span>
 
-                <span>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
-              </div>
-
-              <hr />
-
-              <div className="summary-row total">
-                <span>Total</span>
-
-                <span>₹{total.toFixed(2)}</span>
-              </div>
-
-              <button
-                className="checkout-btn"
-                onClick={() => navigate("/checkout")}
-              >
-                Proceed to Checkout
-              </button>
-
-              <div className="secure-box">
-                <h4>Secure Checkout</h4>
-
-                <p>✔ Cash on Delivery</p>
-
-                <p>✔ Easy Returns</p>
-
-                <p>✔ Fast Delivery</p>
+                <strong className={shipping === 0 ? "free-shipping" : ""}>
+                  {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
+                </strong>
               </div>
             </div>
-          </div>
-        )}
+
+            <div className="cart-summary-divider"></div>
+
+            <div className="cart-total">
+              <div>
+                <span>Total</span>
+
+                <small>Taxes calculated at checkout</small>
+              </div>
+
+              <strong>₹{total.toFixed(2)}</strong>
+            </div>
+
+            <button
+              type="button"
+              className="cart-checkout-btn"
+              onClick={() => navigate("/checkout")}
+            >
+              Proceed to Checkout
+            </button>
+
+            <Link to="/products" className="cart-summary-shopping">
+              <FiArrowLeft />
+              Continue Shopping
+            </Link>
+
+            <div className="cart-summary-security">
+              <div className="summary-security-icon">
+                <FiShield />
+              </div>
+
+              <div>
+                <strong>Secure Shopping</strong>
+
+                <p>Your information is protected with secure encryption.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );
