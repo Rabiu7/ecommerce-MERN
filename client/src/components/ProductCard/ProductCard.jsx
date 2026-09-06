@@ -1,5 +1,7 @@
 import "./ProductCard.css";
 
+import { useEffect, useState } from "react";
+
 import { FiShoppingCart, FiHeart } from "react-icons/fi";
 import { FaStar } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +15,53 @@ function ProductCard({ id, image, title, category, price, rating }) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
   const navigate = useNavigate();
 
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  /*
+   * CHECK WHETHER PRODUCT IS ALREADY IN WISHLIST
+   */
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (!isAuthenticated || !user?.id) {
+        setIsWishlisted(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${VITE_API_URL}/api/wishlist/${user.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        const wishlistItems = data.wishlist || [];
+
+        const exists = wishlistItems.some(
+          (item) => Number(item.product_id || item.id) === Number(id),
+        );
+
+        setIsWishlisted(exists);
+      } catch (error) {
+        console.error("Check wishlist error:", error);
+      }
+    };
+
+    checkWishlist();
+  }, [user?.id, isAuthenticated, id]);
+
+  /*
+   * ADD TO CART
+   */
   const addToCart = async () => {
     if (!isAuthenticated) {
       toast.info("Please login to add products to cart.");
@@ -51,11 +100,86 @@ function ProductCard({ id, image, title, category, price, rating }) {
     }
   };
 
-  const handleWishlist = (e) => {
+  /*
+   * TOGGLE WISHLIST
+   */
+  const handleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    toast.info("Wishlist feature coming soon.");
+    if (!isAuthenticated) {
+      toast.info("Please login to add products to wishlist.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
+      return;
+    }
+
+    if (wishlistLoading) return;
+
+    try {
+      setWishlistLoading(true);
+
+      /*
+       * REMOVE FROM WISHLIST
+       */
+      if (isWishlisted) {
+        const response = await fetch(
+          `${VITE_API_URL}/api/wishlist/${user.id}/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsWishlisted(false);
+          toast.success("Removed from wishlist");
+        } else {
+          toast.error(data.message || "Failed to remove from wishlist.");
+        }
+
+        return;
+      }
+
+      /*
+       * ADD TO WISHLIST
+       */
+      const response = await fetch(`${VITE_API_URL}/api/wishlist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          product_id: id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsWishlisted(true);
+        toast.success("Added to wishlist ❤️");
+      } else if (response.status === 409) {
+        setIsWishlisted(true);
+        toast.info("Product is already in your wishlist.");
+      } else {
+        toast.error(data.message || "Failed to add product to wishlist.");
+      }
+    } catch (error) {
+      console.error("Wishlist error:", error);
+      toast.error("Unable to update wishlist.");
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const productRating = Number(rating || 0);
@@ -70,9 +194,10 @@ function ProductCard({ id, image, title, category, price, rating }) {
 
         <button
           type="button"
-          className="product-wishlist"
+          className={`product-wishlist ${isWishlisted ? "wishlisted" : ""}`}
           onClick={handleWishlist}
-          aria-label="Add to wishlist"
+          disabled={wishlistLoading}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           <FiHeart />
         </button>

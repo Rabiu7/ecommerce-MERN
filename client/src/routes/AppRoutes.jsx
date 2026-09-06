@@ -22,6 +22,7 @@ import Register from "../pages/Register/Register";
 import Payment from "../pages/Payment/Payment";
 import OrderSuccess from "../pages/OrderSuccess/OrderSuccess";
 import OrderDetails from "../pages/OrderDetails/OrderDetails";
+import Wishlist from "../pages/Wishlist/Wishlist";
 
 import AdminLogin from "../pages/AdminLogin/AdminLogin";
 import Admin from "../pages/Admin/Admin";
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/wishlist" element={<Wishlist />} />
         {/* Protected Customer Routes */}
         <Route
           path="/cart"

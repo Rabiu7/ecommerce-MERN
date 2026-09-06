@@ -4,6 +4,8 @@ import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
+import { useAuth } from "../../context/AuthContext";
+
 import {
   FiCheck,
   FiCheckCircle,
@@ -26,6 +28,7 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 function OrderSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, fetchCartCount } = useAuth();
   const [searchParams] = useSearchParams();
 
   const [order, setOrder] = useState(null);
@@ -115,6 +118,11 @@ function OrderSuccess() {
 
         setOrder(data.order);
 
+        // Refresh cart count only after payment/order is confirmed
+        if (user?.id) {
+          await fetchCartCount(user.id);
+        }
+
         if (data.orderId) {
           localStorage.setItem("orderId", String(data.orderId));
         }
@@ -174,33 +182,43 @@ function OrderSuccess() {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    // -----------------------------------------------
-    // COD
-    // -----------------------------------------------
+    const initializeOrder = async () => {
+      // -----------------------------------------------
+      // COD
+      // -----------------------------------------------
 
-    if (isCODOrder && codOrder) {
-      console.log("COD order detected");
+      if (isCODOrder && codOrder) {
+        console.log("COD order detected");
 
-      setOrder(codOrder);
-      setLoading(false);
-      setVerifying(false);
+        setOrder(codOrder);
 
-      localStorage.setItem("orderId", String(codOrderId || codOrder.id));
+        // Backend clears the cart after successful COD order placement
+        if (user?.id) {
+          await fetchCartCount(user.id);
+        }
 
-      return;
-    }
+        setLoading(false);
+        setVerifying(false);
 
-    // -----------------------------------------------
-    // ONLINE PAYMENT
-    // -----------------------------------------------
+        localStorage.setItem("orderId", String(codOrderId || codOrder.id));
 
-    if (verificationStarted.current) {
-      return;
-    }
+        return;
+      }
 
-    verificationStarted.current = true;
+      // -----------------------------------------------
+      // ONLINE PAYMENT
+      // -----------------------------------------------
 
-    verifyPayment();
+      if (verificationStarted.current) {
+        return;
+      }
+
+      verificationStarted.current = true;
+
+      await verifyPayment();
+    };
+
+    initializeOrder();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCODOrder, codOrder, codOrderId]);
@@ -345,7 +363,7 @@ function OrderSuccess() {
   // ORDER DATA
   // =====================================================
 
-  const localOrderId = order.id || codOrderId;
+  const publicOrderId = order?.public_order_id || "Order";
 
   const paymentMethod = order.payment_method || codPaymentMethod || "ONLINE";
 
@@ -397,14 +415,14 @@ function OrderSuccess() {
     <section className="order-success-page">
       <div className="success-wrapper">
         {/* =================================================
-            STEP PROGRESS
-        ================================================= */}
+              STEP PROGRESS
+          ================================================= */}
 
         <CheckoutSteps currentStep={3} />
 
         {/* =================================================
-            HERO
-        ================================================= */}
+              HERO
+          ================================================= */}
 
         <div className="success-hero">
           <div className="success-hero-icon">
@@ -425,14 +443,14 @@ function OrderSuccess() {
         </div>
 
         {/* =================================================
-            ORDER REFERENCE
-        ================================================= */}
+              ORDER REFERENCE
+          ================================================= */}
 
         <div className="order-reference-card">
           <div className="order-reference-main">
             <span>ORDER NUMBER</span>
 
-            <h2>#{localOrderId}</h2>
+            <h2>#{publicOrderId}</h2>
           </div>
 
           <div className={isCOD ? "order-status cod" : "order-status paid"}>
@@ -443,8 +461,8 @@ function OrderSuccess() {
         </div>
 
         {/* =================================================
-            QUICK ORDER INFO
-        ================================================= */}
+              QUICK ORDER INFO
+          ================================================= */}
 
         <div className="order-info-grid">
           <div className="order-info-card">
@@ -493,13 +511,13 @@ function OrderSuccess() {
         </div>
 
         {/* =================================================
-            MAIN CONTENT
-        ================================================= */}
+              MAIN CONTENT
+          ================================================= */}
 
         <div className="success-content-grid">
           {/* =============================================
-              LEFT
-          ============================================= */}
+                LEFT
+            ============================================= */}
 
           <div className="success-main-column">
             {/* ORDER ITEMS */}
@@ -600,8 +618,8 @@ function OrderSuccess() {
           </div>
 
           {/* =============================================
-              RIGHT SUMMARY
-          ============================================= */}
+                RIGHT SUMMARY
+            ============================================= */}
 
           <aside className="success-side-column">
             <div className="success-summary-card">
@@ -683,8 +701,8 @@ function OrderSuccess() {
         </div>
 
         {/* =================================================
-            ACTIONS
-        ================================================= */}
+              ACTIONS
+          ================================================= */}
 
         <div className="success-actions">
           <button
@@ -717,8 +735,8 @@ function OrderSuccess() {
         </div>
 
         {/* =================================================
-            FOOTER
-        ================================================= */}
+              FOOTER
+          ================================================= */}
 
         <div className="success-footer">
           <FiShield />

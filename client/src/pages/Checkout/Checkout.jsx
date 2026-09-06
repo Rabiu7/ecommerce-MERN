@@ -2,11 +2,12 @@ import "./Checkout.css";
 import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import {
   FiMapPin,
   FiPhone,
+  FiShoppingCart,
   FiUser,
   FiHome,
   FiArrowLeft,
@@ -24,8 +25,12 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Checkout() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, isAuthenticated } = useAuth();
+
+  const buyNow = location.state?.buyNow === true;
+  const buyNowItems = location.state?.cartItems || [];
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,12 +56,17 @@ function Checkout() {
     }
 
     fetchCheckoutData();
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user?.id, buyNow]);
 
   const fetchCheckoutData = async () => {
     setLoading(true);
 
-    await Promise.all([fetchCart(), fetchSavedAddress()]);
+    if (buyNow && buyNowItems.length > 0) {
+      setCartItems(buyNowItems);
+      await fetchSavedAddress();
+    } else {
+      await Promise.all([fetchCart(), fetchSavedAddress()]);
+    }
 
     setLoading(false);
   };
@@ -174,6 +184,7 @@ function Checkout() {
           shipping,
           address,
           cartItems,
+          buyNow,
         },
       });
     } catch (error) {
@@ -244,7 +255,11 @@ function Checkout() {
           <button
             type="button"
             className="checkout-back"
-            onClick={() => navigate("/cart")}
+            onClick={() =>
+              navigate(
+                buyNow ? `/products/${buyNowItems[0]?.product_id}` : "/cart",
+              )
+            }
           >
             <FiArrowLeft />
             <span>Back to Cart</span>
@@ -450,7 +465,10 @@ function Checkout() {
 
               <div className="summary-products">
                 {cartItems.map((item) => (
-                  <div className="summary-product" key={item.id}>
+                  <div
+                    className="summary-product"
+                    key={item.id || item.product_id}
+                  >
                     <div className="summary-product-image">
                       <img src={item.image} alt={item.name} />
                     </div>

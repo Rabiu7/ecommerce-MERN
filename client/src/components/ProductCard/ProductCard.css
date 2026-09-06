@@ -129,6 +129,15 @@
   transform: scale(1.08);
 }
 
+.product-wishlist.wishlisted {
+  color: #d64545;
+}
+
+.product-wishlist.wishlisted svg {
+  fill: #d64545;
+  stroke: #d64545;
+}
+
 /* =========================================================
    BODY
 ========================================================= */

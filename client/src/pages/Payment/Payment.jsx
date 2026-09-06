@@ -37,6 +37,7 @@ function Payment() {
     shipping = 0,
     address = {},
     cartItems = [],
+    buyNow = false,
   } = location.state || {};
 
   // =====================================================
@@ -101,6 +102,12 @@ function Payment() {
 
           shipping_address: address,
 
+          buy_now: buyNow,
+
+          buy_now_product_id: buyNow ? cartItems[0]?.product_id : null,
+
+          buy_now_quantity: buyNow ? Number(cartItems[0]?.quantity || 1) : null,
+
           customer: {
             name: user?.name || "",
             email: user?.email || "",
@@ -158,6 +165,12 @@ function Payment() {
         payment_method: "ONLINE",
 
         shipping_address: address,
+
+        buy_now: buyNow,
+
+        buy_now_product_id: buyNow ? cartItems[0]?.product_id : null,
+
+        buy_now_quantity: buyNow ? Number(cartItems[0]?.quantity || 1) : null,
 
         customer: {
           name: user?.name || "",
@@ -290,6 +303,7 @@ function Payment() {
       state: {
         address,
         cartItems,
+        buyNow,
       },
     });
   };

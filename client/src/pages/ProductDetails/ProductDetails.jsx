@@ -106,6 +106,39 @@ function ProductDetails() {
     }
   };
 
+  const buyNow = () => {
+    if (!isAuthenticated) {
+      toast.info("Please login to continue.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
+      return;
+    }
+
+    if (!product || product.stock <= 0) {
+      toast.error("Product is out of stock.");
+      return;
+    }
+
+    const buyNowItem = {
+      product_id: product.id,
+      name: product.name,
+      image: product.image,
+      price: Number(product.price),
+      quantity,
+      stock: product.stock,
+    };
+
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        cartItems: [buyNowItem],
+      },
+    });
+  };
+
   if (loading) {
     return (
       <section className="product-details-loading">
@@ -205,7 +238,11 @@ function ProductDetails() {
                   {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </button>
 
-                <button className="buy-btn" disabled={product.stock <= 0}>
+                <button
+                  className="buy-btn"
+                  onClick={buyNow}
+                  disabled={product.stock <= 0}
+                >
                   Buy Now
                 </button>
               </div>

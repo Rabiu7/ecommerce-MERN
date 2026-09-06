@@ -64,9 +64,72 @@ function Profile() {
   if (loading) {
     return (
       <section className="profile-page">
-        <div className="profile-loading">
-          <div className="profile-loader"></div>
-          <p>Loading your profile...</p>
+        <div className="profile-container">
+          <div className="profile-heading profile-heading-loading">
+            <span className="skeleton skeleton-label"></span>
+            <div className="skeleton skeleton-title"></div>
+            <div className="skeleton skeleton-description"></div>
+          </div>
+
+          <div className="profile-layout">
+            {/* PROFILE CARD SKELETON */}
+            <div className="profile-card profile-card-loading">
+              <div className="profile-cover">
+                <div className="profile-avatar skeleton-avatar"></div>
+              </div>
+
+              <div className="profile-main profile-main-loading">
+                <div className="skeleton skeleton-name"></div>
+                <div className="skeleton skeleton-email"></div>
+
+                <div className="skeleton skeleton-status"></div>
+
+                <div className="skeleton skeleton-button"></div>
+              </div>
+            </div>
+
+            {/* DETAILS SKELETON */}
+            <div className="profile-details">
+              <div className="details-header">
+                <div>
+                  <div className="skeleton skeleton-small-title"></div>
+                  <div className="skeleton skeleton-section-title"></div>
+                </div>
+
+                <div className="skeleton details-icon-skeleton"></div>
+              </div>
+
+              <div className="details-grid">
+                {[1, 2, 3, 4].map((item) => (
+                  <div className="detail-item skeleton-detail" key={item}>
+                    <div className="skeleton skeleton-detail-icon"></div>
+
+                    <div className="skeleton-detail-content">
+                      <div className="skeleton skeleton-detail-label"></div>
+                      <div className="skeleton skeleton-detail-value"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* QUICK ACTIONS SKELETON */}
+              <div className="quick-actions">
+                {[1, 2, 3].map((item) => (
+                  <div
+                    className="quick-action skeleton-quick-action"
+                    key={item}
+                  >
+                    <div className="skeleton skeleton-quick-icon"></div>
+
+                    <div className="skeleton-quick-content">
+                      <div className="skeleton skeleton-quick-title"></div>
+                      <div className="skeleton skeleton-quick-text"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     );
