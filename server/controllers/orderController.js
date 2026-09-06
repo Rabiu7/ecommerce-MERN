@@ -57,6 +57,7 @@ function createLocalOrder(
   orderStatus,
   shippingAddress,
   cart,
+  isBuyNow,
   callback,
 ) {
   Order.createOrder(
@@ -66,6 +67,7 @@ function createLocalOrder(
     paymentStatus,
     orderStatus,
     shippingAddress,
+    isBuyNow,
     (err, result) => {
       if (err) {
         return callback(err);
@@ -93,7 +95,6 @@ function createLocalOrder(
 
             if (itemErr) {
               failed = true;
-
               return callback(itemErr);
             }
 
@@ -142,7 +143,15 @@ function getCompleteOrder(orderId, userId, callback) {
 exports.checkout = async (req, res) => {
   const userId = req.user.id;
 
-  const { payment_method, shipping_address } = req.body;
+  const {
+    payment_method,
+    shipping_address,
+    buy_now,
+    buy_now_product_id,
+    buy_now_quantity,
+  } = req.body;
+
+  const isBuyNow = buy_now === true;
 
   // =======================================================
   // VALIDATE
@@ -160,12 +169,67 @@ exports.checkout = async (req, res) => {
   // GET CART
   // =======================================================
 
-  Order.getCart(userId, async (err, cart) => {
-    if (err) {
-      console.error("Get Cart Error:", err);
+  // =======================================================
+  // GET ORDER ITEMS
+  // =======================================================
 
-      return res.status(500).json({
-        message: "Failed to get cart",
+  const loadOrderItems = (callback) => {
+    // =====================================================
+    // BUY NOW
+    // =====================================================
+
+    if (isBuyNow) {
+      if (!buy_now_product_id) {
+        return callback(new Error("Buy Now product is required"));
+      }
+
+      const quantity = Number(buy_now_quantity || 1);
+
+      if (quantity < 1) {
+        return callback(new Error("Invalid quantity"));
+      }
+
+      return Order.getBuyNowProduct(
+        buy_now_product_id,
+        (productErr, products) => {
+          if (productErr) {
+            return callback(productErr);
+          }
+
+          if (!products || products.length === 0) {
+            return callback(new Error("Product not found"));
+          }
+
+          const product = products[0];
+
+          if (Number(product.stock) < quantity) {
+            return callback(new Error("Insufficient product stock"));
+          }
+
+          return callback(null, [
+            {
+              product_id: product.product_id,
+              quantity,
+              price: Number(product.price),
+            },
+          ]);
+        },
+      );
+    }
+
+    // =====================================================
+    // NORMAL CART
+    // =====================================================
+
+    Order.getCart(userId, callback);
+  };
+
+  loadOrderItems((err, cart) => {
+    if (err) {
+      console.error("Get Order Items Error:", err);
+
+      return res.status(400).json({
+        message: err.message || "Failed to get order items",
       });
     }
 
@@ -203,6 +267,7 @@ exports.checkout = async (req, res) => {
         "Confirmed",
         shipping_address,
         cart,
+        isBuyNow,
         (createErr, orderId) => {
           if (createErr) {
             console.error("COD Order Error:", createErr);
@@ -212,11 +277,7 @@ exports.checkout = async (req, res) => {
             });
           }
 
-          Order.clearCart(userId, (clearErr) => {
-            if (clearErr) {
-              console.error("Clear Cart Error:", clearErr);
-            }
-
+          const finishOrder = () => {
             return getCompleteOrder(
               orderId,
               userId,
@@ -254,6 +315,18 @@ exports.checkout = async (req, res) => {
                 });
               },
             );
+          };
+
+          if (isBuyNow) {
+            return finishOrder();
+          }
+
+          Order.clearCart(userId, (clearErr) => {
+            if (clearErr) {
+              console.error("Clear Cart Error:", clearErr);
+            }
+
+            return finishOrder();
           });
         },
       );
@@ -271,6 +344,7 @@ exports.checkout = async (req, res) => {
       "pending",
       shipping_address,
       cart,
+      isBuyNow,
       async (createErr, orderId) => {
         if (createErr) {
           console.error("Online Order Error:", createErr);
@@ -323,7 +397,7 @@ exports.checkout = async (req, res) => {
               notify_url: `${process.env.BACKEND_URL}/api/orders/cashfree/webhook`,
             },
 
-            order_note: `HomeNeeds Order #${orderId}`,
+            order_note: `HomeNeeds Order ${orderId}`,
           };
 
           console.log("Cashfree Create Order Payload:", payload);
@@ -577,15 +651,7 @@ exports.verifyPayment = async (req, res) => {
           // CLEAR CART
           // =============================================
 
-          Order.clearCart(userId, (clearErr) => {
-            if (clearErr) {
-              console.error("Clear Cart Error:", clearErr);
-            }
-
-            // ===========================================
-            // LOAD COMPLETE ORDER
-            // ===========================================
-
+          const finishSuccessfulPayment = () => {
             getCompleteOrder(order.id, userId, (completeErr, completeOrder) => {
               if (completeErr) {
                 console.error("Complete Order Error:", completeErr);
@@ -596,36 +662,48 @@ exports.verifyPayment = async (req, res) => {
               }
 
               if (!completeOrder) {
-                console.error(
-                  "Complete order is empty for local order ID:",
-                  order.id,
-                );
-
                 return res.status(500).json({
                   message:
                     "Payment successful but order details could not be loaded",
                 });
               }
 
-              console.log(
-                "Complete Order:",
-                JSON.stringify(completeOrder, null, 2),
-              );
-
               return res.json({
                 success: true,
+
                 orderId: order.id,
+
                 cashfreeOrderId: order.cashfree_order_id,
+
                 totalAmount: Number(order.total_amount),
+
                 paymentMethod: order.payment_method,
+
                 paymentStatus: "paid",
+
                 orderStatus: "Confirmed",
+
                 shippingAddress: parseShippingAddress(order.shipping_address),
+
                 cashfreePaymentId: paymentId,
+
                 order: completeOrder,
+
                 message: "Payment verified successfully",
               });
             });
+          };
+
+          if (order.is_buy_now) {
+            return finishSuccessfulPayment();
+          }
+
+          Order.clearCart(userId, (clearErr) => {
+            if (clearErr) {
+              console.error("Clear Cart Error:", clearErr);
+            }
+
+            return finishSuccessfulPayment();
           });
         });
       }
@@ -748,9 +826,19 @@ exports.cashfreeWebhook = async (req, res) => {
         Order.markPaymentSuccessful(localOrder.id, paymentId, (updateErr) => {
           if (updateErr) {
             console.error("Webhook Update Error:", updateErr);
-          } else {
-            Order.clearCart(localOrder.user_id, () => {});
+            return;
           }
+
+          // Only clear cart for normal cart orders.
+          if (Number(localOrder.is_buy_now) === 1) {
+            return;
+          }
+
+          Order.clearCart(localOrder.user_id, (clearErr) => {
+            if (clearErr) {
+              console.error("Webhook Clear Cart Error:", clearErr);
+            }
+          });
         });
       }
 

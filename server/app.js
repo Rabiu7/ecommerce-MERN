@@ -8,7 +8,10 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://ecommerce-mern-hazel.vercel.app"],
+  origin: [
+    "http://10.211.252.133:5173",
+    "https://ecommerce-mern-hazel.vercel.app",
+  ],
   credentials: true,
 };
 
@@ -28,6 +31,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminCustomerRoutes = require("./routes/adminCustomerRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
 
 // Auth API
 app.use("/api/auth", authRoutes);
@@ -51,6 +55,8 @@ app.use("/api/addresses", addressRoutes);
 
 // Order API
 app.use("/api/orders", orderRoutes);
+
+app.use("/api/wishlist", wishlistRoutes);
 
 app.use("/api/admin/orders", adminOrderRoutes);
 

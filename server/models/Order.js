@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const crypto = require("crypto");
 
 const Order = {
   // =========================================================
@@ -12,25 +13,28 @@ const Order = {
     paymentStatus,
     orderStatus,
     shippingAddress,
+    isBuyNow,
     callback,
   ) {
     const sql = `
       INSERT INTO orders
       (
         user_id,
+        is_buy_now,
         total_amount,
         payment_method,
         payment_status,
         order_status,
         shipping_address
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(
       sql,
       [
         userId,
+        isBuyNow ? 1 : 0,
         totalAmount,
         paymentMethod,
         paymentStatus,
@@ -40,10 +44,6 @@ const Order = {
       callback,
     );
   },
-
-  // =========================================================
-  // ADD ORDER ITEM
-  // =========================================================
 
   addOrderItem(orderId, productId, quantity, price, callback) {
     const sql = `
@@ -60,10 +60,6 @@ const Order = {
     db.query(sql, [orderId, productId, quantity, price], callback);
   },
 
-  // =========================================================
-  // GET CART
-  // =========================================================
-
   getCart(userId, callback) {
     const sql = `
       SELECT
@@ -77,6 +73,20 @@ const Order = {
     `;
 
     db.query(sql, [userId], callback);
+  },
+
+  getBuyNowProduct(productId, callback) {
+    const sql = `
+      SELECT
+        id AS product_id,
+        price,
+        stock
+      FROM products
+      WHERE id = ?
+      LIMIT 1
+    `;
+
+    db.query(sql, [productId], callback);
   },
 
   // =========================================================
@@ -264,6 +274,7 @@ const Order = {
     const sql = `
       SELECT
         o.id,
+        o.public_order_id,
         o.user_id,
         o.total_amount,
         o.payment_method,
