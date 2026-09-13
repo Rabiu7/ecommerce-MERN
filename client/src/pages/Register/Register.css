@@ -1,217 +1,535 @@
+/* ========================================
+   REGISTER PAGE
+======================================== */
+
 .register-page {
-  min-height: 100vh;
-
+  min-height: calc(100vh - 80px);
+  padding: 55px 20px;
+  background: #faf9f7;
   display: flex;
-
-  align-items: center;
-
   justify-content: center;
-
-  background: #f8fafc;
-
-  padding: 50px 20px;
 }
 
 .register-container {
   width: 100%;
-
-  max-width: 1250px;
-
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  background: white;
-
-  border-radius: 25px;
-
-  overflow: hidden;
-
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  max-width: 760px;
 }
 
-.register-image img {
-  width: 100%;
-
-  height: 100%;
-
-  object-fit: cover;
-}
-
-.register-form-container {
-  padding: 55px;
-}
+/* ========================================
+   BRAND
+======================================== */
 
 .register-header {
-  margin-bottom: 35px;
-}
-
-.register-header h1 {
-  font-size: 2.5rem;
-
-  color: #1f2937;
-
-  margin-bottom: 10px;
-}
-
-.register-header p {
-  color: #6b7280;
-}
-
-.register-form {
   display: flex;
-
-  flex-direction: column;
-
-  gap: 20px;
-}
-
-.input-box {
-  display: flex;
-
   align-items: center;
-
-  border: 1px solid #ddd;
-
-  border-radius: 10px;
-
-  padding: 15px 18px;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 45px;
 }
 
-.input-box svg {
-  color: #2f855a;
-
-  font-size: 20px;
+.register-logo {
+  width: 43px;
+  height: 43px;
+  border-radius: 11px;
+  background: #a27b3f;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
-.input-box input {
-  flex: 1;
+.register-brand {
+  display: flex;
+  flex-direction: column;
+}
 
+.register-brand span {
+  color: #333;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.register-brand small {
+  margin-top: 2px;
+  color: #999;
+  font-size: 10px;
+}
+
+/* ========================================
+   INTRO
+======================================== */
+
+.register-intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.register-label {
+  display: block;
+  margin-bottom: 11px;
+  color: #a27b3f;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.register-intro h1 {
+  margin: 0;
+  color: #333;
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+
+.register-intro p {
+  max-width: 450px;
+  margin: 10px auto 0;
+  color: #888;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ========================================
+   MAIN CARD
+======================================== */
+
+.register-card {
+  padding: 38px;
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.045);
+}
+
+/* ========================================
+   SECTIONS
+======================================== */
+
+.register-section {
+  padding-bottom: 32px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid #eee;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 25px;
+}
+
+.section-number {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f3ede3;
+  color: #a27b3f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.section-title h2 {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.section-title p {
+  margin: 3px 0 0;
+  color: #999;
+  font-size: 11px;
+}
+
+/* ========================================
+   FIELDS
+======================================== */
+
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 16px;
+}
+
+.field {
+  min-width: 0;
+}
+
+.field-full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: #444;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.field label span {
+  color: #aaa;
+  font-size: 9px;
+  font-weight: 400;
+}
+
+/* ========================================
+   INPUT
+======================================== */
+
+.input-container {
+  height: 49px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e6e2dc;
+  border-radius: 8px;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input-container > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #a27b3f;
+}
+
+.input-container:focus-within {
+  border-color: #a27b3f;
+  box-shadow: 0 0 0 3px rgba(162, 123, 63, 0.09);
+}
+
+.input-container input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
   border: none;
-
   outline: none;
-
-  margin-left: 15px;
-
-  font-size: 16px;
+  background: transparent;
+  color: #333;
+  font-family: inherit;
+  font-size: 12px;
 }
 
-.password-toggle {
+.input-container input::placeholder {
+  color: #b4b4b4;
+}
+
+/* ========================================
+   PASSWORD BUTTON
+======================================== */
+
+.eye-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  flex-shrink: 0;
   border: none;
-
-  background: none;
-
+  background: transparent;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-
-  color: #777;
 }
+
+.eye-button:hover {
+  color: #a27b3f;
+}
+
+.eye-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   PASSWORD STRENGTH
+======================================== */
 
 .password-strength {
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 10px;
+  margin-top: 10px;
 }
 
-.password-strength span {
-  font-size: 14px;
+.strength-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
 
-  color: #666;
+.strength-info span {
+  color: #aaa;
+  font-size: 9px;
+}
+
+.strength-info strong {
+  font-size: 9px;
+}
+
+.strength-info strong.weak {
+  color: #c85d5d;
+}
+
+.strength-info strong.medium {
+  color: #a27b3f;
+}
+
+.strength-info strong.strong {
+  color: #4f8662;
 }
 
 .strength-bar {
   width: 100%;
-
-  height: 8px;
-
-  background: #e5e7eb;
-
-  border-radius: 20px;
-
+  height: 3px;
   overflow: hidden;
-}
-
-.strength-fill {
-  width: 70%;
-
-  height: 100%;
-
-  background: #22c55e;
-}
-
-.terms {
-  display: flex;
-
-  align-items: center;
-
-  gap: 10px;
-
-  font-size: 14px;
-
-  color: #666;
-}
-
-.terms a {
-  color: #2f855a;
-
-  text-decoration: none;
-}
-
-.register-btn {
-  padding: 16px;
-
-  border: none;
-
   border-radius: 10px;
-
-  background: #2f855a;
-
-  color: white;
-
-  font-size: 16px;
-
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: 0.3s;
+  background: #eee;
 }
 
-.register-btn:hover {
-  background: #276749;
+.strength-progress {
+  height: 100%;
+  border-radius: inherit;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
 }
 
-.login-link {
-  text-align: center;
-
-  color: #666;
+.strength-progress.weak {
+  background: #c85d5d;
 }
 
-.login-link a {
-  margin-left: 8px;
+.strength-progress.medium {
+  background: #a27b3f;
+}
 
-  color: #2f855a;
+.strength-progress.strong {
+  background: #4f8662;
+}
 
+/* ========================================
+   PASSWORD MATCH
+======================================== */
+
+.password-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  font-size: 9px;
+}
+
+.password-status svg {
+  width: 12px;
+  height: 12px;
+}
+
+.password-status.matched {
+  color: #4f8662;
+}
+
+.password-status.not-matched {
+  color: #c85d5d;
+}
+
+/* ========================================
+   TERMS
+======================================== */
+
+.terms-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 24px;
+}
+
+.terms-check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #f3ede3;
+  color: #a27b3f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terms-check svg {
+  width: 10px;
+  height: 10px;
+}
+
+.terms-box p {
+  margin: 1px 0 0;
+  color: #999;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.terms-box a {
+  color: #a27b3f;
   text-decoration: none;
-
   font-weight: 600;
 }
 
-@media (max-width: 900px) {
-  .register-container {
+.terms-box a:hover {
+  color: #8d6834;
+}
+
+/* ========================================
+   REGISTER BUTTON
+======================================== */
+
+.register-button {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 8px;
+  background: #a27b3f;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-button:hover:not(:disabled) {
+  background: #8d6834;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(162, 123, 63, 0.2);
+}
+
+.register-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.register-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   LOGIN
+======================================== */
+
+.login-prompt {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 21px;
+  font-size: 11px;
+}
+
+.login-prompt span {
+  color: #999;
+}
+
+.login-prompt a {
+  color: #a27b3f;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-prompt a:hover {
+  color: #8d6834;
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.register-footer {
+  margin-top: 28px;
+  display: flex;
+  justify-content: space-between;
+  color: #aaa;
+  font-size: 9px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 600px) {
+  .register-page {
+    min-height: 100vh;
+    padding: 35px 15px;
+  }
+
+  .register-header {
+    margin-bottom: 35px;
+  }
+
+  .register-intro {
+    margin-bottom: 25px;
+  }
+
+  .register-intro h1 {
+    font-size: 29px;
+  }
+
+  .register-intro p {
+    font-size: 12px;
+  }
+
+  .register-card {
+    padding: 25px 20px;
+    border-radius: 13px;
+  }
+
+  .fields-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 
-  .register-image {
+  .field-full {
+    grid-column: auto;
+  }
+
+  .register-section {
+    padding-bottom: 27px;
+    margin-bottom: 27px;
+  }
+
+  .register-footer {
+    padding: 0 5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-page {
+    padding: 25px 10px;
+  }
+
+  .register-card {
+    padding: 22px 16px;
+  }
+
+  .register-intro h1 {
+    font-size: 26px;
+  }
+
+  .register-footer span:last-child {
     display: none;
-  }
-
-  .register-form-container {
-    padding: 35px 25px;
-  }
-
-  .register-header h1 {
-    font-size: 2rem;
   }
 }

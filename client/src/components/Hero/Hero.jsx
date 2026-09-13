@@ -3,8 +3,55 @@ import "./Hero.css";
 import heroImage from "../../assets/images/hero.png";
 
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Hero() {
+  const [averageRating, setAverageRating] = useState(null);
+
+  useEffect(() => {
+    const fetchRating = async () => {
+      try {
+        const response = await fetch(`${VITE_API_URL}/api/reviews`);
+
+        if (!response.ok) {
+          return;
+        }
+
+        const products = await response.json();
+
+        console.log("Review API Response:", products);
+
+        const ratedProducts = products.filter(
+          (product) =>
+            product.rating !== null &&
+            product.rating !== undefined &&
+            Number(product.rating) >= 4,
+        );
+
+        if (ratedProducts.length === 0) {
+          return;
+        }
+
+        const totalRating = ratedProducts.reduce(
+          (sum, product) => sum + Number(product.rating),
+          0,
+        );
+
+        const average = totalRating / ratedProducts.length;
+
+        if (average >= 4) {
+          setAverageRating(average);
+        }
+      } catch (error) {
+        console.error("Error fetching product ratings:", error);
+      }
+    };
+
+    fetchRating();
+  }, []);
+
   return (
     <section className="hero">
       <div className="hero-container">
@@ -41,12 +88,16 @@ function Hero() {
               <span>Quality Products</span>
             </div>
 
-            <div className="trust-divider"></div>
+            {averageRating !== null && (
+              <>
+                <div className="trust-divider"></div>
 
-            <div>
-              <strong>4.8★</strong>
-              <span>Customer Rating</span>
-            </div>
+                <div>
+                  <strong>{averageRating.toFixed(1)}★</strong>
+                  <span>Highly Rated</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

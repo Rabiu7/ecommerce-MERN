@@ -2,7 +2,16 @@ import "./Login.css";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FiEye, FiEyeOff, FiMail, FiLock, FiAlertCircle } from "react-icons/fi";
+
+import {
+  FiEye,
+  FiEyeOff,
+  FiMail,
+  FiLock,
+  FiAlertCircle,
+  FiArrowRight,
+  FiCheck,
+} from "react-icons/fi";
 
 import { useAuth } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
@@ -13,9 +22,7 @@ function Login() {
   const { login } = useAuth();
 
   const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
@@ -27,8 +34,8 @@ function Login() {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((previous) => ({
+      ...previous,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
@@ -61,103 +68,171 @@ function Login() {
   };
 
   return (
-    <section className="login-page">
-      <div className="login-card">
-        <div className="login-left">
-          <img
-            src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1400&q=80"
-            alt="Home"
-          />
+    <main className="login-page">
+      <div className="login-container">
+        {/* BRAND */}
 
-          <div className="overlay">
-            <h2>HomeNeeds</h2>
+        <header className="login-brand">
+          <div className="login-logo">HN</div>
 
-            <p>Elegant essentials for a beautiful home.</p>
+          <div className="login-brand-text">
+            <span>HomeNeeds</span>
+            <small>Everything your home needs.</small>
           </div>
+        </header>
+
+        {/* INTRO */}
+
+        <div className="login-intro">
+          <span className="login-label">WELCOME BACK</span>
+
+          <h1>Sign in to your account</h1>
+
+          <p>Continue shopping and manage your HomeNeeds account.</p>
         </div>
 
-        <div className="login-right">
-          <div className="login-header">
-            <span>WELCOME BACK</span>
+        {/* LOGIN CARD */}
 
-            <h1>Sign In</h1>
-
-            <p>Login to continue shopping.</p>
-          </div>
+        <div className="login-card">
+          {/* ERROR */}
 
           {error && (
-            <div className="error-box">
-              <FiAlertCircle />
+            <div className="login-error">
+              <div className="error-icon">
+                <FiAlertCircle />
+              </div>
 
-              <span>{error}</span>
+              <div>
+                <strong>Unable to sign in</strong>
+                <span>{error}</span>
+              </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="login-form">
-            <div className="input-box">
-              <FiMail />
+          <form className="login-form" onSubmit={handleSubmit}>
+            {/* EMAIL */}
 
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+            <div className="login-field">
+              <label htmlFor="email">Email Address</label>
+
+              <div className="login-input">
+                <FiMail />
+
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email address"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
-            <div className="input-box">
-              <FiLock />
+            {/* PASSWORD */}
 
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+            <div className="login-field">
+              <div className="password-label">
+                <label htmlFor="password">Password</label>
 
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
+                <Link to="/forgot-password">Forgot Password?</Link>
+              </div>
+
+              <div className="login-input">
+                <FiLock />
+
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete="current-password"
+                />
+
+                <button
+                  type="button"
+                  className="login-eye"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
             </div>
+
+            {/* OPTIONS */}
 
             <div className="login-options">
-              <label className="remember">
-                <input
-                  type="checkbox"
-                  name="remember"
-                  checked={formData.remember}
-                  onChange={handleChange}
-                />
-                Remember me
+              <label className="remember-option">
+                <span
+                  className={`custom-checkbox ${
+                    formData.remember ? "checked" : ""
+                  }`}
+                >
+                  {formData.remember && <FiCheck />}
+
+                  <input
+                    type="checkbox"
+                    name="remember"
+                    checked={formData.remember}
+                    onChange={handleChange}
+                  />
+                </span>
+
+                <span>Remember me</span>
               </label>
-
-              <Link to="/forgot-password">Forgot Password?</Link>
             </div>
 
-            <button className="login-btn" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+            {/* SUBMIT */}
+
+            <button type="submit" className="login-button" disabled={loading}>
+              <span>{loading ? "Signing In..." : "Sign In"}</span>
+
+              {!loading && <FiArrowRight />}
             </button>
-
-            <div className="divider">
-              <span>OR</span>
-            </div>
-
-            <p className="register-link">
-              Don't have an account?
-              <Link to="/register">Create Account</Link>
-            </p>
           </form>
+
+          {/* DIVIDER */}
+
+          <div className="login-divider">
+            <span></span>
+            <strong>OR</strong>
+            <span></span>
+          </div>
+
+          {/* REGISTER */}
+
+          <div className="new-account">
+            <p>Don't have a HomeNeeds account?</p>
+
+            <Link to="/register">
+              Create Account
+              <FiArrowRight />
+            </Link>
+          </div>
         </div>
+
+        {/* SECURITY NOTE */}
+
+        <div className="login-footer">
+          <div className="secure-badge">
+            <FiLock />
+          </div>
+
+          <div>
+            <strong>Secure shopping experience</strong>
+            <span>Your account information is protected.</span>
+          </div>
+        </div>
+
+        <div className="copyright">© HomeNeeds Store</div>
       </div>
-    </section>
+    </main>
   );
 }
 

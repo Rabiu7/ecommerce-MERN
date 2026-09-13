@@ -52,24 +52,62 @@ const updateReviewVerification = (req, res) => {
   const { id } = req.params;
   const { is_verified } = req.body;
 
-  const sql = `
-    UPDATE reviews
-    SET is_verified = ?
+  // First get the product_id of this review
+  const getReviewSql = `
+    SELECT product_id
+    FROM reviews
     WHERE id = ?
   `;
 
-  db.query(sql, [is_verified, id], (err, result) => {
-    if (err) {
-      console.error("Update review error:", err);
+  db.query(getReviewSql, [id], (getErr, reviewResult) => {
+    if (getErr) {
+      console.error("Get review error:", getErr);
 
       return res.status(500).json({
-        message: "Failed to update review",
-        error: err.message,
+        message: "Failed to get review",
+        error: getErr.message,
       });
     }
 
-    res.status(200).json({
-      message: "Review updated successfully",
+    if (reviewResult.length === 0) {
+      return res.status(404).json({
+        message: "Review not found",
+      });
+    }
+
+    const productId = reviewResult[0].product_id;
+
+    const updateSql = `
+      UPDATE reviews
+      SET is_verified = ?
+      WHERE id = ?
+    `;
+
+    db.query(updateSql, [is_verified, id], (err) => {
+      if (err) {
+        console.error("Update review error:", err);
+
+        return res.status(500).json({
+          message: "Failed to update review",
+          error: err.message,
+        });
+      }
+
+      // Recalculate product rating
+      updateProductRating(product_id, (ratingErr) => {
+        if (ratingErr) {
+          return res.status(500).json({
+            message: "Review submitted but product rating failed to update",
+            error: ratingErr.message,
+          });
+        }
+
+        return res.status(201).json({
+          success: true,
+          reviewId: result.insertId,
+          message: "Review submitted successfully",
+        });
+      });
     });
   });
 };
@@ -80,23 +118,59 @@ const updateReviewVerification = (req, res) => {
 const deleteReview = (req, res) => {
   const { id } = req.params;
 
-  const sql = `
-    DELETE FROM reviews
+  // First get product_id
+  const getReviewSql = `
+    SELECT product_id
+    FROM reviews
     WHERE id = ?
   `;
 
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error("Delete review error:", err);
+  db.query(getReviewSql, [id], (getErr, reviewResult) => {
+    if (getErr) {
+      console.error("Get review error:", getErr);
 
       return res.status(500).json({
-        message: "Failed to delete review",
-        error: err.message,
+        message: "Failed to get review",
+        error: getErr.message,
       });
     }
 
-    res.status(200).json({
-      message: "Review deleted successfully",
+    if (reviewResult.length === 0) {
+      return res.status(404).json({
+        message: "Review not found",
+      });
+    }
+
+    const productId = reviewResult[0].product_id;
+
+    const deleteSql = `
+      DELETE FROM reviews
+      WHERE id = ?
+    `;
+
+    db.query(deleteSql, [id], (err) => {
+      if (err) {
+        console.error("Delete review error:", err);
+
+        return res.status(500).json({
+          message: "Failed to delete review",
+          error: err.message,
+        });
+      }
+
+      // Recalculate product rating
+      updateProductRating(productId, (ratingErr) => {
+        if (ratingErr) {
+          return res.status(500).json({
+            message: "Review deleted but product rating failed to update",
+            error: ratingErr.message,
+          });
+        }
+
+        res.status(200).json({
+          message: "Review deleted and product rating updated successfully",
+        });
+      });
     });
   });
 };
@@ -263,6 +337,31 @@ const checkUserReview = (req, res) => {
       reviewed: results.length > 0,
       review: results.length > 0 ? results[0] : null,
     });
+  });
+};
+
+const updateProductRating = (productId, callback) => {
+  const sql = `
+    UPDATE products p
+    SET p.rating = COALESCE(
+      (
+        SELECT ROUND(AVG(r.rating), 1)
+        FROM reviews r
+        WHERE r.product_id = ?
+          AND r.is_verified = 1
+      ),
+      0
+    )
+    WHERE p.id = ?
+  `;
+
+  db.query(sql, [productId, productId], (err) => {
+    if (err) {
+      console.error("Update product rating error:", err);
+      return callback(err);
+    }
+
+    callback(null);
   });
 };
 

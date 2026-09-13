@@ -2,6 +2,7 @@ import "./OrderDetails.css";
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { FiArrowLeft, FiPackage, FiStar, FiX, FiCheck } from "react-icons/fi";
 
@@ -132,7 +133,7 @@ function OrderDetails() {
     if (!reviewProduct) return;
 
     if (rating === 0) {
-      alert("Please select a rating.");
+      toast.error("Please select a rating.");
       return;
     }
 
@@ -169,7 +170,7 @@ function OrderDetails() {
 
       closeReviewModal();
 
-      alert("Review submitted successfully!");
+      toast.success("Review submitted successfully!");
     } catch (error) {
       console.error("Submit Review Error:", error);
 

@@ -12,6 +12,7 @@ import {
   FiLock,
   FiEye,
   FiEyeOff,
+  FiCheck,
 } from "react-icons/fi";
 
 import { registerUser } from "../../services/authService";
@@ -20,9 +21,7 @@ function Register() {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -34,11 +33,49 @@ function Register() {
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
+
+  const getPasswordStrength = () => {
+    const password = formData.password;
+
+    if (!password) {
+      return {
+        label: "",
+        width: "0%",
+        level: "",
+      };
+    }
+
+    if (password.length < 6) {
+      return {
+        label: "Weak",
+        width: "30%",
+        level: "weak",
+      };
+    }
+
+    if (password.length < 10) {
+      return {
+        label: "Good",
+        width: "65%",
+        level: "medium",
+      };
+    }
+
+    return {
+      label: "Strong",
+      width: "100%",
+      level: "strong",
+    };
+  };
+
+  const passwordStrength = getPasswordStrength();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,136 +105,245 @@ function Register() {
   };
 
   return (
-    <section className="register-page">
+    <main className="register-page">
       <div className="register-container">
-        <div className="register-image">
-          <img
-            src="https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1200"
-            alt="Register"
-          />
+        {/* HEADER */}
+
+        <header className="register-header">
+          <div className="register-logo">HN</div>
+
+          <div className="register-brand">
+            <span>HomeNeeds</span>
+            <small>Everything your home needs.</small>
+          </div>
+        </header>
+
+        <div className="register-intro">
+          <span className="register-label">CREATE ACCOUNT</span>
+
+          <h1>Create your account</h1>
+
+          <p>Sign up to enjoy a simpler and better shopping experience.</p>
         </div>
 
-        <div className="register-form-container">
-          <div className="register-header">
-            <h1>Create Account</h1>
-            <p>Join us and start shopping today.</p>
-          </div>
+        {/* FORM CARD */}
 
-          <form className="register-form" onSubmit={handleSubmit}>
-            <div className="input-box">
-              <FiUser />
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
+        <form className="register-card" onSubmit={handleSubmit}>
+          {/* PERSONAL DETAILS */}
 
-            <div className="input-box">
-              <FiMail />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <section className="register-section">
+            <div className="section-title">
+              <div className="section-number">01</div>
 
-            <div className="input-box">
-              <FiPhone />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-box">
-              <FiLock />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
-
-            <div className="input-box">
-              <FiLock />
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
-
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
-
-            <div className="password-strength">
-              <span>Password Strength</span>
-
-              <div className="strength-bar">
-                <div
-                  className="strength-fill"
-                  style={{
-                    width:
-                      formData.password.length < 6
-                        ? "30%"
-                        : formData.password.length < 10
-                          ? "60%"
-                          : "100%",
-                  }}
-                ></div>
+              <div>
+                <h2>Personal details</h2>
+                <p>Your basic information</p>
               </div>
             </div>
 
-            <label className="terms">
-              <input type="checkbox" required />
+            <div className="fields-grid">
+              {/* NAME */}
 
-              <span>
-                I agree to the
-                <Link to="#"> Terms & Conditions</Link>
-              </span>
-            </label>
+              <div className="field">
+                <label htmlFor="name">Full Name</label>
 
-            <button type="submit" className="register-btn" disabled={loading}>
-              {loading ? "Creating..." : "Create Account"}
-            </button>
+                <div className="input-container">
+                  <FiUser />
 
-            <p className="login-link">
-              Already have an account?
-              <Link to="/login"> Login</Link>
-            </p>
-          </form>
-        </div>
+                  <input
+                    id="name"
+                    type="text"
+                    name="name"
+                    placeholder="Enter your full name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* PHONE */}
+
+              <div className="field">
+                <label htmlFor="phone">
+                  Phone Number
+                  <span>Optional</span>
+                </label>
+
+                <div className="input-container">
+                  <FiPhone />
+
+                  <input
+                    id="phone"
+                    type="tel"
+                    name="phone"
+                    placeholder="Enter your phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* EMAIL */}
+
+              <div className="field field-full">
+                <label htmlFor="email">Email Address</label>
+
+                <div className="input-container">
+                  <FiMail />
+
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* SECURITY */}
+
+          <section className="register-section">
+            <div className="section-title">
+              <div className="section-number">02</div>
+
+              <div>
+                <h2>Account security</h2>
+                <p>Protect your account</p>
+              </div>
+            </div>
+
+            <div className="fields-grid">
+              {/* PASSWORD */}
+
+              <div className="field">
+                <label htmlFor="password">Password</label>
+
+                <div className="input-container">
+                  <FiLock />
+
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Create a password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="eye-button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+
+                {formData.password && (
+                  <div className="password-strength">
+                    <div className="strength-info">
+                      <span>Password strength</span>
+
+                      <strong className={passwordStrength.level}>
+                        {passwordStrength.label}
+                      </strong>
+                    </div>
+
+                    <div className="strength-bar">
+                      <div
+                        className={`strength-progress ${passwordStrength.level}`}
+                        style={{
+                          width: passwordStrength.width,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* CONFIRM PASSWORD */}
+
+              <div className="field">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+
+                <div className="input-container">
+                  <FiLock />
+
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="eye-button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+
+                {formData.confirmPassword && (
+                  <div
+                    className={`password-status ${
+                      formData.password === formData.confirmPassword
+                        ? "matched"
+                        : "not-matched"
+                    }`}
+                  >
+                    {formData.password === formData.confirmPassword ? (
+                      <>
+                        <FiCheck />
+                        Passwords match
+                      </>
+                    ) : (
+                      "Passwords do not match"
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* SUBMIT */}
+
+          <button type="submit" className="register-button" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+
+          {/* LOGIN */}
+
+          <div className="login-prompt">
+            <span>Already have an account?</span>
+
+            <Link to="/login">Login</Link>
+          </div>
+        </form>
+
+        <footer className="register-footer">
+          <span>© HomeNeeds Store</span>
+          <span>Simple. Useful. Beautiful.</span>
+        </footer>
       </div>
-    </section>
+    </main>
   );
 }
 

@@ -8,10 +8,7 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: [
-    "http://10.211.252.133:5173",
-    "https://ecommerce-mern-hazel.vercel.app",
-  ],
+  origin: ["http://localhost:5173", "https://ecommerce-mern-hazel.vercel.app"],
   credentials: true,
 };
 

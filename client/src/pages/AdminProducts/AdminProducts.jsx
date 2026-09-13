@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import "./AdminProducts.css";
 
@@ -7,10 +8,11 @@ import { toast } from "react-toastify";
 const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
 
 function AdminProducts() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(searchParams.get("add") === "true");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -233,7 +235,17 @@ function AdminProducts() {
 
         <button
           className="add-product-btn"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            const nextValue = !showForm;
+
+            setShowForm(nextValue);
+
+            if (nextValue) {
+              setSearchParams({ add: "true" });
+            } else {
+              setSearchParams({});
+            }
+          }}
         >
           <span>{showForm ? "×" : "+"}</span>
 
@@ -386,7 +398,10 @@ function AdminProducts() {
               <button
                 type="button"
                 className="cancel-btn"
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setSearchParams({});
+                }}
               >
                 Cancel
               </button>
