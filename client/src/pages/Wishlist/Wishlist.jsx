@@ -1,12 +1,13 @@
 import "./Wishlist.css";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
   FiHeart,
   FiShoppingBag,
   FiTrash2,
+  FiUser,
   FiArrowLeft,
   FiShoppingCart,
   FiPackage,
@@ -34,7 +35,7 @@ function Wishlist() {
     fetchWishlist();
   }, [user?.id]);
 
-  const fetchWishlist = async () => {
+  const fetchWishlist = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -59,7 +60,7 @@ function Wishlist() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id]);
 
   const removeFromWishlist = async (productId) => {
     try {
