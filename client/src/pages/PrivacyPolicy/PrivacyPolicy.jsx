@@ -1,13 +1,6 @@
 import "./PrivacyPolicy.css";
 
-import {
-  FiShield,
-  FiUser,
-  FiDatabase,
-  FiLock,
-  FiEye,
-  FiMail,
-} from "react-icons/fi";
+import { FiShield, FiUser, FiDatabase, FiEye, FiMail } from "react-icons/fi";
 
 function PrivacyPolicy() {
   return (

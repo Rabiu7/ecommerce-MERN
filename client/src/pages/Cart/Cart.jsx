@@ -1,6 +1,7 @@
 import "./Cart.css";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -23,41 +24,55 @@ function Cart() {
 
   const navigate = useNavigate();
 
+  const userId = user?.id;
+
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      fetchCart();
-      fetchCartCount(user.id);
-    } else {
-      setLoading(false);
+  /* =====================================================
+     FETCH CART
+  ===================================================== */
+
+  const fetchCart = useCallback(async () => {
+    if (!userId) {
+      return;
     }
-  }, [isAuthenticated, user?.id]);
 
-  // =====================================================
-  // FETCH CART
-  // =====================================================
-
-  const fetchCart = async () => {
     try {
-      const response = await fetch(`${VITE_API_URL}/api/cart/${user.id}`);
+      const response = await fetch(`${VITE_API_URL}/api/cart/${userId}`);
 
       const data = await response.json();
 
       setCartItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Fetch cart error:", error);
+
       setCartItems([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  // =====================================================
-  // UPDATE QUANTITY
-  // =====================================================
+  /* =====================================================
+     INITIAL CART LOAD
+  ===================================================== */
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      return;
+    }
+
+    const loadCart = async () => {
+      await fetchCart();
+    };
+
+    loadCart();
+  }, [isAuthenticated, userId, fetchCart]);
+
+  /* =====================================================
+     UPDATE QUANTITY
+  ===================================================== */
 
   const updateQuantity = async (item, quantity) => {
     if (quantity < 1 || updatingId === item.id) {
@@ -80,7 +95,10 @@ function Cart() {
       });
 
       await fetchCart();
-      fetchCartCount(user.id);
+
+      if (userId) {
+        await fetchCartCount(userId);
+      }
     } catch (error) {
       console.error("Update quantity error:", error);
     } finally {
@@ -88,9 +106,9 @@ function Cart() {
     }
   };
 
-  // =====================================================
-  // REMOVE ITEM
-  // =====================================================
+  /* =====================================================
+     REMOVE ITEM
+  ===================================================== */
 
   const removeItem = async (id) => {
     try {
@@ -101,7 +119,10 @@ function Cart() {
       });
 
       await fetchCart();
-      fetchCartCount(user.id);
+
+      if (userId) {
+        await fetchCartCount(userId);
+      }
     } catch (error) {
       console.error("Remove cart item error:", error);
     } finally {
@@ -109,9 +130,9 @@ function Cart() {
     }
   };
 
-  // =====================================================
-  // CALCULATIONS
-  // =====================================================
+  /* =====================================================
+     CALCULATIONS
+  ===================================================== */
 
   const totalItems = cartItems.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
@@ -136,9 +157,9 @@ function Cart() {
     100,
   );
 
-  // =====================================================
-  // NOT LOGGED IN
-  // =====================================================
+  /* =====================================================
+     NOT LOGGED IN
+  ===================================================== */
 
   if (!isAuthenticated) {
     return (
@@ -164,9 +185,9 @@ function Cart() {
     );
   }
 
-  // =====================================================
-  // LOADING
-  // =====================================================
+  /* =====================================================
+     LOADING
+  ===================================================== */
 
   if (loading) {
     return (
@@ -174,6 +195,7 @@ function Cart() {
         <div className="cart-container">
           <div className="cart-loading">
             <div className="cart-loading-spinner"></div>
+
             <p>Loading your shopping bag...</p>
           </div>
         </div>
@@ -181,9 +203,9 @@ function Cart() {
     );
   }
 
-  // =====================================================
-  // EMPTY CART
-  // =====================================================
+  /* =====================================================
+     EMPTY CART
+  ===================================================== */
 
   if (cartItems.length === 0) {
     return (
@@ -220,16 +242,14 @@ function Cart() {
     );
   }
 
-  // =====================================================
-  // MAIN CART
-  // =====================================================
+  /* =====================================================
+     MAIN CART
+  ===================================================== */
 
   return (
     <section className="cart-page">
       <div className="cart-container">
-        {/* =================================================
-            HEADER
-        ================================================= */}
+        {/* HEADER */}
 
         <div className="cart-page-header">
           <div>
@@ -249,9 +269,7 @@ function Cart() {
           </Link>
         </div>
 
-        {/* =================================================
-            FREE SHIPPING MESSAGE
-        ================================================= */}
+        {/* FREE SHIPPING */}
 
         <div className="shipping-progress-card">
           <div className="shipping-progress-top">
@@ -280,14 +298,10 @@ function Cart() {
           </div>
         </div>
 
-        {/* =================================================
-            CART LAYOUT
-        ================================================= */}
+        {/* CART LAYOUT */}
 
         <div className="cart-layout">
-          {/* =================================================
-              PRODUCTS
-          ================================================= */}
+          {/* PRODUCTS */}
 
           <div className="cart-products-section">
             <div className="cart-section-heading">
@@ -310,16 +324,12 @@ function Cart() {
 
                 return (
                   <article className="cart-product" key={item.id}>
-                    {/* IMAGE */}
-
                     <Link
                       to={`/products/${item.product_id || item.id}`}
                       className="cart-product-image"
                     >
                       <img src={item.image} alt={item.name} />
                     </Link>
-
-                    {/* DETAILS */}
 
                     <div className="cart-product-details">
                       <span className="cart-stock">
@@ -344,8 +354,6 @@ function Cart() {
                         <div className="cart-product-price">
                           ₹{Number(item.price || 0).toFixed(2)}
                         </div>
-
-                        {/* QUANTITY */}
 
                         <div className="cart-quantity">
                           <button
@@ -375,8 +383,6 @@ function Cart() {
                       </div>
                     </div>
 
-                    {/* RIGHT SIDE */}
-
                     <div className="cart-product-right">
                       <strong>₹{itemTotal.toFixed(2)}</strong>
 
@@ -399,9 +405,7 @@ function Cart() {
               })}
             </div>
 
-            {/* =================================================
-                TRUST FEATURES
-            ================================================= */}
+            {/* TRUST FEATURES */}
 
             <div className="cart-trust-grid">
               <div className="cart-trust-item">
@@ -409,6 +413,7 @@ function Cart() {
 
                 <div>
                   <strong>Secure Checkout</strong>
+
                   <span>Safe & protected payments</span>
                 </div>
               </div>
@@ -418,6 +423,7 @@ function Cart() {
 
                 <div>
                   <strong>Fast Delivery</strong>
+
                   <span>Reliable doorstep delivery</span>
                 </div>
               </div>
@@ -427,15 +433,14 @@ function Cart() {
 
                 <div>
                   <strong>Easy Returns</strong>
+
                   <span>Simple return process</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* =================================================
-              SUMMARY
-          ================================================= */}
+          {/* SUMMARY */}
 
           <aside className="cart-summary">
             <div className="cart-summary-header">

@@ -2,7 +2,7 @@ import "./CategoryCard.css";
 
 import { Link } from "react-router-dom";
 
-function CategoryCard({ id, title, image }) {
+function CategoryCard({ title, image }) {
   return (
     <Link
       to={`/products?category=${encodeURIComponent(title)}`}

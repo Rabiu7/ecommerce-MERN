@@ -23,9 +23,9 @@ function AdminCustomers() {
 
   const [error, setError] = useState("");
 
-  // =========================================================
-  // FETCH CUSTOMERS
-  // =========================================================
+  /* =========================================================
+     FETCH CUSTOMERS
+  ========================================================= */
 
   const fetchCustomers = async () => {
     try {
@@ -58,17 +58,58 @@ function AdminCustomers() {
     }
   };
 
-  // =========================================================
-  // LOAD CUSTOMERS
-  // =========================================================
+  /* =========================================================
+     LOAD CUSTOMERS
+  ========================================================= */
 
   useEffect(() => {
-    fetchCustomers();
+    let cancelled = false;
+
+    const loadCustomers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`${VITE_API_URL}/api/admin/customers`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch customers");
+        }
+
+        const data = await response.json();
+
+        console.log("Admin customers:", data);
+
+        if (!cancelled) {
+          setCustomers(data.customers || []);
+          setError("");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Customers error:", error);
+
+          setError("Failed to load customers");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCustomers();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
+  /* =========================================================
+     SEARCH
+  ========================================================= */
 
   const filteredCustomers = customers.filter((customer) => {
     const searchValue = search.toLowerCase().trim();
@@ -84,9 +125,9 @@ function AdminCustomers() {
     );
   });
 
-  // =========================================================
-  // FORMAT DATE
-  // =========================================================
+  /* =========================================================
+     FORMAT DATE
+  ========================================================= */
 
   const formatDate = (date) => {
     if (!date) {
@@ -100,9 +141,9 @@ function AdminCustomers() {
     });
   };
 
-  // =========================================================
-  // LOADING
-  // =========================================================
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (loading) {
     return (
@@ -116,9 +157,9 @@ function AdminCustomers() {
     );
   }
 
-  // =========================================================
-  // PAGE
-  // =========================================================
+  /* =========================================================
+     PAGE
+  ========================================================= */
 
   return (
     <div className="admin-customers">
@@ -150,7 +191,7 @@ function AdminCustomers() {
         <div className="customers-error">
           <span>{error}</span>
 
-          <button onClick={fetchCustomers}>
+          <button type="button" onClick={fetchCustomers}>
             <FiRefreshCw />
             Retry
           </button>
@@ -354,6 +395,7 @@ function AdminCustomers() {
 
                       <td>
                         <button
+                          type="button"
                           className="view-customer-button"
                           title="View customer"
                         >

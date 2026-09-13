@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 const AuthContext = createContext();
 
@@ -8,6 +16,41 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  /* =========================================================
+     FETCH CART COUNT
+  ========================================================= */
+
+  const fetchCartCount = useCallback(async (userId) => {
+    if (!userId) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${VITE_API_URL}/api/cart/${userId}`);
+
+      if (!response.ok) {
+        console.error("Cart API error:", response.status, response.statusText);
+
+        setCartCount(0);
+        return;
+      }
+
+      const data = await response.json();
+
+      const total = Array.isArray(data)
+        ? data.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+        : 0;
+
+      setCartCount(total);
+    } catch (error) {
+      console.error("Cart count error:", error);
+
+      // Cart unavailable does not mean user is logged out.
+      setCartCount(0);
+    }
+  }, []);
 
   /* =========================================================
      RESTORE LOGIN
@@ -50,24 +93,23 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        // Restore login FIRST
+        // Restore login first
         setUser(userData);
 
-        // Cart failure should NOT logout user
+        // Cart failure should not logout the user
         await fetchCartCount(userData.id);
       } catch (error) {
         console.error("Failed to restore user:", error);
 
-        // IMPORTANT:
         // Do NOT remove user/token here.
-        // A backend/cart failure should not logout the user.
+        // Backend/cart failure should not logout the user.
       } finally {
         setLoading(false);
       }
     };
 
     restoreUser();
-  }, []);
+  }, [fetchCartCount]);
 
   /* =========================================================
      LOGIN
@@ -103,10 +145,14 @@ export function AuthProvider({ children }) {
     setCartCount(0);
   };
 
+  /* =========================================================
+     UPDATE USER
+  ========================================================= */
+
   const updateUser = (updatedData) => {
-    setUser((prev) => {
+    setUser((previousUser) => {
       const updatedUser = {
-        ...prev,
+        ...previousUser,
         ...updatedData,
       };
 
@@ -114,41 +160,6 @@ export function AuthProvider({ children }) {
 
       return updatedUser;
     });
-  };
-
-  /* =========================================================
-     FETCH CART COUNT
-  ========================================================= */
-
-  const fetchCartCount = async (userId) => {
-    if (!userId) {
-      setCartCount(0);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${VITE_API_URL}/api/cart/${userId}`);
-
-      if (!response.ok) {
-        console.error("Cart API error:", response.status, response.statusText);
-
-        setCartCount(0);
-        return;
-      }
-
-      const data = await response.json();
-
-      const total = Array.isArray(data)
-        ? data.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
-        : 0;
-
-      setCartCount(total);
-    } catch (error) {
-      console.error("Cart count error:", error);
-
-      // Cart unavailable ≠ user logged out
-      setCartCount(0);
-    }
   };
 
   /* =========================================================

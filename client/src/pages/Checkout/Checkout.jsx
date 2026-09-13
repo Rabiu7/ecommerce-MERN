@@ -1,7 +1,8 @@
 import "./Checkout.css";
 import CheckoutSteps from "../../components/CheckoutSteps/CheckoutSteps";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { useLocation, useNavigate } from "react-router-dom";
 
 import {
@@ -29,8 +30,16 @@ function Checkout() {
 
   const { user, isAuthenticated } = useAuth();
 
-  const buyNow = location.state?.buyNow === true;
-  const buyNowItems = location.state?.cartItems || [];
+  const locationState = location.state;
+
+  const buyNow = locationState?.buyNow === true;
+
+  const buyNowItems = useMemo(
+    () => locationState?.cartItems || [],
+    [locationState?.cartItems],
+  );
+
+  const userId = user?.id;
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,81 +54,124 @@ function Checkout() {
     pincode: "",
   });
 
-  // =========================================================
-  // LOAD CHECKOUT DATA
-  // =========================================================
+  /* =========================================================
+     LOAD CHECKOUT DATA
+  ========================================================= */
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.id) {
+    if (!isAuthenticated || !userId) {
       navigate("/login");
       return;
     }
 
-    fetchCheckoutData();
-  }, [isAuthenticated, user?.id, buyNow]);
+    let cancelled = false;
 
-  const fetchCheckoutData = async () => {
-    setLoading(true);
+    const loadCheckoutData = async () => {
+      setLoading(true);
 
-    if (buyNow && buyNowItems.length > 0) {
-      setCartItems(buyNowItems);
-      await fetchSavedAddress();
-    } else {
-      await Promise.all([fetchCart(), fetchSavedAddress()]);
-    }
+      try {
+        /* =====================================================
+           BUY NOW
+        ===================================================== */
 
-    setLoading(false);
-  };
+        if (buyNow && buyNowItems.length > 0) {
+          if (!cancelled) {
+            setCartItems(buyNowItems);
+          }
 
-  // =========================================================
-  // FETCH CART
-  // =========================================================
+          try {
+            const data = await getAddress(userId);
 
-  const fetchCart = async () => {
-    try {
-      const response = await fetch(`${VITE_API_URL}/api/cart/${user.id}`);
+            if (!cancelled) {
+              setAddress({
+                fullName: data.full_name || "",
+                phone: data.phone || "",
+                address: data.address || "",
+                city: data.city || "",
+                state: data.state || "",
+                pincode: data.pincode || "",
+              });
+            }
+          } catch (error) {
+            if (error.response?.status !== 404) {
+              console.error("Failed to fetch saved address:", error);
+            }
+          }
 
-      const data = await response.json();
+          if (!cancelled) {
+            setLoading(false);
+          }
 
-      if (response.ok) {
-        setCartItems(Array.isArray(data) ? data : []);
-      } else {
-        setCartItems([]);
-        toast.error(data.message || "Failed to load cart.");
+          return;
+        }
+
+        /* =====================================================
+           NORMAL CART CHECKOUT
+        ===================================================== */
+
+        const [cartResponse, savedAddress] = await Promise.all([
+          fetch(`${VITE_API_URL}/api/cart/${userId}`),
+
+          getAddress(userId).catch((error) => {
+            if (error.response?.status !== 404) {
+              console.error("Failed to fetch saved address:", error);
+            }
+
+            return null;
+          }),
+        ]);
+
+        const cartData = await cartResponse.json();
+
+        if (!cartResponse.ok) {
+          if (!cancelled) {
+            setCartItems([]);
+          }
+
+          toast.error(cartData.message || "Failed to load cart.");
+
+          return;
+        }
+
+        if (!cancelled) {
+          setCartItems(Array.isArray(cartData) ? cartData : []);
+        }
+
+        if (savedAddress && !cancelled) {
+          setAddress({
+            fullName: savedAddress.full_name || "",
+            phone: savedAddress.phone || "",
+            address: savedAddress.address || "",
+            city: savedAddress.city || "",
+            state: savedAddress.state || "",
+            pincode: savedAddress.pincode || "",
+          });
+        }
+      } catch (error) {
+        console.error("Checkout data error:", error);
+
+        if (!cancelled) {
+          setCartItems([]);
+        }
+
+        toast.error("Unable to load checkout information.");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    } catch (error) {
-      console.error("Fetch cart error:", error);
+    };
 
-      toast.error("Unable to load your cart.");
-    }
-  };
+    loadCheckoutData();
 
-  // =========================================================
-  // FETCH SAVED ADDRESS
-  // =========================================================
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, userId, navigate, buyNow, buyNowItems]);
 
-  const fetchSavedAddress = async () => {
-    try {
-      const data = await getAddress(user.id);
-
-      setAddress({
-        fullName: data.full_name || "",
-        phone: data.phone || "",
-        address: data.address || "",
-        city: data.city || "",
-        state: data.state || "",
-        pincode: data.pincode || "",
-      });
-    } catch (error) {
-      if (error.response?.status !== 404) {
-        console.error("Failed to fetch saved address:", error);
-      }
-    }
-  };
-
-  // =========================================================
-  // HANDLE INPUT
-  // =========================================================
+  /* =========================================================
+     HANDLE INPUT
+  ========================================================= */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -130,9 +182,9 @@ function Checkout() {
     }));
   };
 
-  // =========================================================
-  // CALCULATIONS
-  // =========================================================
+  /* =========================================================
+     CALCULATIONS
+  ========================================================= */
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
@@ -145,12 +197,14 @@ function Checkout() {
 
   const total = subtotal + shipping + gst;
 
-  // =========================================================
-  // PLACE ORDER
-  // =========================================================
+  /* =========================================================
+     PLACE ORDER
+  ========================================================= */
 
   const placeOrder = async () => {
-    if (placingOrder) return;
+    if (placingOrder) {
+      return;
+    }
 
     const requiredFields = [
       address.fullName,
@@ -163,18 +217,20 @@ function Checkout() {
 
     if (requiredFields.some((field) => !field.trim())) {
       toast.error("Please fill all address fields.");
+
       return;
     }
 
     if (cartItems.length === 0) {
       toast.error("Your cart is empty.");
+
       return;
     }
 
     setPlacingOrder(true);
 
     try {
-      await saveAddress(user.id, address);
+      await saveAddress(userId, address);
 
       navigate("/payment", {
         state: {
@@ -196,9 +252,9 @@ function Checkout() {
     }
   };
 
-  // =========================================================
-  // LOADING
-  // =========================================================
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (loading) {
     return (
@@ -206,6 +262,7 @@ function Checkout() {
         <div className="checkout-container">
           <div className="checkout-loading">
             <div className="checkout-loader"></div>
+
             <p>Preparing your checkout...</p>
           </div>
         </div>
@@ -213,9 +270,9 @@ function Checkout() {
     );
   }
 
-  // =========================================================
-  // EMPTY CART
-  // =========================================================
+  /* =========================================================
+     EMPTY CART
+  ========================================================= */
 
   if (cartItems.length === 0) {
     return (
@@ -229,6 +286,7 @@ function Checkout() {
             <p>Add some products before proceeding to checkout.</p>
 
             <button
+              type="button"
               onClick={() => navigate("/products")}
               className="back-shopping-btn"
             >
@@ -240,16 +298,14 @@ function Checkout() {
     );
   }
 
-  // =========================================================
-  // RENDER
-  // =========================================================
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
     <section className="checkout-page">
       <div className="checkout-container">
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
+        {/* HEADER */}
 
         <div className="checkout-header">
           <button
@@ -262,6 +318,7 @@ function Checkout() {
             }
           >
             <FiArrowLeft />
+
             <span>Back to Cart</span>
           </button>
 
@@ -274,20 +331,14 @@ function Checkout() {
           </div>
         </div>
 
-        {/* =====================================================
-            CHECKOUT STEPS
-        ===================================================== */}
+        {/* CHECKOUT STEPS */}
 
         <CheckoutSteps currentStep={1} />
 
-        {/* =====================================================
-            MAIN GRID
-        ===================================================== */}
+        {/* MAIN GRID */}
 
         <div className="checkout-grid">
-          {/* ===================================================
-              LEFT SIDE
-          =================================================== */}
+          {/* LEFT SIDE */}
 
           <div className="checkout-left">
             {/* ADDRESS CARD */}
@@ -423,6 +474,7 @@ function Checkout() {
 
                 <div>
                   <strong>Reliable Delivery</strong>
+
                   <span>
                     Your order will be carefully packed and delivered.
                   </span>
@@ -434,15 +486,14 @@ function Checkout() {
 
                 <div>
                   <strong>Secure Checkout</strong>
+
                   <span>Your payment and personal details are protected.</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ===================================================
-              RIGHT SIDE
-          =================================================== */}
+          {/* RIGHT SIDE */}
 
           <aside className="checkout-right">
             <div className="order-summary">
@@ -494,11 +545,13 @@ function Checkout() {
               <div className="price-breakdown">
                 <div className="summary-price-row">
                   <span>Subtotal</span>
+
                   <strong>₹{subtotal.toFixed(2)}</strong>
                 </div>
 
                 <div className="summary-price-row">
                   <span>GST (18%)</span>
+
                   <strong>₹{gst.toFixed(2)}</strong>
                 </div>
 
@@ -516,6 +569,7 @@ function Checkout() {
               <div className="summary-total">
                 <div>
                   <span>Total Amount</span>
+
                   <small>Inclusive of GST</small>
                 </div>
 

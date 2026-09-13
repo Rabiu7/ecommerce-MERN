@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 
 import {
   FiArrowUpRight,
-  FiDollarSign,
   FiShoppingBag,
   FiUsers,
   FiPackage,
@@ -27,9 +26,10 @@ function Admin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchStatistics();
-  }, []);
+  /* =========================================================
+     FETCH STATISTICS
+     Used by Refresh button
+  ========================================================= */
 
   const fetchStatistics = async () => {
     try {
@@ -54,11 +54,62 @@ function Admin() {
       });
     } catch (error) {
       console.error("Dashboard statistics error:", error);
+
       setError("Failed to load dashboard statistics");
     } finally {
       setLoading(false);
     }
   };
+
+  /* =========================================================
+     INITIAL LOAD
+  ========================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStatistics = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await fetch(`${VITE_API_URL}/api/admin/statistics`);
+
+        if (!response.ok) {
+          throw new Error("Failed to load dashboard statistics");
+        }
+
+        const data = await response.json();
+
+        console.log("Dashboard statistics:", data);
+
+        if (!cancelled) {
+          setStatistics({
+            totalRevenue: Number(data.revenue || 0),
+            totalOrders: Number(data.orders || 0),
+            totalUsers: Number(data.users || 0),
+            totalProducts: Number(data.products || 0),
+          });
+        }
+      } catch (error) {
+        console.error("Dashboard statistics error:", error);
+
+        if (!cancelled) {
+          setError("Failed to load dashboard statistics");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadStatistics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const formattedRevenue = statistics.totalRevenue.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
@@ -86,6 +137,7 @@ function Admin() {
             disabled={loading}
           >
             <FiRefreshCw className={loading ? "is-loading" : ""} />
+
             <span>Refresh</span>
           </button>
         </section>
@@ -110,6 +162,7 @@ function Admin() {
 
             <div className="revenue-value">
               <span>₹</span>
+
               <strong>{loading ? "0.00" : formattedRevenue}</strong>
             </div>
 

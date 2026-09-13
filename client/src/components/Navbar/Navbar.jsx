@@ -12,7 +12,7 @@ import {
   FiPackage,
 } from "react-icons/fi";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 
@@ -28,7 +28,6 @@ function Navbar() {
   // SEARCH STATES
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
 
@@ -78,16 +77,18 @@ function Navbar() {
   // =========================================================
   // SEARCH PRODUCTS
   // =========================================================
+  // searchResults is derived from searchTerm + products.
+  // Therefore useMemo is better than useEffect + setState.
+  // =========================================================
 
-  useEffect(() => {
+  const searchResults = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
     if (!term) {
-      setSearchResults([]);
-      return;
+      return [];
     }
 
-    const results = products
+    return products
       .filter((product) => {
         const name = String(product.name || "").toLowerCase();
 
@@ -98,8 +99,6 @@ function Navbar() {
         return name.includes(term) || category.includes(term);
       })
       .slice(0, 6);
-
-    setSearchResults(results);
   }, [searchTerm, products]);
 
   // =========================================================
@@ -356,7 +355,7 @@ function Navbar() {
                   </Link>
                 )}
 
-                <button onClick={handleLogout}>
+                <button type="button" onClick={handleLogout}>
                   <FiLogOut />
                   Logout
                 </button>
@@ -371,6 +370,7 @@ function Navbar() {
           {/* MOBILE MENU */}
 
           <button
+            type="button"
             className="menu-btn"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle navigation"

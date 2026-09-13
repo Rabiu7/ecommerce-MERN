@@ -32,13 +32,8 @@ function Orders() {
 
   // =========================================================
   // FETCH ORDERS
+  // USED BY REFRESH BUTTON
   // =========================================================
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchOrders();
-    }
-  }, [user]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -66,6 +61,43 @@ function Orders() {
       setLoading(false);
     }
   };
+
+  // =========================================================
+  // INITIAL FETCH
+  // =========================================================
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const loadOrders = async () => {
+      try {
+        const response = await fetch(`${VITE_API_URL}/api/orders`, {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        });
+
+        const data = await response.json();
+
+        console.log("Fetched Orders:", data);
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch orders");
+        }
+
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Orders Error:", error);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [user]);
 
   // =========================================================
   // STATUS DETAILS

@@ -8,30 +8,42 @@ import OfferBanner from "../../components/OfferBanner/OfferBanner";
 import Testimonials from "../../components/Testimonials/Testimonials";
 import Newsletter from "../../components/Newsletter/Newsletter";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Home() {
   const [categories, setCategories] = useState([]);
 
+  /* =========================================================
+     LOAD CATEGORIES
+  ========================================================= */
+
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    let cancelled = false;
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch(`${VITE_API_URL}/api/categories`);
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${VITE_API_URL}/api/categories`);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch categories");
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
       }
+    };
 
-      const data = await response.json();
+    loadCategories();
 
-      setCategories(data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="home">

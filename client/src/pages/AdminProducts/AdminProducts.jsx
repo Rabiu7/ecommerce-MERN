@@ -5,10 +5,11 @@ import "./AdminProducts.css";
 
 import { toast } from "react-toastify";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -17,7 +18,6 @@ function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Product selected for deletion
   const [deleteProduct, setDeleteProduct] = useState(null);
 
   const [form, setForm] = useState({
@@ -31,7 +31,54 @@ function AdminProducts() {
   });
 
   /* =========================================================
+     INITIAL LOAD
+  ========================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+
+        const [productsResponse, categoriesResponse] = await Promise.all([
+          axios.get(`${VITE_API_URL}/api/products`),
+          axios.get(`${VITE_API_URL}/api/categories`),
+        ]);
+
+        if (!cancelled) {
+          setProducts(productsResponse.data);
+          setCategories(categoriesResponse.data);
+        }
+      } catch (error) {
+        console.error("Error loading admin products data:", error);
+
+        if (!cancelled) {
+          if (error?.config?.url?.includes("/api/products")) {
+            toast.error("Failed to load products.");
+          } else if (error?.config?.url?.includes("/api/categories")) {
+            toast.error("Failed to load categories.");
+          } else {
+            toast.error("Failed to load products and categories.");
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* =========================================================
      FETCH PRODUCTS
+     Used after adding a product
   ========================================================= */
 
   const fetchProducts = async () => {
@@ -43,35 +90,8 @@ function AdminProducts() {
       console.error("Error fetching products:", error);
 
       toast.error("Failed to load products.");
-    } finally {
-      setLoading(false);
     }
   };
-
-  /* =========================================================
-     FETCH CATEGORIES
-  ========================================================= */
-
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`${VITE_API_URL}/api/categories`);
-
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-
-      toast.error("Failed to load categories.");
-    }
-  };
-
-  /* =========================================================
-     INITIAL LOAD
-  ========================================================= */
-
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
 
   /* =========================================================
      HANDLE INPUT
@@ -144,8 +164,9 @@ function AdminProducts() {
       });
 
       setShowForm(false);
+      setSearchParams({});
 
-      fetchProducts();
+      await fetchProducts();
     } catch (error) {
       console.error("Error creating product:", error);
 
@@ -222,9 +243,7 @@ function AdminProducts() {
 
   return (
     <div className="admin-products">
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
 
       <div className="products-page-header">
         <div>
@@ -253,9 +272,7 @@ function AdminProducts() {
         </button>
       </div>
 
-      {/* =====================================================
-          ADD PRODUCT FORM
-      ===================================================== */}
+      {/* ADD PRODUCT FORM */}
 
       {showForm && (
         <div className="product-form-card">
@@ -268,8 +285,6 @@ function AdminProducts() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* PRODUCT NAME */}
-
             <div className="form-group full-width">
               <label>Product Name</label>
 
@@ -282,8 +297,6 @@ function AdminProducts() {
                 required
               />
             </div>
-
-            {/* DESCRIPTION */}
 
             <div className="form-group full-width">
               <label>Description</label>
@@ -298,8 +311,6 @@ function AdminProducts() {
             </div>
 
             <div className="form-grid">
-              {/* CATEGORY */}
-
               <div className="form-group">
                 <label>Category</label>
 
@@ -318,8 +329,6 @@ function AdminProducts() {
                   ))}
                 </select>
               </div>
-
-              {/* PRICE */}
 
               <div className="form-group">
                 <label>Price (₹)</label>
@@ -340,8 +349,6 @@ function AdminProducts() {
                 </div>
               </div>
 
-              {/* DISCOUNT */}
-
               <div className="form-group">
                 <label>Discount (%)</label>
 
@@ -361,8 +368,6 @@ function AdminProducts() {
                 </div>
               </div>
 
-              {/* STOCK */}
-
               <div className="form-group">
                 <label>Stock Quantity</label>
 
@@ -375,8 +380,6 @@ function AdminProducts() {
                   min="0"
                 />
               </div>
-
-              {/* IMAGE */}
 
               <div className="form-group full-width">
                 <label>Product Image</label>
@@ -391,8 +394,6 @@ function AdminProducts() {
                 {form.image && <small>Selected: {form.image.name}</small>}
               </div>
             </div>
-
-            {/* FORM ACTIONS */}
 
             <div className="form-actions">
               <button
@@ -418,9 +419,7 @@ function AdminProducts() {
         </div>
       )}
 
-      {/* =====================================================
-          PRODUCTS LIST
-      ===================================================== */}
+      {/* PRODUCTS LIST */}
 
       <div className="products-card">
         <div className="products-card-header">
@@ -462,8 +461,6 @@ function AdminProducts() {
               <tbody>
                 {products.map((product) => (
                   <tr key={product.id}>
-                    {/* PRODUCT */}
-
                     <td>
                       <div className="product-info">
                         <div className="admin-product-image">
@@ -482,23 +479,17 @@ function AdminProducts() {
                       </div>
                     </td>
 
-                    {/* CATEGORY */}
-
                     <td>
                       <span className="category-badge">
                         {product.category || "Uncategorized"}
                       </span>
                     </td>
 
-                    {/* PRICE */}
-
                     <td>
                       <strong className="product-price">
                         {formatPrice(product.price)}
                       </strong>
                     </td>
-
-                    {/* DISCOUNT */}
 
                     <td>
                       {Number(product.discount) > 0 ? (
@@ -509,8 +500,6 @@ function AdminProducts() {
                         <span className="no-discount">—</span>
                       )}
                     </td>
-
-                    {/* STOCK */}
 
                     <td>
                       <span
@@ -524,15 +513,11 @@ function AdminProducts() {
                       </span>
                     </td>
 
-                    {/* RATING */}
-
                     <td>
                       <span className="rating">
                         ★ {product.rating || "0.0"}
                       </span>
                     </td>
-
-                    {/* ACTION */}
 
                     <td>
                       <button
@@ -550,20 +535,14 @@ function AdminProducts() {
         )}
       </div>
 
-      {/* =====================================================
-          DELETE CONFIRMATION MODAL
-      ===================================================== */}
+      {/* DELETE MODAL */}
 
       {deleteProduct && (
         <div className="delete-modal-overlay" onClick={closeDeleteModal}>
           <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
-            {/* WARNING ICON */}
-
             <div className="delete-modal-icon">
               <span>!</span>
             </div>
-
-            {/* CONTENT */}
 
             <div className="delete-modal-content">
               <h2>Delete Product?</h2>
@@ -575,8 +554,6 @@ function AdminProducts() {
 
               <small>This action cannot be undone.</small>
             </div>
-
-            {/* ACTIONS */}
 
             <div className="delete-modal-actions">
               <button className="delete-cancel-btn" onClick={closeDeleteModal}>

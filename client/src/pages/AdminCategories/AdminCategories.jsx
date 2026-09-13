@@ -62,7 +62,35 @@ function AdminCategories() {
   ========================================================= */
 
   useEffect(() => {
-    fetchCategories();
+    let cancelled = false;
+
+    const loadCategories = async () => {
+      try {
+        const response = await axios.get(`${VITE_API_URL}/api/categories`);
+
+        if (!cancelled) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Error fetching categories:", error);
+
+          toast.error(
+            error.response?.data?.message || "Failed to load categories.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /* =========================================================
@@ -94,6 +122,7 @@ function AdminCategories() {
       toast.error("Please select a valid image.");
 
       e.target.value = "";
+
       return;
     }
 
@@ -102,6 +131,7 @@ function AdminCategories() {
       toast.error("Image size must be less than 5 MB.");
 
       e.target.value = "";
+
       return;
     }
 
@@ -144,7 +174,6 @@ function AdminCategories() {
       image: null,
     });
 
-    // Show existing Cloudinary image
     setImagePreview(category.image || "");
 
     setShowForm(true);
@@ -177,12 +206,14 @@ function AdminCategories() {
 
     if (!form.name.trim()) {
       toast.error("Please enter category name.");
+
       return;
     }
 
     // Image required only when creating
     if (!editingId && !form.image) {
       toast.error("Please select a category image.");
+
       return;
     }
 
@@ -223,7 +254,7 @@ function AdminCategories() {
 
       handleCloseForm();
 
-      fetchCategories();
+      await fetchCategories();
     } catch (error) {
       console.error("Category save error:", error);
 
@@ -308,7 +339,7 @@ function AdminCategories() {
           />
 
           {search && (
-            <button onClick={() => setSearch("")}>
+            <button type="button" onClick={() => setSearch("")}>
               <FiX />
             </button>
           )}
@@ -401,6 +432,7 @@ function AdminCategories() {
                   <td>
                     <div className="category-actions">
                       <button
+                        type="button"
                         className="edit-btn"
                         onClick={() => handleEdit(category)}
                         title="Edit"
@@ -409,6 +441,7 @@ function AdminCategories() {
                       </button>
 
                       <button
+                        type="button"
                         className="delete-btn"
                         onClick={() => handleDelete(category.id)}
                         title="Delete"
@@ -444,7 +477,7 @@ function AdminCategories() {
                 </p>
               </div>
 
-              <button onClick={handleCloseForm}>
+              <button type="button" onClick={handleCloseForm}>
                 <FiX />
               </button>
             </div>

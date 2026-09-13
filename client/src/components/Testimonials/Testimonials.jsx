@@ -8,28 +8,28 @@ function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    const loadReviews = async () => {
+      try {
+        const response = await fetch(`${VITE_API_URL}/api/reviews`);
 
-  const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+        if (!response.ok) {
+          throw new Error("Failed to fetch reviews");
+        }
 
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`${VITE_API_URL}/api/reviews`);
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch reviews");
+        // Only 10 reviews
+        setReviews(data.slice(0, 10));
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
       }
+    };
 
-      const data = await response.json();
-
-      // Only 10 reviews
-      setReviews(data.slice(0, 10));
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-    }
-  };
+    loadReviews();
+  }, [VITE_API_URL]);
 
   /*
    * Automatically move to the next 3 reviews

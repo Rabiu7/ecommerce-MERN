@@ -1,24 +1,21 @@
 import "./ProductDetails.css";
 
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { FaStar } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 import ProductCard from "../../components/ProductCard/ProductCard";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || 5000;
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductDetails() {
   const { id } = useParams();
-
   const { user, isAuthenticated } = useAuth();
-
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
@@ -26,14 +23,8 @@ function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProduct();
-  }, [id]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
-      setLoading(true);
-
       const response = await fetch(`${VITE_API_URL}/api/products/${id}`);
 
       if (!response.ok) {
@@ -44,12 +35,10 @@ function ProductDetails() {
 
       setProduct(data);
 
-      // Fetch all products
       const productsResponse = await fetch(`${VITE_API_URL}/api/products`);
 
       const productsData = await productsResponse.json();
 
-      // Find products from same category
       const related = productsData.filter(
         (item) =>
           Number(item.category_id) === Number(data.category_id) &&
@@ -59,12 +48,19 @@ function ProductDetails() {
       setRelatedProducts(related);
     } catch (error) {
       console.error("Error loading product:", error);
-
       toast.error("Unable to load product");
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      await fetchProduct();
+    };
+
+    loadProduct();
+  }, [fetchProduct]);
 
   const addToCart = async () => {
     if (!isAuthenticated) {
@@ -80,11 +76,9 @@ function ProductDetails() {
     try {
       const response = await fetch(`${VITE_API_URL}/api/cart`, {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           user_id: user.id,
           product_id: product.id,
@@ -101,7 +95,6 @@ function ProductDetails() {
       }
     } catch (error) {
       console.error(error);
-
       toast.error("Something went wrong");
     }
   };
@@ -161,19 +154,13 @@ function ProductDetails() {
 
   return (
     <>
-      {/* =====================================
-          PRODUCT DETAILS
-      ===================================== */}
-
       <section className="product-details">
         <div className="product-details-container">
           <div className="product-details-grid">
-            {/* IMAGE */}
             <div className="product-details-image">
               <img src={product.image} alt={product.name} />
             </div>
 
-            {/* INFORMATION */}
             <div className="product-details-info">
               <span className="product-details-category">
                 {product.category}
@@ -194,7 +181,6 @@ function ProductDetails() {
                 {product.description}
               </p>
 
-              {/* STOCK */}
               <div className="stock-status">
                 {product.stock > 0 ? (
                   <span className="in-stock">
@@ -205,7 +191,6 @@ function ProductDetails() {
                 )}
               </div>
 
-              {/* QUANTITY */}
               {product.stock > 0 && (
                 <div className="quantity">
                   <button
@@ -226,7 +211,6 @@ function ProductDetails() {
                 </div>
               )}
 
-              {/* ACTIONS */}
               <div className="actions">
                 <button
                   className="cart-btn"
@@ -250,10 +234,6 @@ function ProductDetails() {
           </div>
         </div>
       </section>
-
-      {/* =====================================
-          RELATED PRODUCTS
-      ===================================== */}
 
       {relatedProducts.length > 0 && (
         <section className="related-products">

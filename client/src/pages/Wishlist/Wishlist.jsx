@@ -22,24 +22,19 @@ function Wishlist() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const userId = user?.id;
+
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    fetchWishlist();
-  }, [user?.id]);
-
   const fetchWishlist = useCallback(async () => {
+    if (!userId) return;
+
     try {
       setLoading(true);
 
-      const response = await fetch(`${VITE_API_URL}/api/wishlist/${user.id}`, {
+      const response = await fetch(`${VITE_API_URL}/api/wishlist/${userId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -60,14 +55,40 @@ function Wishlist() {
     } finally {
       setLoading(false);
     }
-  }, [user.id]);
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    const loadWishlist = async () => {
+      await fetchWishlist();
+    };
+
+    loadWishlist();
+  }, [userId, fetchWishlist]);
+
+  useEffect(() => {
+    if (userId) {
+      return;
+    }
+
+    const resetLoading = () => {
+      setLoading(false);
+    };
+
+    const timer = setTimeout(resetLoading, 0);
+
+    return () => clearTimeout(timer);
+  }, [userId]);
 
   const removeFromWishlist = async (productId) => {
     try {
       setRemovingId(productId);
 
       const response = await fetch(
-        `${VITE_API_URL}/api/wishlist/${user.id}/${productId}`,
+        `${VITE_API_URL}/api/wishlist/${userId}/${productId}`,
         {
           method: "DELETE",
           headers: {
@@ -106,7 +127,7 @@ function Wishlist() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          user_id: user.id,
+          user_id: userId,
           product_id: productId,
           quantity: 1,
         }),
@@ -186,8 +207,6 @@ function Wishlist() {
   return (
     <section className="wishlist-page">
       <div className="wishlist-container">
-        {/* HEADER */}
-
         <div className="wishlist-heading">
           <div className="wishlist-heading-left">
             <button className="wishlist-back" onClick={() => navigate(-1)}>
@@ -208,14 +227,13 @@ function Wishlist() {
           {wishlist.length > 0 && (
             <div className="wishlist-count">
               <strong>{wishlist.length}</strong>
+
               <span>
                 {wishlist.length === 1 ? "Saved Item" : "Saved Items"}
               </span>
             </div>
           )}
         </div>
-
-        {/* EMPTY */}
 
         {wishlist.length === 0 ? (
           <div className="wishlist-empty">
@@ -257,8 +275,6 @@ function Wishlist() {
 
               return (
                 <div className="wishlist-card" key={productId}>
-                  {/* IMAGE */}
-
                   <div
                     className="wishlist-image-wrapper"
                     onClick={() => navigate(`/products/${productId}`)}
@@ -291,8 +307,6 @@ function Wishlist() {
                       <FiHeart />
                     </div>
                   </div>
-
-                  {/* INFO */}
 
                   <div className="wishlist-product-info">
                     <h3 onClick={() => navigate(`/products/${productId}`)}>

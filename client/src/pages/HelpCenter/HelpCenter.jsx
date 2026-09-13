@@ -3,7 +3,6 @@ import "./HelpCenter.css";
 import {
   FiShoppingBag,
   FiTruck,
-  FiCreditCard,
   FiRefreshCw,
   FiUser,
   FiMail,

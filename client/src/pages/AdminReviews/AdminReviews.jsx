@@ -10,6 +10,10 @@ function AdminReviews() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // =========================================================
+  // FETCH REVIEWS - USED BY RETRY BUTTON
+  // =========================================================
+
   const fetchReviews = async () => {
     try {
       setLoading(true);
@@ -32,9 +36,38 @@ function AdminReviews() {
     }
   };
 
+  // =========================================================
+  // INITIAL FETCH
+  // =========================================================
+
   useEffect(() => {
-    fetchReviews();
+    const loadReviews = async () => {
+      try {
+        setError("");
+
+        const response = await fetch(`${VITE_API_URL}/api/reviews`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch reviews");
+        }
+
+        const data = await response.json();
+
+        setReviews(data);
+      } catch (error) {
+        console.error("Fetch reviews error:", error);
+        setError("Unable to load reviews.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReviews();
   }, []);
+
+  // =========================================================
+  // VERIFY / UNVERIFY REVIEW
+  // =========================================================
 
   const handleVerify = async (id, currentStatus) => {
     try {
@@ -68,6 +101,10 @@ function AdminReviews() {
     }
   };
 
+  // =========================================================
+  // DELETE REVIEW
+  // =========================================================
+
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this review?",
@@ -93,6 +130,10 @@ function AdminReviews() {
     }
   };
 
+  // =========================================================
+  // RENDER STARS
+  // =========================================================
+
   const renderStars = (rating) => {
     return (
       <div className="review-stars">
@@ -102,6 +143,10 @@ function AdminReviews() {
       </div>
     );
   };
+
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
     <div className="admin-reviews-page">

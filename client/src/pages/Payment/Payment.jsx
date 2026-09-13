@@ -15,7 +15,6 @@ import {
 } from "react-icons/fi";
 
 import { toast } from "react-toastify";
-
 import { useAuth } from "../../context/AuthContext";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -23,7 +22,6 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { user } = useAuth();
 
   const [cashfreeReady, setCashfreeReady] = useState(false);
@@ -40,26 +38,30 @@ function Payment() {
     buyNow = false,
   } = location.state || {};
 
-  // =====================================================
-  // LOAD CASHFREE SDK
-  // =====================================================
-
   useEffect(() => {
     if (window.Cashfree) {
       console.log("Cashfree SDK already available");
-      setCashfreeReady(true);
+
+      setTimeout(() => {
+        setCashfreeReady(true);
+      }, 0);
+
       return;
     }
 
     const existingScript = document.querySelector("#cashfree-sdk");
 
     if (existingScript) {
-      existingScript.addEventListener("load", () => {
+      const handleLoad = () => {
         console.log("Cashfree SDK loaded");
         setCashfreeReady(true);
-      });
+      };
 
-      return;
+      existingScript.addEventListener("load", handleLoad);
+
+      return () => {
+        existingScript.removeEventListener("load", handleLoad);
+      };
     }
 
     const script = document.createElement("script");
@@ -79,11 +81,12 @@ function Payment() {
     };
 
     document.body.appendChild(script);
-  }, []);
 
-  // =====================================================
-  // HANDLE COD
-  // =====================================================
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
 
   const handleCOD = async () => {
     try {
@@ -91,23 +94,16 @@ function Payment() {
 
       const response = await fetch(`${VITE_API_URL}/api/orders/checkout`, {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
-
         body: JSON.stringify({
           payment_method: "COD",
-
           shipping_address: address,
-
           buy_now: buyNow,
-
           buy_now_product_id: buyNow ? cartItems[0]?.product_id : null,
-
           buy_now_quantity: buyNow ? Number(cartItems[0]?.quantity || 1) : null,
-
           customer: {
             name: user?.name || "",
             email: user?.email || "",
@@ -128,7 +124,6 @@ function Payment() {
 
       navigate("/order-success", {
         replace: true,
-
         state: {
           orderId: data.orderId,
           totalAmount: data.totalAmount,
@@ -141,37 +136,25 @@ function Payment() {
       });
     } catch (error) {
       console.error("COD Error:", error);
-
       toast.error(error.message || "Unable to place order");
     } finally {
       setProcessing(false);
     }
   };
 
-  // =====================================================
-  // CREATE CASHFREE ORDER
-  // =====================================================
-
   const createCashfreeOrder = async () => {
     const response = await fetch(`${VITE_API_URL}/api/orders/checkout`, {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-
       body: JSON.stringify({
         payment_method: "ONLINE",
-
         shipping_address: address,
-
         buy_now: buyNow,
-
         buy_now_product_id: buyNow ? cartItems[0]?.product_id : null,
-
         buy_now_quantity: buyNow ? Number(cartItems[0]?.quantity || 1) : null,
-
         customer: {
           name: user?.name || "",
           email: user?.email || "",
@@ -191,10 +174,6 @@ function Payment() {
     return data;
   };
 
-  // =====================================================
-  // OPEN CASHFREE CHECKOUT
-  // =====================================================
-
   const handleOnlinePayment = async () => {
     try {
       setProcessing(true);
@@ -209,7 +188,6 @@ function Payment() {
         );
 
         setProcessing(false);
-
         return;
       }
 
@@ -259,7 +237,6 @@ function Payment() {
         toast.error(result.error.message || "Unable to open Cashfree checkout");
 
         setProcessing(false);
-
         return;
       }
 
@@ -275,10 +252,6 @@ function Payment() {
     }
   };
 
-  // =====================================================
-  // MAIN PAYMENT HANDLER
-  // =====================================================
-
   const handlePayment = async () => {
     if (processing) {
       return;
@@ -292,10 +265,6 @@ function Payment() {
     await handleOnlinePayment();
   };
 
-  // =====================================================
-  // BACK TO CHECKOUT
-  // =====================================================
-
   const goBackToCheckout = () => {
     if (processing) return;
 
@@ -308,17 +277,9 @@ function Payment() {
     });
   };
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
   return (
     <section className="payment-page">
       <div className="payment-container">
-        {/* =================================================
-            TOP HEADER
-        ================================================= */}
-
         <div className="payment-topbar">
           <button
             type="button"
@@ -331,10 +292,6 @@ function Payment() {
           </button>
         </div>
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
         <div className="payment-header">
           <span className="payment-eyebrow">SECURE CHECKOUT</span>
 
@@ -346,29 +303,14 @@ function Payment() {
           </p>
         </div>
 
-        {/* =================================================
-            CHECKOUT STEPS
-        ================================================= */}
-
         <CheckoutSteps currentStep={2} />
 
-        {/* =================================================
-            MAIN GRID
-        ================================================= */}
-
         <div className="payment-grid">
-          {/* =================================================
-              LEFT COLUMN
-          ================================================= */}
-
           <div className="payment-left">
-            {/* DELIVERY CARD */}
-
             <div className="delivery-preview-card">
               <div className="card-heading">
                 <div>
                   <span className="card-eyebrow">DELIVERY</span>
-
                   <h2>Shipping Address</h2>
                 </div>
 
@@ -400,20 +342,15 @@ function Payment() {
               </button>
             </div>
 
-            {/* PAYMENT METHODS */}
-
             <div className="payment-card">
               <div className="card-heading">
                 <div>
                   <span className="card-eyebrow">PAYMENT</span>
-
                   <h2>Select Payment Method</h2>
                 </div>
 
                 <FiCreditCard />
               </div>
-
-              {/* ONLINE PAYMENT */}
 
               <button
                 type="button"
@@ -432,7 +369,6 @@ function Payment() {
                 <div className="payment-option-content">
                   <div className="payment-option-title">
                     <h4>Online Payment</h4>
-
                     <span className="recommended-badge">Recommended</span>
                   </div>
 
@@ -450,8 +386,6 @@ function Payment() {
                   {paymentMethod === "ONLINE" && <FiCheckCircle />}
                 </div>
               </button>
-
-              {/* COD */}
 
               <button
                 type="button"
@@ -481,8 +415,6 @@ function Payment() {
               </button>
             </div>
 
-            {/* SECURITY */}
-
             <div className="payment-security">
               <div className="security-icon">
                 <FiShield />
@@ -499,15 +431,10 @@ function Payment() {
             </div>
           </div>
 
-          {/* =================================================
-              RIGHT COLUMN - ORDER SUMMARY
-          ================================================= */}
-
           <aside className="payment-summary">
             <div className="summary-header">
               <div>
                 <span className="card-eyebrow">YOUR ORDER</span>
-
                 <h2>Order Summary</h2>
               </div>
 
@@ -515,8 +442,6 @@ function Payment() {
                 {cartItems.length} {cartItems.length === 1 ? "item" : "items"}
               </span>
             </div>
-
-            {/* PRODUCTS */}
 
             <div className="payment-products">
               {cartItems.map((item) => (
@@ -527,29 +452,24 @@ function Payment() {
 
                   <div className="payment-product-info">
                     <h4>{item.name}</h4>
-
                     <p>Qty: {item.quantity}</p>
                   </div>
 
                   <strong>
-                    ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                    ₹{(Number(item.price) * Number(item.quantity)).toFixed(2)}
                   </strong>
                 </div>
               ))}
             </div>
 
-            {/* PRICE BREAKDOWN */}
-
             <div className="summary-breakdown">
               <div className="summary-row">
                 <span>Subtotal</span>
-
                 <strong>₹{Number(subtotal).toFixed(2)}</strong>
               </div>
 
               <div className="summary-row">
                 <span>GST</span>
-
                 <strong>₹{Number(gst).toFixed(2)}</strong>
               </div>
 
@@ -570,19 +490,14 @@ function Payment() {
               </div>
             </div>
 
-            {/* TOTAL */}
-
             <div className="payment-total">
               <div>
                 <span>Total Amount</span>
-
                 <small>Inclusive of applicable taxes</small>
               </div>
 
               <strong>₹{Number(amount).toFixed(2)}</strong>
             </div>
-
-            {/* BUTTON */}
 
             <button
               type="button"
@@ -599,7 +514,6 @@ function Payment() {
 
             <div className="payment-trust">
               <FiShield />
-
               <span>Secure & encrypted payment</span>
             </div>
           </aside>

@@ -13,31 +13,30 @@ function Products() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("featured");
 
-  // URL query parameters
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read category from URL
   const category = searchParams.get("category") || "All";
 
   useEffect(() => {
-    fetchProducts();
+    const loadProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const data = await getProducts();
-      setProducts(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const categories = [
+    "All",
+    ...new Set(products.map((product) => product.category)),
+  ];
 
-  // Get categories from products
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
-
-  // Change category and URL
   const handleCategoryChange = (cat) => {
     if (cat === "All") {
       setSearchParams({});
@@ -51,14 +50,12 @@ function Products() {
   const filteredProducts = useMemo(() => {
     let data = [...products];
 
-    // Search
     if (search) {
       data = data.filter((item) =>
         item.name.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
-    // Category
     if (category !== "All") {
       data = data.filter(
         (item) =>
@@ -66,7 +63,6 @@ function Products() {
       );
     }
 
-    // Sorting
     if (sort === "low") {
       data.sort((a, b) => Number(a.price) - Number(b.price));
     }
@@ -89,8 +85,6 @@ function Products() {
   return (
     <section className="products-page">
       <div className="container">
-        {/* PAGE TITLE */}
-
         <div className="page-title">
           <span>OUR COLLECTION</span>
 
@@ -102,8 +96,6 @@ function Products() {
         </div>
 
         <div className="products-layout">
-          {/* SIDEBAR */}
-
           <aside className="sidebar">
             <h3>Categories</h3>
 
@@ -125,11 +117,7 @@ function Products() {
             <h3>{filteredProducts.length} Products</h3>
           </aside>
 
-          {/* PRODUCTS */}
-
           <div className="products-content">
-            {/* TOOLBAR */}
-
             <div className="toolbar">
               <input
                 type="text"
@@ -140,16 +128,11 @@ function Products() {
 
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
                 <option value="featured">Featured</option>
-
                 <option value="low">Price: Low → High</option>
-
                 <option value="high">Price: High → Low</option>
-
                 <option value="rating">Highest Rated</option>
               </select>
             </div>
-
-            {/* PRODUCT GRID */}
 
             <div className="products-grid">
               {filteredProducts.length > 0 ? (

@@ -2,6 +2,8 @@ import "./AdminOrders.css";
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import {
   FiSearch,
   FiEye,
@@ -14,6 +16,8 @@ import {
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminOrders() {
+  const navigate = useNavigate();
+
   const [orders, setOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,13 +32,9 @@ function AdminOrders() {
 
   const ordersPerPage = 10;
 
-  // =========================================================
-  // FETCH ORDERS
-  // =========================================================
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  /* =========================================================
+     FETCH ORDERS
+  ========================================================= */
 
   const fetchOrders = async () => {
     try {
@@ -71,9 +71,62 @@ function AdminOrders() {
     }
   };
 
-  // =========================================================
-  // FORMAT DATE
-  // =========================================================
+  /* =========================================================
+     INITIAL LOAD
+  ========================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`${VITE_API_URL}/api/admin/orders`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch orders");
+        }
+
+        const data = await response.json();
+
+        console.log("Admin orders:", data);
+
+        if (!cancelled) {
+          setOrders(Array.isArray(data.orders) ? data.orders : []);
+
+          setCurrentPage(1);
+          setError("");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Admin orders error:", error);
+
+          setError("Failed to load orders. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* =========================================================
+     FORMAT DATE
+  ========================================================= */
 
   const formatDate = (date) => {
     if (!date) {
@@ -87,9 +140,9 @@ function AdminOrders() {
     });
   };
 
-  // =========================================================
-  // FORMAT AMOUNT
-  // =========================================================
+  /* =========================================================
+     FORMAT AMOUNT
+  ========================================================= */
 
   const formatAmount = (amount) => {
     return Number(amount || 0).toLocaleString("en-IN", {
@@ -98,9 +151,9 @@ function AdminOrders() {
     });
   };
 
-  // =========================================================
-  // GET INITIALS
-  // =========================================================
+  /* =========================================================
+     GET INITIALS
+  ========================================================= */
 
   const getInitials = (name) => {
     if (!name) {
@@ -115,9 +168,9 @@ function AdminOrders() {
       .toUpperCase();
   };
 
-  // =========================================================
-  // FILTER ORDERS
-  // =========================================================
+  /* =========================================================
+     FILTER ORDERS
+  ========================================================= */
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -145,9 +198,9 @@ function AdminOrders() {
     });
   }, [orders, searchTerm, statusFilter]);
 
-  // =========================================================
-  // PAGINATION
-  // =========================================================
+  /* =========================================================
+     PAGINATION
+  ========================================================= */
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
@@ -158,9 +211,9 @@ function AdminOrders() {
     startIndex + ordersPerPage,
   );
 
-  // =========================================================
-  // STATUS COUNTS
-  // =========================================================
+  /* =========================================================
+     STATUS COUNTS
+  ========================================================= */
 
   const statusCounts = useMemo(() => {
     return {
@@ -192,9 +245,9 @@ function AdminOrders() {
     };
   }, [orders]);
 
-  // =========================================================
-  // CHANGE PAGE
-  // =========================================================
+  /* =========================================================
+     CHANGE PAGE
+  ========================================================= */
 
   const changePage = (page) => {
     if (page < 1 || page > totalPages) {
@@ -204,17 +257,17 @@ function AdminOrders() {
     setCurrentPage(page);
   };
 
-  // =========================================================
-  // VIEW ORDER
-  // =========================================================
+  /* =========================================================
+     VIEW ORDER
+  ========================================================= */
 
   const viewOrder = (orderId) => {
-    window.location.href = `/admin/orders/${orderId}`;
+    navigate(`/admin/orders/${orderId}`);
   };
 
-  // =========================================================
-  // LOADING
-  // =========================================================
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (loading) {
     return (
@@ -228,9 +281,9 @@ function AdminOrders() {
     );
   }
 
-  // =========================================================
-  // PAGE
-  // =========================================================
+  /* =========================================================
+     PAGE
+  ========================================================= */
 
   return (
     <div className="admin-orders-page">
@@ -387,6 +440,7 @@ function AdminOrders() {
               value={searchTerm}
               onChange={(event) => {
                 setSearchTerm(event.target.value);
+
                 setCurrentPage(1);
               }}
             />
@@ -397,16 +451,24 @@ function AdminOrders() {
             value={statusFilter}
             onChange={(event) => {
               setStatusFilter(event.target.value);
+
               setCurrentPage(1);
             }}
           >
             <option value="all">All Statuses</option>
+
             <option value="pending">Pending</option>
+
             <option value="confirmed">Confirmed</option>
+
             <option value="processing">Processing</option>
+
             <option value="shipped">Shipped</option>
+
             <option value="delivered">Delivered</option>
+
             <option value="cancelled">Cancelled</option>
+
             <option value="failed">Failed</option>
           </select>
         </div>
