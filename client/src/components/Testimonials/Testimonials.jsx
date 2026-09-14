@@ -106,11 +106,16 @@ function Testimonials() {
 
               <div className="testimonial-top">
                 <div className="avatar">
-                  {review.name?.charAt(0).toUpperCase()}
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      review.user_name || "Customer",
+                    )}&background=f3ede3&color=a27b3f&size=100&bold=true`}
+                    alt={review.user_name || "Customer"}
+                  />
                 </div>
 
                 <div>
-                  <h3>{review.name}</h3>
+                  <h3>{review.user_name}</h3>
 
                   <small>{review.product_name}</small>
                 </div>
