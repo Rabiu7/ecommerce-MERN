@@ -114,8 +114,8 @@ function Hero() {
             <span className="floating-icon">✦</span>
 
             <div>
-              <strong>Thoughtfully Selected</strong>
-              <span>For modern homes</span>
+              <strong>Premium Home Essentials</strong>
+              <span>Selected for modern living</span>
             </div>
           </div>
         </div>

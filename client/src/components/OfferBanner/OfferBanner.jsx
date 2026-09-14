@@ -1,5 +1,7 @@
 import "./OfferBanner.css";
 
+import offer from "../../assets/images/offer.png";
+
 function OfferBanner() {
   return (
     <section className="offer">
@@ -10,7 +12,7 @@ function OfferBanner() {
           <h2>
             Save up to
             <br />
-            <strong>50% OFF</strong>
+            <strong>20% OFF</strong>
           </h2>
 
           <p>
@@ -22,10 +24,7 @@ function OfferBanner() {
         </div>
 
         <div className="offer-image">
-          <img
-            src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200"
-            alt="Offer"
-          />
+          <img src={offer} alt="Offer" />
         </div>
       </div>
     </section>

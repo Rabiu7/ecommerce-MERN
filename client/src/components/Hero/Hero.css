@@ -305,6 +305,7 @@
   height: 100%;
 
   object-fit: cover;
+  object-position: left center;
 
   transition:
     transform 0.8s ease,

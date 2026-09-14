@@ -1,18 +1,13 @@
 import "./WhyChooseUs.css";
 
-import {
-  FiTruck,
-  FiShield,
-  FiRefreshCw,
-  FiHeadphones,
-} from "react-icons/fi";
+import { FiTruck, FiShield, FiRefreshCw, FiHeadphones } from "react-icons/fi";
 
 function WhyChooseUs() {
   const features = [
     {
       icon: <FiTruck />,
       title: "Free Delivery",
-      description: "Free shipping on orders over $50.",
+      description: "Free shipping on orders over ₹50.",
     },
     {
       icon: <FiShield />,
@@ -34,7 +29,6 @@ function WhyChooseUs() {
   return (
     <section className="why">
       <div className="container">
-
         <div className="section-title">
           <h2>Why Choose Us</h2>
           <p>Making your shopping experience better every day.</p>
@@ -43,9 +37,7 @@ function WhyChooseUs() {
         <div className="why-grid">
           {features.map((item, index) => (
             <div className="why-card" key={index}>
-              <div className="why-icon">
-                {item.icon}
-              </div>
+              <div className="why-icon">{item.icon}</div>
 
               <h3>{item.title}</h3>
 
@@ -53,7 +45,6 @@ function WhyChooseUs() {
             </div>
           ))}
         </div>
-
       </div>
     </section>
   );

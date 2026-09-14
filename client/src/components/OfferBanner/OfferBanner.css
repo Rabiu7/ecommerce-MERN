@@ -234,6 +234,7 @@
   display: block;
 
   object-fit: cover;
+  object-position: left center;
 
   transform: scale(1.03);
 
