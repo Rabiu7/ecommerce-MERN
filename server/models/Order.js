@@ -175,16 +175,20 @@ const Order = {
   // MARK PAYMENT SUCCESSFUL
   // =========================================================
 
+  // =========================================================
+  // MARK PAYMENT SUCCESSFUL
+  // =========================================================
+
   markPaymentSuccessful(orderId, cashfreePaymentId, callback) {
     const sql = `
-      UPDATE orders
-      SET
-        cashfree_payment_id = ?,
-        payment_status = 'paid',
-        order_status = 'Confirmed'
-      WHERE id = ?
-      AND payment_status = 'pending'
-    `;
+    UPDATE orders
+    SET
+      cashfree_payment_id = ?,
+      payment_status = 'paid',
+      order_status = 'Confirmed'
+    WHERE id = ?
+    AND payment_status != 'paid'
+  `;
 
     db.query(sql, [cashfreePaymentId, orderId], callback);
   },
@@ -193,14 +197,36 @@ const Order = {
   // MARK PAYMENT FAILED
   // =========================================================
 
+  // =========================================================
+  // MARK PAYMENT FAILED
+  // =========================================================
+
   markPaymentFailed(orderId, callback) {
     const sql = `
-      UPDATE orders
-      SET
-        payment_status = 'failed',
-        order_status = 'Failed'
-      WHERE id = ?
-    `;
+    UPDATE orders
+    SET
+      payment_status = 'failed',
+      order_status = 'Failed'
+    WHERE id = ?
+    AND payment_status != 'paid'
+  `;
+
+    db.query(sql, [orderId], callback);
+  },
+
+  // =========================================================
+  // MARK PAYMENT CANCELLED
+  // =========================================================
+
+  markPaymentCancelled(orderId, callback) {
+    const sql = `
+    UPDATE orders
+    SET
+      payment_status = 'cancelled',
+      order_status = 'Payment Cancelled'
+    WHERE id = ?
+    AND payment_status != 'paid'
+  `;
 
     db.query(sql, [orderId], callback);
   },

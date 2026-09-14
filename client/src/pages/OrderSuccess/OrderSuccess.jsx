@@ -35,6 +35,7 @@ function OrderSuccess() {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState(false);
+  const [paymentResult, setPaymentResult] = useState(null);
 
   const verificationStarted = useRef(false);
 
@@ -77,22 +78,16 @@ function OrderSuccess() {
     try {
       setVerifying(true);
       setVerificationError(false);
-
-      console.log("====================================");
-      console.log("Cashfree Payment Verification");
-      console.log("Cashfree Order ID:", cashfreeOrderId);
-      console.log("====================================");
+      setPaymentResult(null);
 
       const response = await fetch(
         `${VITE_API_URL}/api/orders/verify-payment`,
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
-
           body: JSON.stringify({
             cashfreeOrderId,
           }),
@@ -103,13 +98,11 @@ function OrderSuccess() {
 
       console.log("Payment Verification Response:", data);
 
-      // =================================================
+      // =====================================================
       // PAYMENT SUCCESS
-      // =================================================
+      // =====================================================
 
       if (response.ok && data.success && data.paymentStatus === "paid") {
-        console.log("Payment successful");
-
         if (!data.order) {
           throw new Error(
             "Payment successful but order details could not be loaded.",
@@ -117,8 +110,8 @@ function OrderSuccess() {
         }
 
         setOrder(data.order);
+        setPaymentResult("paid");
 
-        // Refresh cart count only after payment/order is confirmed
         if (user?.id) {
           await fetchCartCount(user.id);
         }
@@ -134,33 +127,71 @@ function OrderSuccess() {
         return;
       }
 
-      // =================================================
+      // =====================================================
       // PAYMENT PENDING
-      // =================================================
+      // =====================================================
 
-      if (response.status === 202 || data.paymentStatus === "pending") {
+      if (response.status === 202 && data.paymentStatus === "pending") {
+        setPaymentResult("pending");
+
         toast.info(
-          "Payment is still being processed. Please check My Orders shortly.",
+          data.message ||
+            "Payment is still being processed. Please check My Orders shortly.",
         );
 
         return;
       }
 
-      // =================================================
+      // =====================================================
+      // PAYMENT NOT ATTEMPTED
+      // USER LEFT CASHFREE WITHOUT COMPLETING PAYMENT
+      // =====================================================
+
+      if (data.paymentStatus === "not_attempted") {
+        setPaymentResult("not_attempted");
+
+        localStorage.removeItem("cashfreeOrderId");
+
+        toast.info(data.message || "Payment was not completed.");
+
+        return;
+      }
+
+      // =====================================================
+      // PAYMENT CANCELLED
+      // =====================================================
+
+      if (data.paymentStatus === "cancelled") {
+        setPaymentResult("cancelled");
+
+        localStorage.removeItem("cashfreeOrderId");
+
+        toast.info(data.message || "Payment was cancelled.");
+
+        return;
+      }
+
+      // =====================================================
       // PAYMENT FAILED
-      // =================================================
+      // =====================================================
 
       if (data.paymentStatus === "failed") {
+        setPaymentResult("failed");
+
+        localStorage.removeItem("cashfreeOrderId");
+
         toast.error(data.message || "Payment failed.");
 
         return;
       }
 
-      // =================================================
+      // =====================================================
       // UNKNOWN RESPONSE
-      // =================================================
+      // =====================================================
 
       console.error("Unknown payment response:", data);
+
+      setVerificationError(true);
 
       toast.error(data.message || "Unable to verify payment.");
     } catch (error) {
@@ -168,7 +199,7 @@ function OrderSuccess() {
 
       setVerificationError(true);
 
-      toast.error(error.message || "Unable to verify payment");
+      toast.error(error.message || "Unable to verify payment.");
     } finally {
       setLoading(false);
       setVerifying(false);
@@ -313,6 +344,14 @@ function OrderSuccess() {
   // =====================================================
 
   if (!order) {
+    const isNotAttempted = paymentResult === "not_attempted";
+
+    const isCancelled = paymentResult === "cancelled";
+
+    const isFailed = paymentResult === "failed";
+
+    const isPending = paymentResult === "pending";
+
     return (
       <section className="order-success-page">
         <div className="order-problem-card">
@@ -320,18 +359,44 @@ function OrderSuccess() {
             <FiCreditCard />
           </div>
 
-          <span className="success-eyebrow">ORDER STATUS</span>
+          <span className="success-eyebrow">
+            {isNotAttempted
+              ? "PAYMENT NOT COMPLETED"
+              : isCancelled
+                ? "PAYMENT CANCELLED"
+                : isFailed
+                  ? "PAYMENT FAILED"
+                  : isPending
+                    ? "PAYMENT PROCESSING"
+                    : "ORDER STATUS"}
+          </span>
 
           <h1>
-            {verificationError
-              ? "We Couldn't Confirm Your Order"
-              : "Your Payment Is Processing"}
+            {isNotAttempted
+              ? "Payment Was Not Completed"
+              : isCancelled
+                ? "Payment Was Cancelled"
+                : isFailed
+                  ? "Payment Failed"
+                  : isPending
+                    ? "Your Payment Is Processing"
+                    : verificationError
+                      ? "We Couldn't Confirm Your Order"
+                      : "Payment Status Unknown"}
           </h1>
 
           <p>
-            {verificationError
-              ? "We couldn't confirm your payment right now. Please check your order history before trying again."
-              : "Your payment may still be processing. Please check your order history after a few moments."}
+            {isNotAttempted
+              ? "You left the Cashfree payment page before completing the payment. Your order has not been confirmed and your cart items are still available."
+              : isCancelled
+                ? "You cancelled the payment. Your order has not been confirmed and no payment was completed."
+                : isFailed
+                  ? "Your payment could not be completed. Your cart is still available so you can try again."
+                  : isPending
+                    ? "Your payment may still be processing. Please check your order history after a few moments."
+                    : verificationError
+                      ? "We couldn't confirm your payment right now. Please check your order history before trying again."
+                      : "We couldn't determine the current payment status. Please check your order history."}
           </p>
 
           <div className="problem-actions">

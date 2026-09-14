@@ -483,10 +483,6 @@ exports.checkout = async (req, res) => {
 // VERIFY CASHFREE PAYMENT
 // =========================================================
 
-// =========================================================
-// VERIFY CASHFREE PAYMENT
-// =========================================================
-
 exports.verifyPayment = async (req, res) => {
   const userId = req.user.id;
 
@@ -624,6 +620,18 @@ exports.verifyPayment = async (req, res) => {
         });
       }
 
+      if (payments.length === 0) {
+        return res.status(200).json({
+          success: false,
+          orderId: order.id,
+          cashfreeOrderId: order.cashfree_order_id,
+          paymentStatus: "not_attempted",
+          orderStatus: order.order_status,
+          message:
+            "Payment was not completed. You left the payment page without completing the payment.",
+        });
+      }
+
       // ===================================================
       // SUCCESS PAYMENT
       // ===================================================
@@ -709,17 +717,85 @@ exports.verifyPayment = async (req, res) => {
       }
 
       // ===================================================
-      // FAILED PAYMENT
+      // PAYMENT STILL PENDING
+      // ===================================================
+
+      const pendingPayment = payments.find((payment) => {
+        const status = String(payment.payment_status || "").toUpperCase();
+
+        return ["PENDING", "NOT_ATTEMPTED"].includes(status);
+      });
+
+      if (pendingPayment) {
+        return res.status(202).json({
+          success: false,
+
+          orderId: order.id,
+
+          cashfreeOrderId: order.cashfree_order_id,
+
+          paymentStatus: "pending",
+
+          orderStatus: "Pending",
+
+          message:
+            "Payment is still being processed. Please check My Orders after a few moments.",
+        });
+      }
+
+      // ===================================================
+      // PAYMENT CANCELLED / USER DROPPED
+      // ===================================================
+
+      const cancelledPayment = payments.find((payment) => {
+        const status = String(payment.payment_status || "").toUpperCase();
+
+        return ["USER_DROPPED", "CANCELLED"].includes(status);
+      });
+
+      if (cancelledPayment) {
+        return Order.markPaymentCancelled(order.id, (updateErr) => {
+          if (updateErr) {
+            console.error("Mark Payment Cancelled Error:", updateErr);
+
+            return res.status(500).json({
+              message: "Unable to update cancelled payment",
+            });
+          }
+
+          return res.status(400).json({
+            success: false,
+
+            orderId: order.id,
+
+            cashfreeOrderId: order.cashfree_order_id,
+
+            paymentStatus: "cancelled",
+
+            orderStatus: "Payment Cancelled",
+
+            message: "Payment was cancelled.",
+          });
+        });
+      }
+
+      // ===================================================
+      // PAYMENT FAILED
       // ===================================================
 
       const failedPayment = payments.find(
-        (payment) => String(payment.payment_status).toUpperCase() === "FAILED",
+        (payment) =>
+          String(payment.payment_status || "").toUpperCase() === "FAILED",
       );
 
       if (failedPayment) {
         return Order.markPaymentFailed(order.id, (updateErr) => {
           if (updateErr) {
-            console.error("Mark Failed Error:", updateErr);
+            console.error("Mark Payment Failed Error:", updateErr);
+
+            return res.status(500).json({
+              message: "Unable to update failed payment",
+            });
           }
 
           return res.status(400).json({
@@ -731,7 +807,7 @@ exports.verifyPayment = async (req, res) => {
 
             paymentStatus: "failed",
 
-            orderStatus: "Failed",
+            orderStatus: "Payment Failed",
 
             message: failedPayment.payment_message || "Payment failed",
           });
@@ -739,7 +815,7 @@ exports.verifyPayment = async (req, res) => {
       }
 
       // ===================================================
-      // PAYMENT STILL PENDING
+      // NO PAYMENT ATTEMPT FOUND
       // ===================================================
 
       return res.status(202).json({
@@ -753,8 +829,7 @@ exports.verifyPayment = async (req, res) => {
 
         orderStatus: order.order_status,
 
-        message:
-          "Payment is still being processed. Please check My Orders after a few moments.",
+        message: "No completed payment attempt found yet.",
       });
     } catch (error) {
       console.error("Cashfree Verify Error:", error);
@@ -818,33 +893,84 @@ exports.cashfreeWebhook = async (req, res) => {
 
       const localOrder = orders[0];
 
-      const paymentStatus = payment?.payment_status;
+      const paymentStatus = String(payment?.payment_status || "").toUpperCase();
+
+      console.log("Cashfree Webhook Payment Status:", paymentStatus);
+
+      // =====================================================
+      // PAYMENT SUCCESS
+      // =====================================================
 
       if (paymentStatus === "SUCCESS") {
         const paymentId = payment?.cf_payment_id || payment?.payment_id;
 
-        Order.markPaymentSuccessful(localOrder.id, paymentId, (updateErr) => {
-          if (updateErr) {
-            console.error("Webhook Update Error:", updateErr);
-            return;
-          }
+        return Order.markPaymentSuccessful(
+          localOrder.id,
+          paymentId,
+          (updateErr) => {
+            if (updateErr) {
+              console.error("Webhook Update Error:", updateErr);
 
-          // Only clear cart for normal cart orders.
-          if (Number(localOrder.is_buy_now) === 1) {
-            return;
-          }
-
-          Order.clearCart(localOrder.user_id, (clearErr) => {
-            if (clearErr) {
-              console.error("Webhook Clear Cart Error:", clearErr);
+              return res.status(500).json({
+                message: "Database update failed",
+              });
             }
-          });
+
+            // Don't clear cart for Buy Now orders
+            if (Number(localOrder.is_buy_now) === 1) {
+              return res.status(200).json({
+                received: true,
+              });
+            }
+
+            Order.clearCart(localOrder.user_id, (clearErr) => {
+              if (clearErr) {
+                console.error("Webhook Clear Cart Error:", clearErr);
+              }
+
+              return res.status(200).json({
+                received: true,
+              });
+            });
+          },
+        );
+      }
+
+      // =====================================================
+      // PAYMENT CANCELLED / USER DROPPED
+      // =====================================================
+
+      if (paymentStatus === "USER_DROPPED" || paymentStatus === "CANCELLED") {
+        Order.markPaymentCancelled(localOrder.id, (updateErr) => {
+          if (updateErr) {
+            console.error("Webhook Mark Cancelled Error:", updateErr);
+          }
+        });
+
+        return res.status(200).json({
+          received: true,
         });
       }
 
+      // =====================================================
+      // PAYMENT FAILED
+      // =====================================================
+
       if (paymentStatus === "FAILED") {
-        Order.markPaymentFailed(localOrder.id, () => {});
+        Order.markPaymentFailed(localOrder.id, (updateErr) => {
+          if (updateErr) {
+            console.error("Webhook Mark Failed Error:", updateErr);
+          }
+        });
+
+        return res.status(200).json({
+          received: true,
+        });
       }
+
+      // =====================================================
+      // OTHER STATUS
+      // =====================================================
 
       return res.status(200).json({
         received: true,
