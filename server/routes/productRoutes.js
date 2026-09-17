@@ -6,11 +6,9 @@ const upload = require("../middleware/upload");
 
 const {
   getProducts,
-
   getProductById,
-
   createProduct,
-
+  updateStock,
   deleteProduct,
 } = require("../controllers/productController");
 
@@ -19,7 +17,7 @@ const {
 router.get(
   "/",
 
-  getProducts,
+  getProducts
 );
 
 // GET SINGLE
@@ -27,19 +25,23 @@ router.get(
 router.get(
   "/:id",
 
-  getProductById,
+  getProductById
 );
 
 // CREATE
 
 router.post("/", upload.single("image"), createProduct);
 
+// UPDATE STOCK
+
+router.put("/:id/stock", updateStock);
+
 // DELETE
 
 router.delete(
   "/:id",
 
-  deleteProduct,
+  deleteProduct
 );
 
 module.exports = router;

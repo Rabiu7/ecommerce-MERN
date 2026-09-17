@@ -20,7 +20,8 @@ import { toast } from "react-toastify";
 
 import "./Navbar.css";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -93,7 +94,7 @@ function Navbar() {
         const name = String(product.name || "").toLowerCase();
 
         const category = String(
-          product.category_name || product.category || "",
+          product.category_name || product.category || ""
         ).toLowerCase();
 
         return name.includes(term) || category.includes(term);

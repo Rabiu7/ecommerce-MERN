@@ -11,7 +11,8 @@ import { useAuth } from "../../context/AuthContext";
 
 import ProductCard from "../../components/ProductCard/ProductCard";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -22,6 +23,17 @@ function ProductDetails() {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  // =========================================================
+  // STOCK REMINDER STATES
+  // =========================================================
+
+  const [isReminderSet, setIsReminderSet] = useState(false);
+  const [reminderLoading, setReminderLoading] = useState(false);
+
+  // =========================================================
+  // FETCH PRODUCT
+  // =========================================================
 
   const fetchProduct = useCallback(async () => {
     try {
@@ -35,14 +47,19 @@ function ProductDetails() {
 
       setProduct(data);
 
+      // Fetch all products for related products
       const productsResponse = await fetch(`${VITE_API_URL}/api/products`);
+
+      if (!productsResponse.ok) {
+        throw new Error("Unable to load related products");
+      }
 
       const productsData = await productsResponse.json();
 
       const related = productsData.filter(
         (item) =>
           Number(item.category_id) === Number(data.category_id) &&
-          Number(item.id) !== Number(data.id),
+          Number(item.id) !== Number(data.id)
       );
 
       setRelatedProducts(related);
@@ -61,6 +78,57 @@ function ProductDetails() {
 
     loadProduct();
   }, [fetchProduct]);
+
+  // =========================================================
+  // CHECK WHETHER USER ALREADY SUBSCRIBED FOR STOCK REMINDER
+  // =========================================================
+
+  useEffect(() => {
+    const checkReminder = async () => {
+      // No need to check if:
+      // - user is not logged in
+      // - user doesn't exist
+      // - product doesn't exist
+      // - product is already in stock
+
+      if (
+        !isAuthenticated ||
+        !user?.id ||
+        !product?.id ||
+        Number(product.stock) > 0
+      ) {
+        setIsReminderSet(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${VITE_API_URL}/api/stock-reminders/${user.id}/${product.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        setIsReminderSet(Boolean(data.subscribed));
+      } catch (error) {
+        console.error("Check stock reminder error:", error);
+      }
+    };
+
+    checkReminder();
+  }, [user?.id, isAuthenticated, product?.id, product?.stock]);
+
+  // =========================================================
+  // ADD TO CART
+  // =========================================================
 
   const addToCart = async () => {
     if (!isAuthenticated) {
@@ -94,10 +162,14 @@ function ProductDetails() {
         toast.error(data.message || "Unable to add product");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Add to cart error:", error);
       toast.error("Something went wrong");
     }
   };
+
+  // =========================================================
+  // BUY NOW
+  // =========================================================
 
   const buyNow = () => {
     if (!isAuthenticated) {
@@ -110,7 +182,7 @@ function ProductDetails() {
       return;
     }
 
-    if (!product || product.stock <= 0) {
+    if (!product || Number(product.stock) <= 0) {
       toast.error("Product is out of stock.");
       return;
     }
@@ -132,6 +204,98 @@ function ProductDetails() {
     });
   };
 
+  // =========================================================
+  // SET / CANCEL STOCK REMINDER
+  // =========================================================
+
+  const handleRemindMe = async () => {
+    // User must be logged in
+    if (!isAuthenticated) {
+      toast.info("Please login to get notified.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
+      return;
+    }
+
+    // Prevent multiple clicks
+    if (reminderLoading) {
+      return;
+    }
+
+    try {
+      setReminderLoading(true);
+
+      // =====================================================
+      // CANCEL EXISTING REMINDER
+      // =====================================================
+
+      if (isReminderSet) {
+        const response = await fetch(
+          `${VITE_API_URL}/api/stock-reminders/${user.id}/${product.id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsReminderSet(false);
+
+          toast.success(data.message || "Stock reminder cancelled.");
+        } else {
+          toast.error(data.message || "Unable to cancel reminder.");
+        }
+
+        return;
+      }
+
+      // =====================================================
+      // SET NEW REMINDER
+      // =====================================================
+
+      const response = await fetch(`${VITE_API_URL}/api/stock-reminders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          product_id: product.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsReminderSet(true);
+
+        toast.success(
+          data.message || "You are subscribed for stock notification."
+        );
+      } else {
+        toast.error(data.message || "Unable to set reminder.");
+      }
+    } catch (error) {
+      console.error("Stock reminder error:", error);
+
+      toast.error("Unable to update stock reminder.");
+    } finally {
+      setReminderLoading(false);
+    }
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
   if (loading) {
     return (
       <section className="product-details-loading">
@@ -141,6 +305,10 @@ function ProductDetails() {
       </section>
     );
   }
+
+  // =========================================================
+  // PRODUCT NOT FOUND
+  // =========================================================
 
   if (!product) {
     return (
@@ -152,48 +320,97 @@ function ProductDetails() {
     );
   }
 
+  // =========================================================
+  // PAGE
+  // =========================================================
+
   return (
     <>
       <section className="product-details">
         <div className="product-details-container">
           <div className="product-details-grid">
+            {/* =================================================
+                PRODUCT IMAGE
+            ================================================= */}
+
             <div className="product-details-image">
               <img src={product.image} alt={product.name} />
             </div>
 
+            {/* =================================================
+                PRODUCT INFORMATION
+            ================================================= */}
+
             <div className="product-details-info">
+              {/* CATEGORY */}
+
               <span className="product-details-category">
                 {product.category}
               </span>
 
+              {/* PRODUCT NAME */}
+
               <h1>{product.name}</h1>
+
+              {/* RATING */}
 
               <div className="product-details-rating">
                 <FaStar />
+
                 <span>{Number(product.rating || 0).toFixed(1)}</span>
               </div>
+
+              {/* PRICE */}
 
               <div className="product-details-price">
                 ₹{Number(product.price).toFixed(2)}
               </div>
 
+              {/* DESCRIPTION */}
+
               <p className="product-details-description">
                 {product.description}
               </p>
 
+              {/* =================================================
+                  STOCK STATUS
+              ================================================= */}
+
               <div className="stock-status">
-                {product.stock > 0 ? (
+                {Number(product.stock) > 0 ? (
                   <span className="in-stock">
                     ✓ In Stock ({product.stock} available)
                   </span>
                 ) : (
-                  <span className="out-stock">Out of Stock</span>
+                  <div className="out-stock-wrapper">
+                    <span className="out-stock">Out of Stock</span>
+
+                    <button
+                      type="button"
+                      className={`remind-btn ${
+                        isReminderSet ? "reminder-set" : ""
+                      }`}
+                      onClick={handleRemindMe}
+                      disabled={reminderLoading}
+                    >
+                      {reminderLoading
+                        ? "Please wait..."
+                        : isReminderSet
+                        ? "✓ You're on the list"
+                        : "Remind Me"}
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {product.stock > 0 && (
+              {/* =================================================
+                  QUANTITY
+              ================================================= */}
+
+              {Number(product.stock) > 0 && (
                 <div className="quantity">
                   <button
+                    type="button"
                     onClick={() => quantity > 1 && setQuantity(quantity - 1)}
                   >
                     -
@@ -202,8 +419,10 @@ function ProductDetails() {
                   <span>{quantity}</span>
 
                   <button
+                    type="button"
                     onClick={() =>
-                      quantity < product.stock && setQuantity(quantity + 1)
+                      quantity < Number(product.stock) &&
+                      setQuantity(quantity + 1)
                     }
                   >
                     +
@@ -211,29 +430,36 @@ function ProductDetails() {
                 </div>
               )}
 
+              {/* =================================================
+                  ACTION BUTTONS
+              ================================================= */}
+
               <div className="actions">
-                <button
-                  className="cart-btn"
-                  onClick={addToCart}
-                  disabled={product.stock <= 0}
-                >
-                  <FiShoppingCart />
+                {Number(product.stock) > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      className="cart-btn"
+                      onClick={addToCart}
+                    >
+                      <FiShoppingCart />
+                      Add to Cart
+                    </button>
 
-                  {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                </button>
-
-                <button
-                  className="buy-btn"
-                  onClick={buyNow}
-                  disabled={product.stock <= 0}
-                >
-                  Buy Now
-                </button>
+                    <button type="button" className="buy-btn" onClick={buyNow}>
+                      Buy Now
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* =======================================================
+          RELATED PRODUCTS
+      ======================================================= */}
 
       {relatedProducts.length > 0 && (
         <section className="related-products">
@@ -258,6 +484,7 @@ function ProductDetails() {
                   category={item.category}
                   price={item.price}
                   rating={item.rating}
+                  stock={item.stock}
                 />
               ))}
             </div>

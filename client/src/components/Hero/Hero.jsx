@@ -5,7 +5,8 @@ import heroImage from "../../assets/images/hero.png";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function Hero() {
   const [averageRating, setAverageRating] = useState(null);
@@ -27,7 +28,7 @@ function Hero() {
           (product) =>
             product.rating !== null &&
             product.rating !== undefined &&
-            Number(product.rating) >= 4,
+            Number(product.rating) >= 4
         );
 
         if (ratedProducts.length === 0) {
@@ -36,7 +37,7 @@ function Hero() {
 
         const totalRating = ratedProducts.reduce(
           (sum, product) => sum + Number(product.rating),
-          0,
+          0
         );
 
         const average = totalRating / ratedProducts.length;

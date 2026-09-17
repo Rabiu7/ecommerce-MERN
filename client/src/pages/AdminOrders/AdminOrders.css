@@ -108,10 +108,7 @@
 
   cursor: pointer;
 
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease,
     color 0.2s ease;
 }
 
@@ -202,25 +199,20 @@
 
   background: #ffffff;
 
-  box-shadow:
-    0 2px 5px rgba(23, 33, 47, 0.02),
+  box-shadow: 0 2px 5px rgba(23, 33, 47, 0.02),
     0 8px 22px rgba(23, 33, 47, 0.035);
 
   cursor: pointer;
 
   text-align: left;
 
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .order-summary-card:hover {
   border-color: #e3e6ea;
 
-  box-shadow:
-    0 4px 9px rgba(23, 33, 47, 0.03),
+  box-shadow: 0 4px 9px rgba(23, 33, 47, 0.03),
     0 12px 28px rgba(23, 33, 47, 0.06);
 
   transform: translateY(-2px);
@@ -260,8 +252,7 @@
   border: 1px solid #e9edf1;
   border-radius: 16px;
 
-  box-shadow:
-    0 2px 5px rgba(23, 33, 47, 0.02),
+  box-shadow: 0 2px 5px rgba(23, 33, 47, 0.02),
     0 10px 30px rgba(23, 33, 47, 0.04);
 }
 
@@ -324,10 +315,7 @@
 
   font-size: 11px;
 
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .orders-search input::placeholder {
@@ -698,10 +686,7 @@
 
   cursor: pointer;
 
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
     transform 0.2s ease;
 }
 

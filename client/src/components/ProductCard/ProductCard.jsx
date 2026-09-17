@@ -9,14 +9,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
-function ProductCard({ id, image, title, category, price, rating }) {
+function ProductCard({ id, image, title, category, price, rating, stock }) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
   const navigate = useNavigate();
 
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  const [isReminderSet, setIsReminderSet] = useState(false);
+  const [reminderLoading, setReminderLoading] = useState(false);
 
   /*
    * CHECK WHETHER PRODUCT IS ALREADY IN WISHLIST
@@ -35,7 +39,7 @@ function ProductCard({ id, image, title, category, price, rating }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          },
+          }
         );
 
         if (!response.ok) {
@@ -47,7 +51,7 @@ function ProductCard({ id, image, title, category, price, rating }) {
         const wishlistItems = data.wishlist || [];
 
         const exists = wishlistItems.some(
-          (item) => Number(item.product_id || item.id) === Number(id),
+          (item) => Number(item.product_id || item.id) === Number(id)
         );
 
         setIsWishlisted(exists);
@@ -58,6 +62,41 @@ function ProductCard({ id, image, title, category, price, rating }) {
 
     checkWishlist();
   }, [user?.id, isAuthenticated, id]);
+
+  /*
+   * CHECK WHETHER PRODUCT IS ALREADY IN STOCK REMINDER
+   */
+  useEffect(() => {
+    const checkReminder = async () => {
+      if (!isAuthenticated || !user?.id || Number(stock) > 0) {
+        setIsReminderSet(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${VITE_API_URL}/api/stock-reminders/${user.id}/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        setIsReminderSet(data.subscribed);
+      } catch (error) {
+        console.error("Check stock reminder error:", error);
+      }
+    };
+
+    checkReminder();
+  }, [user?.id, isAuthenticated, id, stock]);
 
   /*
    * ADD TO CART
@@ -133,7 +172,7 @@ function ProductCard({ id, image, title, category, price, rating }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          },
+          }
         );
 
         const data = await response.json();
@@ -184,6 +223,81 @@ function ProductCard({ id, image, title, category, price, rating }) {
 
   const productRating = Number(rating || 0);
 
+  const handleReminder = async () => {
+    if (!isAuthenticated) {
+      toast.info("Please login to get notified.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
+
+      return;
+    }
+
+    if (reminderLoading) return;
+
+    try {
+      setReminderLoading(true);
+
+      // ============================================
+      // CANCEL REMINDER
+      // ============================================
+
+      if (isReminderSet) {
+        const response = await fetch(
+          `${VITE_API_URL}/api/stock-reminders/${user.id}/${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setIsReminderSet(false);
+          toast.success("Stock reminder cancelled.");
+        } else {
+          toast.error(data.message || "Unable to cancel reminder.");
+        }
+
+        return;
+      }
+
+      // ============================================
+      // ADD REMINDER
+      // ============================================
+
+      const response = await fetch(`${VITE_API_URL}/api/stock-reminders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          product_id: id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsReminderSet(true);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message || "Unable to set reminder.");
+      }
+    } catch (error) {
+      console.error("Stock reminder error:", error);
+      toast.error("Unable to update stock reminder.");
+    } finally {
+      setReminderLoading(false);
+    }
+  };
+
   return (
     <article className="product-card">
       {/* IMAGE */}
@@ -191,6 +305,10 @@ function ProductCard({ id, image, title, category, price, rating }) {
         <Link to={`/products/${id}`}>
           <img src={image} alt={title} loading="lazy" />
         </Link>
+
+        {Number(stock) <= 0 && (
+          <span className="product-card-out-stock">Out of Stock</span>
+        )}
 
         <button
           type="button"
@@ -223,19 +341,37 @@ function ProductCard({ id, image, title, category, price, rating }) {
         </div>
 
         {/* PRICE + CART */}
+        {/* PRICE + CART */}
         <div className="product-card-footer">
           <div className="product-card-price">
             ₹{Number(price || 0).toFixed(2)}
           </div>
 
-          <button
-            type="button"
-            className="product-card-cart"
-            onClick={addToCart}
-            aria-label="Add to cart"
-          >
-            <FiShoppingCart />
-          </button>
+          {Number(stock) > 0 ? (
+            <button
+              type="button"
+              className="product-card-cart"
+              onClick={addToCart}
+              aria-label="Add to cart"
+            >
+              <FiShoppingCart />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={`product-card-remind ${
+                isReminderSet ? "reminder-set" : ""
+              }`}
+              onClick={handleReminder}
+              disabled={reminderLoading}
+            >
+              {reminderLoading
+                ? "Please wait..."
+                : isReminderSet
+                ? "✓ You're on the list"
+                : "Remind Me"}
+            </button>
+          )}
         </div>
 
         {/* DETAILS */}

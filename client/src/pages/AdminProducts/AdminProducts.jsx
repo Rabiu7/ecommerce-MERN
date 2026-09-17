@@ -5,7 +5,8 @@ import "./AdminProducts.css";
 
 import { toast } from "react-toastify";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function AdminProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -146,7 +147,7 @@ function AdminProducts() {
 
       const response = await axios.post(
         `${VITE_API_URL}/api/products`,
-        formData,
+        formData
       );
 
       console.log("Product created:", response.data);
@@ -205,7 +206,7 @@ function AdminProducts() {
       await axios.delete(`${VITE_API_URL}/api/products/${deleteProduct.id}`);
 
       setProducts((previous) =>
-        previous.filter((product) => product.id !== deleteProduct.id),
+        previous.filter((product) => product.id !== deleteProduct.id)
       );
 
       toast.success("Product deleted successfully.");

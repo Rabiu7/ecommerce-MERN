@@ -3,7 +3,8 @@ import "./AdminReviews.css";
 import { useEffect, useState } from "react";
 import { FiCheck, FiTrash2, FiStar } from "react-icons/fi";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -92,8 +93,8 @@ function AdminReviews() {
                 ...review,
                 is_verified: currentStatus ? 0 : 1,
               }
-            : review,
-        ),
+            : review
+        )
       );
     } catch (error) {
       console.error("Verify review error:", error);
@@ -107,7 +108,7 @@ function AdminReviews() {
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this review?",
+      "Are you sure you want to delete this review?"
     );
 
     if (!confirmed) return;
@@ -122,7 +123,7 @@ function AdminReviews() {
       }
 
       setReviews((prevReviews) =>
-        prevReviews.filter((review) => review.id !== id),
+        prevReviews.filter((review) => review.id !== id)
       );
     } catch (error) {
       console.error("Delete review error:", error);

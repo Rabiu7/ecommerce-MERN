@@ -16,10 +16,7 @@
   border: 1px solid #e9e4dc;
   border-radius: 12px;
 
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .product-card:hover {
@@ -80,6 +77,93 @@
 }
 
 /* =========================================================
+   OUT OF STOCK
+========================================================= */
+
+.product-card-out-stock {
+  position: absolute;
+
+  top: 12px;
+  left: 12px;
+
+  z-index: 4;
+
+  padding: 7px 10px;
+
+  border: 1px solid #e2c6c6;
+  border-radius: 4px;
+
+  background: rgba(251, 241, 241, 0.95);
+
+  color: #a35353;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.8px;
+
+  text-transform: uppercase;
+}
+
+.product-card-remind.reminder-set {
+  background: #a17d47;
+  color: #fff;
+  border-color: #a17d47;
+}
+
+.product-card-remind.reminder-set:hover {
+  background: transparent;
+  color: #a17d47;
+}
+
+.product-card-remind:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================================
+   REMIND ME
+========================================================= */
+
+.product-card-remind {
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #a17d47;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #a17d47;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 0.8px;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+
+.product-card-remind:hover {
+  background: #a17d47;
+
+  color: #fff;
+
+  transform: translateY(-2px);
+}
+
+/* =========================================================
    WISHLIST
 ========================================================= */
 
@@ -111,10 +195,7 @@
 
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 
-  transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
 .product-wishlist svg {
@@ -280,9 +361,7 @@
 
   cursor: pointer;
 
-  transition:
-    background 0.25s ease,
-    transform 0.25s ease;
+  transition: background 0.25s ease, transform 0.25s ease;
 }
 
 .product-card-cart svg {
@@ -325,10 +404,7 @@
 
   text-decoration: none;
 
-  transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    border-color 0.25s ease;
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 .product-card-details:hover {

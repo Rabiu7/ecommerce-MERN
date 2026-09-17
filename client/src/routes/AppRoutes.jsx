@@ -8,6 +8,7 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute/ProtectedAdminRoute";
 
 import AdminProducts from "../pages/AdminProducts/AdminProducts";
 import AdminCategories from "../pages/AdminCategories/AdminCategories";
+import AdminOrderDetails from "../pages/AdminOrderDetails/AdminOrderDetails";
 
 import Home from "../pages/Home/Home";
 import Products from "../pages/Products/Products";
@@ -156,6 +157,11 @@ function AppRoutes() {
 
           {/* Reviews - add later */}
           <Route path="/admin/reviews" element={<AdminReviews />} />
+
+          <Route
+            path="/admin/orders/:orderId"
+            element={<AdminOrderDetails />}
+          />
         </Route>
       </Route>
 

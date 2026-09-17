@@ -23,7 +23,8 @@ import {
 
 import { toast } from "react-toastify";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function OrderSuccess() {
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ function OrderSuccess() {
           body: JSON.stringify({
             cashfreeOrderId,
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -105,7 +106,7 @@ function OrderSuccess() {
       if (response.ok && data.success && data.paymentStatus === "paid") {
         if (!data.order) {
           throw new Error(
-            "Payment successful but order details could not be loaded.",
+            "Payment successful but order details could not be loaded."
           );
         }
 
@@ -136,7 +137,7 @@ function OrderSuccess() {
 
         toast.info(
           data.message ||
-            "Payment is still being processed. Please check My Orders shortly.",
+            "Payment is still being processed. Please check My Orders shortly."
         );
 
         return;
@@ -275,7 +276,7 @@ function OrderSuccess() {
           headers: {
             Authorization: "Bearer " + token,
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -363,40 +364,40 @@ function OrderSuccess() {
             {isNotAttempted
               ? "PAYMENT NOT COMPLETED"
               : isCancelled
-                ? "PAYMENT CANCELLED"
-                : isFailed
-                  ? "PAYMENT FAILED"
-                  : isPending
-                    ? "PAYMENT PROCESSING"
-                    : "ORDER STATUS"}
+              ? "PAYMENT CANCELLED"
+              : isFailed
+              ? "PAYMENT FAILED"
+              : isPending
+              ? "PAYMENT PROCESSING"
+              : "ORDER STATUS"}
           </span>
 
           <h1>
             {isNotAttempted
               ? "Payment Was Not Completed"
               : isCancelled
-                ? "Payment Was Cancelled"
-                : isFailed
-                  ? "Payment Failed"
-                  : isPending
-                    ? "Your Payment Is Processing"
-                    : verificationError
-                      ? "We Couldn't Confirm Your Order"
-                      : "Payment Status Unknown"}
+              ? "Payment Was Cancelled"
+              : isFailed
+              ? "Payment Failed"
+              : isPending
+              ? "Your Payment Is Processing"
+              : verificationError
+              ? "We Couldn't Confirm Your Order"
+              : "Payment Status Unknown"}
           </h1>
 
           <p>
             {isNotAttempted
               ? "You left the Cashfree payment page before completing the payment. Your order has not been confirmed and your cart items are still available."
               : isCancelled
-                ? "You cancelled the payment. Your order has not been confirmed and no payment was completed."
-                : isFailed
-                  ? "Your payment could not be completed. Your cart is still available so you can try again."
-                  : isPending
-                    ? "Your payment may still be processing. Please check your order history after a few moments."
-                    : verificationError
-                      ? "We couldn't confirm your payment right now. Please check your order history before trying again."
-                      : "We couldn't determine the current payment status. Please check your order history."}
+              ? "You cancelled the payment. Your order has not been confirmed and no payment was completed."
+              : isFailed
+              ? "Your payment could not be completed. Your cart is still available so you can try again."
+              : isPending
+              ? "Your payment may still be processing. Please check your order history after a few moments."
+              : verificationError
+              ? "We couldn't confirm your payment right now. Please check your order history before trying again."
+              : "We couldn't determine the current payment status. Please check your order history."}
           </p>
 
           <div className="problem-actions">

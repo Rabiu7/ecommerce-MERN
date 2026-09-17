@@ -52,14 +52,13 @@ function Products() {
 
     if (search) {
       data = data.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase()),
+        item.name.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     if (category !== "All") {
       data = data.filter(
-        (item) =>
-          (item.category || "").toLowerCase() === category.toLowerCase(),
+        (item) => (item.category || "").toLowerCase() === category.toLowerCase()
       );
     }
 
@@ -145,6 +144,7 @@ function Products() {
                     category={product.category}
                     price={product.price}
                     rating={product.rating}
+                    stock={product.stock}
                   />
                 ))
               ) : (

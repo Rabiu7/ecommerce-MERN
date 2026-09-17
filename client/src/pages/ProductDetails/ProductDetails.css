@@ -128,9 +128,7 @@
 
   background: #eeeae2;
 
-  transition:
-    transform 0.8s ease,
-    filter 0.5s ease;
+  transition: transform 0.8s ease, filter 0.5s ease;
 }
 
 .product-details-image:hover img {
@@ -321,6 +319,82 @@
   color: #a35353;
 }
 
+.remind-btn.reminder-set {
+  background: #a17d47;
+  color: #fff;
+  border-color: #a17d47;
+}
+
+.remind-btn.reminder-set:hover {
+  background: transparent;
+  color: #a17d47;
+}
+
+.remind-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+/* =========================================================
+   OUT OF STOCK + REMIND ME
+========================================================= */
+
+.out-stock-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.remind-btn {
+  min-height: 40px;
+
+  padding: 0 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid #a27b3f;
+
+  border-radius: 4px;
+
+  background: transparent;
+
+  color: #a27b3f;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.remind-btn:hover {
+  background: #a27b3f;
+
+  color: #fff;
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 20px rgba(162, 123, 63, 0.18);
+}
+
+.remind-action-btn {
+  min-height: 52px;
+
+  padding: 0 28px;
+}
+
 /* =========================================================
    QUANTITY
 ========================================================= */
@@ -357,9 +431,7 @@
 
   cursor: pointer;
 
-  transition:
-    background 0.3s ease,
-    color 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .quantity button:hover {
@@ -418,12 +490,8 @@
 
   cursor: pointer;
 
-  transition:
-    background 0.3s ease,
-    color 0.3s ease,
-    border-color 0.3s ease,
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .cart-btn {

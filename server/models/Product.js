@@ -89,8 +89,22 @@ const Product = {
         product.image,
       ],
 
-      callback,
+      callback
     );
+  },
+
+  // =========================================================
+  // UPDATE PRODUCT STOCK
+  // =========================================================
+
+  updateStock: (id, stock, callback) => {
+    const sql = `
+    UPDATE products
+    SET stock = ?
+    WHERE id = ?
+  `;
+
+    db.query(sql, [stock, id], callback);
   },
 
   // Delete product
@@ -109,7 +123,7 @@ const Product = {
 
       [id],
 
-      callback,
+      callback
     );
   },
 };

@@ -17,7 +17,8 @@ import {
 
 import { useAuth } from "../../context/AuthContext";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function Cart() {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
@@ -136,12 +137,12 @@ function Cart() {
 
   const totalItems = cartItems.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
-    0,
+    0
   );
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
-    0,
+    0
   );
 
   const FREE_SHIPPING_LIMIT = 1000;
@@ -154,7 +155,7 @@ function Cart() {
 
   const shippingProgress = Math.min(
     (subtotal / FREE_SHIPPING_LIMIT) * 100,
-    100,
+    100
   );
 
   /* =====================================================
@@ -279,7 +280,7 @@ function Cart() {
               <span>
                 {remainingForFreeShipping > 0
                   ? `Add ₹${remainingForFreeShipping.toFixed(
-                      2,
+                      2
                     )} more for FREE shipping`
                   : "You've unlocked FREE shipping"}
               </span>

@@ -12,7 +12,8 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const VITE_API_URL =
+  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
 
 function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -22,6 +23,8 @@ function AdminCustomers() {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   /* =========================================================
      FETCH CUSTOMERS
@@ -142,6 +145,22 @@ function AdminCustomers() {
   };
 
   /* =========================================================
+     GET INITIALS
+  ========================================================= */
+
+  const getInitials = (name) => {
+    return (
+      name
+        ?.split(" ")
+        .filter(Boolean)
+        .map((word) => word.charAt(0))
+        .join("")
+        .substring(0, 2)
+        .toUpperCase() || "CU"
+    );
+  };
+
+  /* =========================================================
      LOADING
   ========================================================= */
 
@@ -222,7 +241,7 @@ function AdminCustomers() {
             <strong>
               {
                 customers.filter(
-                  (customer) => Number(customer.total_orders) > 0,
+                  (customer) => Number(customer.total_orders) > 0
                 ).length
               }
             </strong>
@@ -239,7 +258,9 @@ function AdminCustomers() {
       ===================================================== */}
 
       <div className="customers-card">
-        {/* CARD HEADER */}
+        {/* ===================================================
+            CARD HEADER
+        =================================================== */}
 
         <div className="customers-card-header">
           <div>
@@ -316,13 +337,7 @@ function AdminCustomers() {
                 </tr>
               ) : (
                 filteredCustomers.map((customer) => {
-                  const initials =
-                    customer.name
-                      ?.split(" ")
-                      .map((word) => word.charAt(0))
-                      .join("")
-                      .substring(0, 2)
-                      .toUpperCase() || "CU";
+                  const initials = getInitials(customer.name);
 
                   return (
                     <tr key={customer.id}>
@@ -347,7 +362,7 @@ function AdminCustomers() {
                           <span>
                             <FiMail />
 
-                            {customer.email}
+                            {customer.email || "-"}
                           </span>
 
                           {customer.phone && (
@@ -378,7 +393,7 @@ function AdminCustomers() {
                             {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
-                            },
+                            }
                           )}
                         </strong>
                       </td>
@@ -398,6 +413,7 @@ function AdminCustomers() {
                           type="button"
                           className="view-customer-button"
                           title="View customer"
+                          onClick={() => setSelectedCustomer(customer)}
                         >
                           <FiEye />
 
@@ -412,6 +428,106 @@ function AdminCustomers() {
           </table>
         </div>
       </div>
+
+      {/* =====================================================
+          CUSTOMER DETAILS MODAL
+      ===================================================== */}
+
+      {selectedCustomer && (
+        <div
+          className="customer-modal-overlay"
+          onClick={() => setSelectedCustomer(null)}
+        >
+          <div
+            className="customer-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* MODAL HEADER */}
+
+            <div className="customer-modal-header">
+              <div>
+                <span>CUSTOMER DETAILS</span>
+
+                <h2>{selectedCustomer.name || "Customer"}</h2>
+              </div>
+
+              <button
+                type="button"
+                className="customer-modal-close"
+                title="Close"
+                onClick={() => setSelectedCustomer(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* CUSTOMER PROFILE */}
+
+            <div className="customer-modal-profile">
+              <div className="customer-modal-avatar">
+                {getInitials(selectedCustomer.name)}
+              </div>
+
+              <div>
+                <strong>{selectedCustomer.name || "-"}</strong>
+
+                <span>Customer #{selectedCustomer.id}</span>
+              </div>
+            </div>
+
+            {/* CUSTOMER DETAILS */}
+
+            <div className="customer-details-grid">
+              <div className="customer-detail-item">
+                <span>Email</span>
+
+                <strong>{selectedCustomer.email || "-"}</strong>
+              </div>
+
+              <div className="customer-detail-item">
+                <span>Phone</span>
+
+                <strong>{selectedCustomer.phone || "-"}</strong>
+              </div>
+
+              <div className="customer-detail-item">
+                <span>Total Orders</span>
+
+                <strong>{Number(selectedCustomer.total_orders || 0)}</strong>
+              </div>
+
+              <div className="customer-detail-item">
+                <span>Total Spent</span>
+
+                <strong>
+                  ₹
+                  {Number(selectedCustomer.total_spent || 0).toLocaleString(
+                    "en-IN",
+                    {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    }
+                  )}
+                </strong>
+              </div>
+
+              <div className="customer-detail-item">
+                <span>Joined</span>
+
+                <strong>{formatDate(selectedCustomer.created_at)}</strong>
+              </div>
+            </div>
+
+            {/* MODAL FOOTER */}
+
+            <div className="customer-modal-footer">
+              <button type="button" onClick={() => setSelectedCustomer(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
