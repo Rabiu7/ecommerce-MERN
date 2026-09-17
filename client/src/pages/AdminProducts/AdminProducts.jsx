@@ -19,7 +19,12 @@ function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // DELETE
   const [deleteProduct, setDeleteProduct] = useState(null);
+
+  // EDIT
+  const [editProduct, setEditProduct] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -79,7 +84,6 @@ function AdminProducts() {
 
   /* =========================================================
      FETCH PRODUCTS
-     Used after adding a product
   ========================================================= */
 
   const fetchProducts = async () => {
@@ -95,7 +99,7 @@ function AdminProducts() {
   };
 
   /* =========================================================
-     HANDLE INPUT
+     HANDLE ADD FORM INPUT
   ========================================================= */
 
   const handleChange = (e) => {
@@ -178,6 +182,122 @@ function AdminProducts() {
   };
 
   /* =========================================================
+     OPEN EDIT MODAL
+  ========================================================= */
+
+  const openEditModal = (product) => {
+    setEditProduct(product);
+  };
+
+  /* =========================================================
+     CLOSE EDIT MODAL
+  ========================================================= */
+
+  const closeEditModal = () => {
+    if (editSaving) {
+      return;
+    }
+
+    setEditProduct(null);
+  };
+
+  /* =========================================================
+     HANDLE EDIT INPUT
+  ========================================================= */
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+
+    setEditProduct((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+  /* =========================================================
+     HANDLE EDIT IMAGE
+  ========================================================= */
+
+  const handleEditImageChange = (e) => {
+    setEditProduct((previous) => ({
+      ...previous,
+      newImage: e.target.files[0] || null,
+    }));
+  };
+
+  /* =========================================================
+     UPDATE PRODUCT
+  ========================================================= */
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!editProduct) {
+      return;
+    }
+
+    if (!editProduct.name?.trim()) {
+      toast.error("Please enter product name.");
+      return;
+    }
+
+    if (!editProduct.category_id) {
+      toast.error("Please select a category.");
+      return;
+    }
+
+    if (!editProduct.price || Number(editProduct.price) <= 0) {
+      toast.error("Please enter a valid price.");
+      return;
+    }
+
+    if (
+      editProduct.stock === "" ||
+      Number(editProduct.stock) < 0 ||
+      !Number.isInteger(Number(editProduct.stock))
+    ) {
+      toast.error("Please enter a valid stock quantity.");
+      return;
+    }
+
+    setEditSaving(true);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("name", editProduct.name.trim());
+      formData.append("description", editProduct.description?.trim() || "");
+      formData.append("category_id", editProduct.category_id);
+      formData.append("price", editProduct.price);
+      formData.append("discount", editProduct.discount || 0);
+      formData.append("stock", editProduct.stock);
+
+      if (editProduct.newImage) {
+        formData.append("image", editProduct.newImage);
+      }
+
+      const response = await axios.put(
+        `${VITE_API_URL}/api/products/${editProduct.id}`,
+        formData
+      );
+
+      console.log("Product updated:", response.data);
+
+      toast.success("Product updated successfully.");
+
+      setEditProduct(null);
+
+      await fetchProducts();
+    } catch (error) {
+      console.error("Error updating product:", error);
+
+      toast.error(error.response?.data?.message || "Failed to update product.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  /* =========================================================
      OPEN DELETE MODAL
   ========================================================= */
 
@@ -244,7 +364,9 @@ function AdminProducts() {
 
   return (
     <div className="admin-products">
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <div className="products-page-header">
         <div>
@@ -273,7 +395,9 @@ function AdminProducts() {
         </button>
       </div>
 
-      {/* ADD PRODUCT FORM */}
+      {/* =====================================================
+          ADD PRODUCT FORM
+      ===================================================== */}
 
       {showForm && (
         <div className="product-form-card">
@@ -420,7 +544,9 @@ function AdminProducts() {
         </div>
       )}
 
-      {/* PRODUCTS LIST */}
+      {/* =====================================================
+          PRODUCTS LIST
+      ===================================================== */}
 
       <div className="products-card">
         <div className="products-card-header">
@@ -521,12 +647,23 @@ function AdminProducts() {
                     </td>
 
                     <td>
-                      <button
-                        className="delete-product-btn"
-                        onClick={() => openDeleteModal(product)}
-                      >
-                        Delete
-                      </button>
+                      <div className="product-action-buttons">
+                        <button
+                          type="button"
+                          className="edit-product-btn"
+                          onClick={() => openEditModal(product)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="delete-product-btn"
+                          onClick={() => openDeleteModal(product)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -536,7 +673,171 @@ function AdminProducts() {
         )}
       </div>
 
-      {/* DELETE MODAL */}
+      {/* =====================================================
+          EDIT PRODUCT MODAL
+      ===================================================== */}
+
+      {editProduct && (
+        <div className="edit-modal-overlay" onClick={closeEditModal}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="edit-modal-header">
+              <div>
+                <h2>Edit Product</h2>
+
+                <p>Update product details, price and stock.</p>
+              </div>
+
+              <button
+                type="button"
+                className="edit-modal-close"
+                onClick={closeEditModal}
+                disabled={editSaving}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdate}>
+              <div className="edit-form-grid">
+                <div className="form-group full-width">
+                  <label>Product Name</label>
+
+                  <input
+                    type="text"
+                    name="name"
+                    value={editProduct.name || ""}
+                    onChange={handleEditChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Description</label>
+
+                  <textarea
+                    name="description"
+                    value={editProduct.description || ""}
+                    onChange={handleEditChange}
+                    rows="4"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Category</label>
+
+                  <select
+                    name="category_id"
+                    value={editProduct.category_id || ""}
+                    onChange={handleEditChange}
+                    required
+                  >
+                    <option value="">Select Category</option>
+
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Price (₹)</label>
+
+                  <div className="price-input">
+                    <span>₹</span>
+
+                    <input
+                      type="number"
+                      name="price"
+                      value={editProduct.price || ""}
+                      onChange={handleEditChange}
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Discount (%)</label>
+
+                  <div className="suffix-input">
+                    <input
+                      type="number"
+                      name="discount"
+                      value={editProduct.discount || 0}
+                      onChange={handleEditChange}
+                      min="0"
+                      max="100"
+                      step="0.01"
+                    />
+
+                    <span>%</span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Stock Quantity</label>
+
+                  <input
+                    type="number"
+                    name="stock"
+                    value={editProduct.stock ?? 0}
+                    onChange={handleEditChange}
+                    min="0"
+                    step="1"
+                    required
+                  />
+
+                  <small>Increase stock when new items arrive.</small>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Product Image</label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleEditImageChange}
+                  />
+
+                  {editProduct.newImage && (
+                    <small>New image: {editProduct.newImage.name}</small>
+                  )}
+
+                  {!editProduct.newImage && editProduct.image && (
+                    <small>Current image will be kept.</small>
+                  )}
+                </div>
+              </div>
+
+              <div className="edit-modal-actions">
+                <button
+                  type="button"
+                  className="delete-cancel-btn"
+                  onClick={closeEditModal}
+                  disabled={editSaving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="edit-save-btn"
+                  disabled={editSaving}
+                >
+                  {editSaving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          DELETE MODAL
+      ===================================================== */}
 
       {deleteProduct && (
         <div className="delete-modal-overlay" onClick={closeDeleteModal}>
