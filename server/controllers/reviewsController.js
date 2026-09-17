@@ -48,6 +48,9 @@ const getAllReviews = (req, res) => {
 // ===============================
 // VERIFY / UNVERIFY REVIEW
 // ===============================
+// ===============================
+// VERIFY / UNVERIFY REVIEW
+// ===============================
 const updateReviewVerification = (req, res) => {
   const { id } = req.params;
   const { is_verified } = req.body;
@@ -83,29 +86,32 @@ const updateReviewVerification = (req, res) => {
       WHERE id = ?
     `;
 
-    db.query(updateSql, [is_verified, id], (err) => {
-      if (err) {
-        console.error("Update review error:", err);
+    db.query(updateSql, [is_verified, id], (updateErr) => {
+      if (updateErr) {
+        console.error("Update review error:", updateErr);
 
         return res.status(500).json({
           message: "Failed to update review",
-          error: err.message,
+          error: updateErr.message,
         });
       }
 
       // Recalculate product rating
-      updateProductRating(product_id, (ratingErr) => {
+      updateProductRating(productId, (ratingErr) => {
         if (ratingErr) {
           return res.status(500).json({
-            message: "Review submitted but product rating failed to update",
+            message: "Review updated but product rating failed to update",
             error: ratingErr.message,
           });
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
           success: true,
-          reviewId: result.insertId,
-          message: "Review submitted successfully",
+          reviewId: id,
+          is_verified: Number(is_verified),
+          message: is_verified
+            ? "Review verified successfully"
+            : "Review unverified successfully",
         });
       });
     });
@@ -296,9 +302,9 @@ const createReview = (req, res) => {
               reviewId: result.insertId,
               message: "Review submitted successfully",
             });
-          },
+          }
         );
-      },
+      }
     );
   });
 };
