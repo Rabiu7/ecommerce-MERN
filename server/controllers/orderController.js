@@ -1018,22 +1018,177 @@ exports.getOrder = (req, res) => {
 
 // =========================================================
 // GET USER ORDERS
+// GET /api/orders
+//
+// Example:
+// /api/orders?page=1&limit=10&search=&status=all
 // =========================================================
 
 exports.getOrders = (req, res) => {
   const userId = req.user.id;
 
-  Order.getOrders(userId, (err, result) => {
-    if (err) {
-      console.error("Get Orders Error:", err);
+  let page = Number(req.query.page) || 1;
+  let limit = Number(req.query.limit) || 10;
 
-      return res.status(500).json({
-        message: "Failed to fetch orders",
-      });
-    }
+  const search = (req.query.search || "").trim();
+  const status = (req.query.status || "all").trim();
 
-    res.json(result);
-  });
+  // ---------------------------------------------------------
+  // VALIDATE PAGE
+  // ---------------------------------------------------------
+
+  if (page < 1) {
+    page = 1;
+  }
+
+  // ---------------------------------------------------------
+  // VALIDATE LIMIT
+  // ---------------------------------------------------------
+
+  if (limit < 1) {
+    limit = 10;
+  }
+
+  if (limit > 50) {
+    limit = 50;
+  }
+
+  // ---------------------------------------------------------
+  // ALLOWED STATUSES
+  // ---------------------------------------------------------
+
+  const allowedStatuses = [
+    "all",
+    "pending",
+    "confirmed",
+    "processing",
+    "shipped",
+    "delivered",
+    "cancelled",
+    "failed",
+  ];
+
+  if (!allowedStatuses.includes(status.toLowerCase())) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid order status",
+    });
+  }
+
+  // ---------------------------------------------------------
+  // GET COUNT
+  // ---------------------------------------------------------
+
+  Order.getUserOrdersCount(
+    userId,
+    search,
+    status,
+    (countError, countResult) => {
+      if (countError) {
+        console.error("Get User Order Count Error:", countError);
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to fetch order count",
+        });
+      }
+
+      const totalOrders = Number(countResult[0]?.total || 0);
+
+      const totalPages = totalOrders === 0 ? 0 : Math.ceil(totalOrders / limit);
+
+      // -----------------------------------------------------
+      // INVALID PAGE
+      // -----------------------------------------------------
+
+      if (totalPages > 0 && page > totalPages) {
+        return res.status(404).json({
+          success: false,
+          message: "Page not found",
+        });
+      }
+
+      // -----------------------------------------------------
+      // GET ORDERS
+      // -----------------------------------------------------
+
+      Order.getOrdersPaginated(
+        userId,
+        page,
+        limit,
+        search,
+        status,
+        (ordersError, orders) => {
+          if (ordersError) {
+            console.error("Get User Orders Error:", ordersError);
+
+            return res.status(500).json({
+              success: false,
+              message: "Failed to fetch orders",
+            });
+          }
+
+          // -------------------------------------------------
+          // GET STATUS COUNTS
+          // -------------------------------------------------
+
+          Order.getUserOrderStatusCounts(
+            userId,
+            (statusError, statusResult) => {
+              if (statusError) {
+                console.error(
+                  "Get User Order Status Counts Error:",
+                  statusError,
+                );
+
+                return res.status(500).json({
+                  success: false,
+                  message: "Failed to fetch order status counts",
+                });
+              }
+
+              const counts = statusResult[0] || {};
+
+              return res.json({
+                success: true,
+
+                orders: orders || [],
+
+                pagination: {
+                  currentPage: page,
+                  limit,
+                  totalOrders,
+                  totalPages,
+
+                  hasNextPage: page < totalPages,
+
+                  hasPreviousPage: page > 1,
+                },
+
+                statusCounts: {
+                  all: Number(counts.all_count) || 0,
+
+                  pending: Number(counts.pending_count) || 0,
+
+                  processing: Number(counts.processing_count) || 0,
+
+                  shipped: Number(counts.shipped_count) || 0,
+
+                  delivered: Number(counts.delivered_count) || 0,
+
+                  failed: Number(counts.failed_count) || 0,
+
+                  cancelled: Number(counts.cancelled_count) || 0,
+
+                  confirmed: Number(counts.confirmed_count) || 0,
+                },
+              });
+            },
+          );
+        },
+      );
+    },
+  );
 };
 
 // =========================================================

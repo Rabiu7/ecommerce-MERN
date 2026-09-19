@@ -16,24 +16,28 @@ const Order = {
     isBuyNow,
     callback,
   ) {
+    const publicOrderId = `MAC-${new Date().getFullYear()}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
     const sql = `
-      INSERT INTO orders
-      (
-        user_id,
-        is_buy_now,
-        total_amount,
-        payment_method,
-        payment_status,
-        order_status,
-        shipping_address
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
+    INSERT INTO orders
+    (
+      user_id,
+      public_order_id,
+      is_buy_now,
+      total_amount,
+      payment_method,
+      payment_status,
+      order_status,
+      shipping_address
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
     db.query(
       sql,
       [
         userId,
+        publicOrderId,
         isBuyNow ? 1 : 0,
         totalAmount,
         paymentMethod,
@@ -93,16 +97,20 @@ const Order = {
   // GET ORDER BY LOCAL ID
   // =========================================================
 
-  getOrderById(orderId, userId, callback) {
-    const sql = `
-      SELECT *
-      FROM orders
-      WHERE id = ?
-      AND user_id = ?
-      LIMIT 1
-    `;
+  // =========================================================
+  // GET USER ORDER BY PUBLIC ORDER ID
+  // =========================================================
 
-    db.query(sql, [orderId, userId], callback);
+  getOrderByPublicId(publicOrderId, userId, callback) {
+    const sql = `
+    SELECT *
+    FROM orders
+    WHERE public_order_id = ?
+    AND user_id = ?
+    LIMIT 1
+  `;
+
+    db.query(sql, [publicOrderId, userId], callback);
   },
 
   // =========================================================
@@ -245,16 +253,170 @@ const Order = {
   },
 
   // =========================================================
-  // GET USER ORDERS
+  // GET USER ORDERS WITH PAGINATION
   // =========================================================
 
-  getOrders(userId, callback) {
-    const sql = `
-      SELECT *
-      FROM orders
-      WHERE user_id = ?
-      ORDER BY created_at DESC
+  getOrdersPaginated(userId, page, limit, search, status, callback) {
+    const offset = (page - 1) * limit;
+
+    let sql = `
+    SELECT
+      o.public_order_id,
+      o.total_amount,
+      o.payment_method,
+      o.payment_status,
+      o.order_status,
+      o.created_at
+
+    FROM orders o
+
+    WHERE o.user_id = ?
+  `;
+
+    const params = [userId];
+
+    // ---------------------------------------------------------
+    // SEARCH BY PUBLIC ORDER ID
+    // ---------------------------------------------------------
+
+    if (search) {
+      sql += `
+      AND o.public_order_id LIKE ?
     `;
+
+      params.push(`%${search}%`);
+    }
+
+    // ---------------------------------------------------------
+    // STATUS FILTER
+    // ---------------------------------------------------------
+
+    if (status && status !== "all") {
+      sql += `
+      AND LOWER(o.order_status) = LOWER(?)
+    `;
+
+      params.push(status);
+    }
+
+    // ---------------------------------------------------------
+    // PAGINATION
+    // ---------------------------------------------------------
+
+    sql += `
+    ORDER BY o.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+
+    params.push(limit, offset);
+
+    db.query(sql, params, callback);
+  },
+
+  // =========================================================
+  // GET USER ORDER COUNT
+  // =========================================================
+
+  getUserOrdersCount(userId, search, status, callback) {
+    let sql = `
+    SELECT COUNT(*) AS total
+
+    FROM orders o
+
+    WHERE o.user_id = ?
+  `;
+
+    const params = [userId];
+
+    // ---------------------------------------------------------
+    // SEARCH
+    // ---------------------------------------------------------
+
+    if (search) {
+      sql += `
+      AND o.public_order_id LIKE ?
+    `;
+
+      params.push(`%${search}%`);
+    }
+
+    // ---------------------------------------------------------
+    // STATUS
+    // ---------------------------------------------------------
+
+    if (status && status !== "all") {
+      sql += `
+      AND LOWER(o.order_status) = LOWER(?)
+    `;
+
+      params.push(status);
+    }
+
+    db.query(sql, params, callback);
+  },
+
+  // =========================================================
+  // GET USER ORDER STATUS COUNTS
+  // =========================================================
+
+  getUserOrderStatusCounts(userId, callback) {
+    const sql = `
+    SELECT
+      COUNT(*) AS all_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'pending'
+          THEN 1 ELSE 0
+        END
+      ) AS pending_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'processing'
+          THEN 1 ELSE 0
+        END
+      ) AS processing_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'shipped'
+          THEN 1 ELSE 0
+        END
+      ) AS shipped_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'delivered'
+          THEN 1 ELSE 0
+        END
+      ) AS delivered_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'failed'
+          THEN 1 ELSE 0
+        END
+      ) AS failed_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'cancelled'
+          THEN 1 ELSE 0
+        END
+      ) AS cancelled_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'confirmed'
+          THEN 1 ELSE 0
+        END
+      ) AS confirmed_count
+
+    FROM orders
+
+    WHERE user_id = ?
+  `;
 
     db.query(sql, [userId], callback);
   },
