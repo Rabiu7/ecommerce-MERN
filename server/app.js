@@ -6,17 +6,22 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// =========================================================
+// MIDDLEWARE
+// =========================================================
+
 const corsOptions = {
   origin: ["http://localhost:5173", "https://ecommerce-mern-hazel.vercel.app"],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-
 app.use(express.json());
 
-// Routes
+// =========================================================
+// ROUTES
+// =========================================================
+
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
@@ -43,41 +48,47 @@ app.use("/api/categories", categoryRoutes);
 // Cart API
 app.use("/api/cart", CartRoutes);
 
-// Cart API
+// Reviews API
 app.use("/api/reviews", reviewRoutes);
 
 // Profile API
 app.use("/api/profile", profileRoutes);
 
+// Address API
 app.use("/api/addresses", addressRoutes);
 
 // Order API
 app.use("/api/orders", orderRoutes);
 
+// Wishlist API
 app.use("/api/wishlist", wishlistRoutes);
 
+// Admin Orders API
 app.use("/api/admin/orders", adminOrderRoutes);
 
 // Admin API
 app.use("/api/admin", adminRoutes);
 
+// Admin Customers API
 app.use("/api/admin/customers", adminCustomerRoutes);
 
+// Stock Reminder API
 app.use("/api/stock-reminders", stockReminderRoutes);
 
-// Test Route
+// =========================================================
+// TEST ROUTE
+// =========================================================
+
 app.get("/", (req, res) => {
   res.json({
     message: "Home Needs Store API Running 🚀",
   });
 });
 
-// Routes AFTER CORS
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/reviews", reviewRoutes);
+// =========================================================
+// SERVER
+// =========================================================
 
-// Server
 const PORT = process.env.PORT || 5000;
 
 const cloudinary = require("./config/cloudinary");

@@ -248,36 +248,35 @@ const Product = {
   },
 
   // =========================================================
-  // UPDATE STOCK
-  // =========================================================
-
-  updateStock: (id, stock, callback) => {
-    const sql = `
-      UPDATE products
-      SET stock = ?
-      WHERE id = ?
-    `;
-
-    db.query(sql, [stock, id], callback);
-  },
-
-  // =========================================================
-  // UPDATE PRICE / DISCOUNT / STOCK
+  // UPDATE PRODUCT
   // =========================================================
 
   update: (id, product, callback) => {
     const sql = `
-      UPDATE products
-      SET
-        price = ?,
-        discount = ?,
-        stock = ?
-      WHERE id = ?
-    `;
+    UPDATE products
+    SET
+      name = ?,
+      description = ?,
+      category_id = ?,
+      price = ?,
+      discount = ?,
+      stock = ?,
+      image = ?
+    WHERE id = ?
+  `;
 
     db.query(
       sql,
-      [product.price, product.discount, product.stock, id],
+      [
+        product.name,
+        product.description,
+        product.category_id,
+        product.price,
+        product.discount,
+        product.stock,
+        product.image,
+        id,
+      ],
       callback,
     );
   },

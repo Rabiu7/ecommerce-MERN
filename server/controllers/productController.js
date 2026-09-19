@@ -515,6 +515,12 @@ exports.updateStock = (req, res) => {
       });
     }
 
+    console.log("Stock update:", {
+      productId,
+      oldStock,
+      newStock,
+    });
+
     const oldStock = Number(products[0].stock);
     const productName = products[0].name;
 
@@ -569,6 +575,8 @@ const sendStockReminderEmails = (productId, productName) => {
     }
 
     for (const reminder of reminders) {
+      console.log("Sending stock reminder to:", reminder.email);
+
       try {
         await transporter.sendMail({
           from: `"Masha Allah Creations" <${process.env.EMAIL_USER}>`,
@@ -609,6 +617,8 @@ const sendStockReminderEmails = (productId, productName) => {
             </div>
           `,
         });
+
+        console.log("Stock reminder sent to:", reminder.email);
 
         const updateReminderSql = `
           UPDATE stock_reminders

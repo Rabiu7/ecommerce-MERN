@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const upload = require("../middleware/upload");
@@ -8,6 +9,7 @@ const {
   getProductsPaginated,
   getProductById,
   createProduct,
+  updateProduct,
   deleteProduct,
   updateStock,
   getRelatedProducts,
@@ -20,6 +22,7 @@ const {
 // Paginated products
 router.get("/paginated", getProductsPaginated);
 
+// Related products
 router.get("/:id/related", getRelatedProducts);
 
 // Existing all-products API
@@ -31,7 +34,10 @@ router.get("/:id", getProductById);
 // Create product
 router.post("/", upload.single("image"), createProduct);
 
-// Update stock
+// Update complete product
+router.put("/:id", upload.single("image"), updateProduct);
+
+// Update stock only
 router.put("/:id/stock", updateStock);
 
 // Delete product
