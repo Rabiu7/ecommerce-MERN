@@ -767,6 +767,97 @@
   cursor: not-allowed;
 }
 
+/* =========================================================
+   ADMIN PRODUCT SEARCH
+   ========================================================= */
+
+.admin-products-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-products-search input {
+  width: 240px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  background: #fff;
+}
+
+.admin-products-search input:focus {
+  border-color: #a27b3f;
+  box-shadow: 0 0 0 2px rgba(162, 123, 63, 0.08);
+}
+
+.admin-products-search > button {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #a27b3f;
+  border-radius: 6px;
+  background: #a27b3f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.admin-products-search > button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.admin-products-search > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-products-search .clear-search-btn {
+  background: transparent;
+  color: #a27b3f;
+}
+
+/* =========================================================
+   EMPTY SEARCH RESULT
+   ========================================================= */
+
+.products-empty .clear-search-btn {
+  margin-top: 16px;
+  padding: 9px 18px;
+  border: 1px solid #a27b3f;
+  border-radius: 6px;
+  background: transparent;
+  color: #a27b3f;
+  cursor: pointer;
+}
+
+.products-empty .clear-search-btn:hover {
+  background: #a27b3f;
+  color: #fff;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .products-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .admin-products-search {
+    width: 100%;
+  }
+
+  .admin-products-search input {
+    width: 100%;
+    flex: 1;
+  }
+}
+
 @media (max-width: 600px) {
   .products-pagination {
     flex-wrap: wrap;

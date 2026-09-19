@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import "./AdminProducts.css";
@@ -50,6 +50,16 @@ function AdminProducts() {
   const PRODUCTS_PER_PAGE = 10;
 
   // =========================================================
+  // SEARCH
+  // =========================================================
+
+  const [search, setSearch] = useState("");
+
+  // Prevent the search useEffect from making a duplicate
+  // request during the initial page load.
+  const searchInitialized = useRef(false);
+
+  // =========================================================
   // ADD PRODUCT FORM
   // =========================================================
 
@@ -64,26 +74,10 @@ function AdminProducts() {
   });
 
   // =========================================================
-  // FETCH CATEGORIES
-  // =========================================================
-
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`${VITE_API_URL}/api/categories`);
-
-      setCategories(response.data);
-    } catch (error) {
-      console.error("Error loading categories:", error);
-
-      toast.error("Failed to load categories.");
-    }
-  };
-
-  // =========================================================
   // FETCH PRODUCTS
   // =========================================================
 
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = async (page = 1, searchValue = search) => {
     try {
       setLoading(true);
 
@@ -93,6 +87,7 @@ function AdminProducts() {
           params: {
             page,
             limit: PRODUCTS_PER_PAGE,
+            search: searchValue.trim(),
           },
         },
       );
@@ -131,6 +126,7 @@ function AdminProducts() {
             params: {
               page: 1,
               limit: PRODUCTS_PER_PAGE,
+              search: "",
             },
           }),
 
@@ -185,6 +181,75 @@ function AdminProducts() {
   }, []);
 
   // =========================================================
+  // SEARCH WHILE TYPING
+  // =========================================================
+  //
+  // Example:
+  //
+  // User types:
+  // "s"
+  // "sp"
+  // "spo"
+  // "spon"
+  // "sponge"
+  //
+  // API request is made 300ms after the user stops typing.
+  //
+  // =========================================================
+
+  useEffect(() => {
+    if (!searchInitialized.current) {
+      searchInitialized.current = true;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+
+      fetchProducts(1, search);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [search]);
+
+  // =========================================================
+  // SEARCH INPUT
+  // =========================================================
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+
+    // Immediately show page 1 while searching.
+    setCurrentPage(1);
+  };
+
+  // =========================================================
+  // SEARCH ENTER KEY
+  // =========================================================
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      fetchProducts(1, search);
+    }
+  };
+
+  // =========================================================
+  // CLEAR SEARCH
+  // =========================================================
+
+  const handleClearSearch = () => {
+    setSearch("");
+    setCurrentPage(1);
+
+    // Explicitly fetch all products immediately.
+    fetchProducts(1, "");
+  };
+
+  // =========================================================
   // HANDLE PAGE CHANGE
   // =========================================================
 
@@ -193,7 +258,7 @@ function AdminProducts() {
       return;
     }
 
-    fetchProducts(page);
+    fetchProducts(page, search);
   };
 
   // =========================================================
@@ -218,6 +283,7 @@ function AdminProducts() {
     }
 
     const startPage = Math.max(2, currentPage - 1);
+
     const endPage = Math.min(totalPages - 1, currentPage + 1);
 
     for (let page = startPage; page <= endPage; page++) {
@@ -319,8 +385,8 @@ function AdminProducts() {
 
       setSearchParams({});
 
-      // New product -> go to first page
-      await fetchProducts(1);
+      // New product -> first page
+      await fetchProducts(1, search);
     } catch (error) {
       console.error("Error creating product:", error);
 
@@ -465,7 +531,7 @@ function AdminProducts() {
       setEditProduct(null);
 
       // Refresh current page
-      await fetchProducts(currentPage);
+      await fetchProducts(currentPage, search);
     } catch (error) {
       console.error("Error updating product:", error);
 
@@ -507,16 +573,17 @@ function AdminProducts() {
 
       setDeleteProduct(null);
 
-      // Calculate which page should be displayed after delete
+      // Calculate which page should be displayed
+      // after deleting the product.
       let pageToLoad = currentPage;
 
-      // If deleting the last item on the current page,
-      // move to the previous page.
+      // If deleting the last item on current page,
+      // move to previous page.
       if (products.length === 1 && currentPage > 1) {
         pageToLoad = currentPage - 1;
       }
 
-      await fetchProducts(pageToLoad);
+      await fetchProducts(pageToLoad, search);
     } catch (error) {
       console.error("Error deleting product:", error);
 
@@ -735,6 +802,31 @@ function AdminProducts() {
               {totalProducts !== 1 ? "s" : ""}
             </span>
           </div>
+
+          {/* =================================================
+              SEARCH
+          ================================================= */}
+
+          <div className="admin-products-search">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
+            />
+
+            {search && (
+              <button
+                type="button"
+                className="clear-search-btn"
+                onClick={handleClearSearch}
+                disabled={loading}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ===================================================
@@ -753,7 +845,21 @@ function AdminProducts() {
 
             <h3>No products found</h3>
 
-            <p>Add your first HomeNeeds product.</p>
+            <p>
+              {search
+                ? `No products match "${search}".`
+                : "Add your first HomeNeeds product."}
+            </p>
+
+            {search && (
+              <button
+                type="button"
+                className="clear-search-btn"
+                onClick={handleClearSearch}
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         ) : (
           /* =================================================
@@ -947,6 +1053,12 @@ function AdminProducts() {
                   {Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)}
                 </strong>{" "}
                 of <strong>{totalProducts}</strong> products
+                {search && (
+                  <>
+                    {" "}
+                    for <strong>"{search}"</strong>
+                  </>
+                )}
               </div>
             )}
           </>
