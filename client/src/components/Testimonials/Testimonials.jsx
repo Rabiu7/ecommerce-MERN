@@ -8,8 +8,7 @@ function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const VITE_API_URL =
-    import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+  const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -109,7 +108,7 @@ function Testimonials() {
                 <div className="avatar">
                   <img
                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      review.user_name || "Customer"
+                      review.user_name || "Customer",
                     )}&background=f3ede3&color=a27b3f&size=100&bold=true`}
                     alt={review.user_name || "Customer"}
                   />

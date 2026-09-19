@@ -22,8 +22,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import { getAddress, saveAddress } from "../../services/addressService";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Checkout() {
   const navigate = useNavigate();
@@ -37,7 +36,7 @@ function Checkout() {
 
   const buyNowItems = useMemo(
     () => locationState?.cartItems || [],
-    [locationState?.cartItems]
+    [locationState?.cartItems],
   );
 
   const userId = user?.id;
@@ -189,7 +188,7 @@ function Checkout() {
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
-    0
+    0,
   );
 
   const shipping = subtotal >= 999 ? 0 : 99;
@@ -314,7 +313,7 @@ function Checkout() {
             className="checkout-back"
             onClick={() =>
               navigate(
-                buyNow ? `/products/${buyNowItems[0]?.product_id}` : "/cart"
+                buyNow ? `/products/${buyNowItems[0]?.product_id}` : "/cart",
               )
             }
           >

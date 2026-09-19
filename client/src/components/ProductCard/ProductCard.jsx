@@ -9,8 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductCard({ id, image, title, category, price, rating, stock }) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
@@ -39,7 +38,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -51,7 +50,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
         const wishlistItems = data.wishlist || [];
 
         const exists = wishlistItems.some(
-          (item) => Number(item.product_id || item.id) === Number(id)
+          (item) => Number(item.product_id || item.id) === Number(id),
         );
 
         setIsWishlisted(exists);
@@ -80,7 +79,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -172,7 +171,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         const data = await response.json();
@@ -251,7 +250,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         const data = await response.json();
@@ -368,8 +367,8 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
               {reminderLoading
                 ? "Please wait..."
                 : isReminderSet
-                ? "✓ You're on the list"
-                : "Remind Me"}
+                  ? "✓ You're on the list"
+                  : "Remind Me"}
             </button>
           )}
         </div>

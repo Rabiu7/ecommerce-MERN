@@ -10,8 +10,7 @@ import {
 
 const AuthContext = createContext();
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

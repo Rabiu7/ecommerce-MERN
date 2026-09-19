@@ -261,6 +261,113 @@ exports.updateProduct = async (req, res) => {
 };
 
 // =========================================================
+// GET PAGINATED PRODUCTS
+// =========================================================
+
+exports.getProductsPaginated = (req, res) => {
+  let page = Number(req.query.page) || 1;
+  let limit = Number(req.query.limit) || 12;
+
+  const search = (req.query.search || "").trim();
+  const category = (req.query.category || "All").trim();
+  const sort = req.query.sort || "featured";
+
+  if (page < 1) {
+    page = 1;
+  }
+
+  if (limit < 1) {
+    limit = 12;
+  }
+
+  if (limit > 50) {
+    limit = 50;
+  }
+
+  const allowedSorts = ["featured", "low", "high", "rating"];
+
+  const safeSort = allowedSorts.includes(sort) ? sort : "featured";
+
+  const offset = (page - 1) * limit;
+
+  Product.getPaginatedCount(search, category, (countError, countResult) => {
+    if (countError) {
+      console.error("Product count error:", countError);
+
+      return res.status(500).json({
+        message: "Unable to get product count.",
+      });
+    }
+
+    const totalProducts = Number(countResult[0].total);
+
+    const totalPages =
+      totalProducts === 0 ? 0 : Math.ceil(totalProducts / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+      return res.status(404).json({
+        message: "Page not found.",
+      });
+    }
+
+    Product.getPaginated(
+      limit,
+      offset,
+      search,
+      category,
+      safeSort,
+      (productsError, products) => {
+        if (productsError) {
+          console.error("Get paginated products error:", productsError);
+
+          return res.status(500).json({
+            message: "Unable to load products.",
+          });
+        }
+
+        res.json({
+          products,
+          pagination: {
+            currentPage: page,
+            limit,
+            totalProducts,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+          },
+        });
+      },
+    );
+  });
+};
+
+exports.getRelatedProducts = (req, res) => {
+  const productId = req.params.id;
+
+  let limit = Number(req.query.limit) || 4;
+
+  if (limit < 1) {
+    limit = 4;
+  }
+
+  if (limit > 10) {
+    limit = 10;
+  }
+
+  Product.getRelated(productId, limit, (err, result) => {
+    if (err) {
+      console.error("Get related products error:", err);
+
+      return res.status(500).json({
+        message: "Unable to load related products",
+      });
+    }
+
+    res.json(result);
+  });
+};
+
+// =========================================================
 // DELETE PRODUCT
 // =========================================================
 
@@ -275,6 +382,97 @@ exports.deleteProduct = (req, res) => {
     res.json({
       message: "Product deleted successfully",
     });
+  });
+};
+
+exports.getRelatedProducts = (req, res) => {
+  const productId = req.params.id;
+
+  let page = Number(req.query.page) || 1;
+  let limit = Number(req.query.limit) || 4;
+
+  // Validate page
+  if (page < 1) {
+    page = 1;
+  }
+
+  // Validate limit
+  if (limit < 1) {
+    limit = 4;
+  }
+
+  // Prevent very large requests
+  if (limit > 10) {
+    limit = 10;
+  }
+
+  const offset = (page - 1) * limit;
+
+  // =========================================================
+  // GET TOTAL RELATED PRODUCTS
+  // =========================================================
+
+  Product.getRelatedCount(productId, (countError, countResult) => {
+    if (countError) {
+      console.error("Get related product count error:", countError);
+
+      return res.status(500).json({
+        message: "Unable to get related product count.",
+      });
+    }
+
+    const totalProducts = Number(countResult[0].total);
+
+    const totalPages =
+      totalProducts === 0 ? 0 : Math.ceil(totalProducts / limit);
+
+    // =========================================================
+    // INVALID PAGE
+    // =========================================================
+
+    if (totalPages > 0 && page > totalPages) {
+      return res.status(404).json({
+        message: "Page not found.",
+      });
+    }
+
+    // =========================================================
+    // GET RELATED PRODUCTS FOR CURRENT PAGE
+    // =========================================================
+
+    Product.getRelatedPaginated(
+      productId,
+      limit,
+      offset,
+      (productsError, products) => {
+        if (productsError) {
+          console.error("Get related products error:", productsError);
+
+          return res.status(500).json({
+            message: "Unable to load related products.",
+          });
+        }
+
+        // =====================================================
+        // RESPONSE
+        // =====================================================
+
+        res.json({
+          products,
+
+          pagination: {
+            currentPage: page,
+            limit,
+            totalProducts,
+            totalPages,
+
+            hasNextPage: page < totalPages,
+
+            hasPreviousPage: page > 1,
+          },
+        });
+      },
+    );
   });
 };
 
@@ -430,7 +628,7 @@ const sendStockReminderEmails = (productId, productName) => {
       } catch (emailError) {
         console.error(
           `Failed to send stock reminder to ${reminder.email}:`,
-          emailError
+          emailError,
         );
       }
     }

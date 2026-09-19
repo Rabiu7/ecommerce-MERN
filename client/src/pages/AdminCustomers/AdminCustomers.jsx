@@ -12,8 +12,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminCustomers() {
   const [customers, setCustomers] = useState([]);
@@ -241,7 +240,7 @@ function AdminCustomers() {
             <strong>
               {
                 customers.filter(
-                  (customer) => Number(customer.total_orders) > 0
+                  (customer) => Number(customer.total_orders) > 0,
                 ).length
               }
             </strong>
@@ -393,7 +392,7 @@ function AdminCustomers() {
                             {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
-                            }
+                            },
                           )}
                         </strong>
                       </td>
@@ -506,7 +505,7 @@ function AdminCustomers() {
                     {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
-                    }
+                    },
                   )}
                 </strong>
               </div>

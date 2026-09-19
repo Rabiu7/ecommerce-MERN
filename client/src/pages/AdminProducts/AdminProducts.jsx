@@ -5,26 +5,53 @@ import "./AdminProducts.css";
 
 import { toast } from "react-toastify";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminProducts() {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // =========================================================
+  // PRODUCTS / CATEGORIES
+  // =========================================================
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+
+  // =========================================================
+  // ADD PRODUCT
+  // =========================================================
 
   const [showForm, setShowForm] = useState(searchParams.get("add") === "true");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // DELETE
+  // =========================================================
+  // DELETE PRODUCT
+  // =========================================================
+
   const [deleteProduct, setDeleteProduct] = useState(null);
 
-  // EDIT
+  // =========================================================
+  // EDIT PRODUCT
+  // =========================================================
+
   const [editProduct, setEditProduct] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  // =========================================================
+  // PAGINATION
+  // =========================================================
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  const PRODUCTS_PER_PAGE = 10;
+
+  // =========================================================
+  // ADD PRODUCT FORM
+  // =========================================================
 
   const [form, setForm] = useState({
     name: "",
@@ -36,9 +63,61 @@ function AdminProducts() {
     image: null,
   });
 
-  /* =========================================================
-     INITIAL LOAD
-  ========================================================= */
+  // =========================================================
+  // FETCH CATEGORIES
+  // =========================================================
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${VITE_API_URL}/api/categories`);
+
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+
+      toast.error("Failed to load categories.");
+    }
+  };
+
+  // =========================================================
+  // FETCH PRODUCTS
+  // =========================================================
+
+  const fetchProducts = async (page = 1) => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get(
+        `${VITE_API_URL}/api/products/paginated`,
+        {
+          params: {
+            page,
+            limit: PRODUCTS_PER_PAGE,
+          },
+        },
+      );
+
+      const data = response.data;
+
+      setProducts(data.products || []);
+
+      setCurrentPage(data.pagination?.currentPage || page);
+
+      setTotalPages(data.pagination?.totalPages || 1);
+
+      setTotalProducts(data.pagination?.totalProducts || 0);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+
+      toast.error("Failed to load products.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
   useEffect(() => {
     let cancelled = false;
@@ -48,14 +127,37 @@ function AdminProducts() {
         setLoading(true);
 
         const [productsResponse, categoriesResponse] = await Promise.all([
-          axios.get(`${VITE_API_URL}/api/products`),
+          axios.get(`${VITE_API_URL}/api/products/paginated`, {
+            params: {
+              page: 1,
+              limit: PRODUCTS_PER_PAGE,
+            },
+          }),
+
           axios.get(`${VITE_API_URL}/api/categories`),
         ]);
 
-        if (!cancelled) {
-          setProducts(productsResponse.data);
-          setCategories(categoriesResponse.data);
+        if (cancelled) {
+          return;
         }
+
+        // -----------------------------
+        // PRODUCTS
+        // -----------------------------
+
+        setProducts(productsResponse.data.products || []);
+
+        setCurrentPage(productsResponse.data.pagination?.currentPage || 1);
+
+        setTotalPages(productsResponse.data.pagination?.totalPages || 1);
+
+        setTotalProducts(productsResponse.data.pagination?.totalProducts || 0);
+
+        // -----------------------------
+        // CATEGORIES
+        // -----------------------------
+
+        setCategories(categoriesResponse.data || []);
       } catch (error) {
         console.error("Error loading admin products data:", error);
 
@@ -82,25 +184,58 @@ function AdminProducts() {
     };
   }, []);
 
-  /* =========================================================
-     FETCH PRODUCTS
-  ========================================================= */
+  // =========================================================
+  // HANDLE PAGE CHANGE
+  // =========================================================
 
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${VITE_API_URL}/api/products`);
-
-      setProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-
-      toast.error("Failed to load products.");
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages || page === currentPage) {
+      return;
     }
+
+    fetchProducts(page);
   };
 
-  /* =========================================================
-     HANDLE ADD FORM INPUT
-  ========================================================= */
+  // =========================================================
+  // GENERATE PAGE NUMBERS
+  // =========================================================
+
+  const getPageNumbers = () => {
+    const pages = [];
+
+    if (totalPages <= 7) {
+      for (let page = 1; page <= totalPages; page++) {
+        pages.push(page);
+      }
+
+      return pages;
+    }
+
+    pages.push(1);
+
+    if (currentPage > 4) {
+      pages.push("...");
+    }
+
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let page = startPage; page <= endPage; page++) {
+      pages.push(page);
+    }
+
+    if (currentPage < totalPages - 3) {
+      pages.push("...");
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+  };
+
+  // =========================================================
+  // HANDLE ADD FORM INPUT
+  // =========================================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -111,9 +246,9 @@ function AdminProducts() {
     }));
   };
 
-  /* =========================================================
-     ADD PRODUCT
-  ========================================================= */
+  // =========================================================
+  // ADD PRODUCT
+  // =========================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,16 +268,26 @@ function AdminProducts() {
       return;
     }
 
+    if (Number(form.stock) < 0 || !Number.isInteger(Number(form.stock))) {
+      toast.error("Please enter a valid stock quantity.");
+      return;
+    }
+
     setSaving(true);
 
     try {
       const formData = new FormData();
 
       formData.append("name", form.name.trim());
+
       formData.append("description", form.description.trim());
+
       formData.append("category_id", form.category_id);
+
       formData.append("price", form.price);
+
       formData.append("discount", form.discount || 0);
+
       formData.append("stock", form.stock || 0);
 
       if (form.image) {
@@ -151,13 +296,14 @@ function AdminProducts() {
 
       const response = await axios.post(
         `${VITE_API_URL}/api/products`,
-        formData
+        formData,
       );
 
       console.log("Product created:", response.data);
 
       toast.success("Product added successfully!");
 
+      // Reset form
       setForm({
         name: "",
         description: "",
@@ -168,10 +314,13 @@ function AdminProducts() {
         image: null,
       });
 
+      // Close form
       setShowForm(false);
+
       setSearchParams({});
 
-      await fetchProducts();
+      // New product -> go to first page
+      await fetchProducts(1);
     } catch (error) {
       console.error("Error creating product:", error);
 
@@ -181,17 +330,31 @@ function AdminProducts() {
     }
   };
 
-  /* =========================================================
-     OPEN EDIT MODAL
-  ========================================================= */
+  // =========================================================
+  // HANDLE ADD IMAGE
+  // =========================================================
 
-  const openEditModal = (product) => {
-    setEditProduct(product);
+  const handleImageChange = (e) => {
+    setForm((previous) => ({
+      ...previous,
+      image: e.target.files[0] || null,
+    }));
   };
 
-  /* =========================================================
-     CLOSE EDIT MODAL
-  ========================================================= */
+  // =========================================================
+  // OPEN EDIT MODAL
+  // =========================================================
+
+  const openEditModal = (product) => {
+    setEditProduct({
+      ...product,
+      newImage: null,
+    });
+  };
+
+  // =========================================================
+  // CLOSE EDIT MODAL
+  // =========================================================
 
   const closeEditModal = () => {
     if (editSaving) {
@@ -201,9 +364,9 @@ function AdminProducts() {
     setEditProduct(null);
   };
 
-  /* =========================================================
-     HANDLE EDIT INPUT
-  ========================================================= */
+  // =========================================================
+  // HANDLE EDIT INPUT
+  // =========================================================
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -214,9 +377,9 @@ function AdminProducts() {
     }));
   };
 
-  /* =========================================================
-     HANDLE EDIT IMAGE
-  ========================================================= */
+  // =========================================================
+  // HANDLE EDIT IMAGE
+  // =========================================================
 
   const handleEditImageChange = (e) => {
     setEditProduct((previous) => ({
@@ -225,9 +388,9 @@ function AdminProducts() {
     }));
   };
 
-  /* =========================================================
-     UPDATE PRODUCT
-  ========================================================= */
+  // =========================================================
+  // UPDATE PRODUCT
+  // =========================================================
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -252,6 +415,15 @@ function AdminProducts() {
     }
 
     if (
+      editProduct.discount === "" ||
+      Number(editProduct.discount) < 0 ||
+      Number(editProduct.discount) > 100
+    ) {
+      toast.error("Please enter a valid discount.");
+      return;
+    }
+
+    if (
       editProduct.stock === "" ||
       Number(editProduct.stock) < 0 ||
       !Number.isInteger(Number(editProduct.stock))
@@ -266,10 +438,15 @@ function AdminProducts() {
       const formData = new FormData();
 
       formData.append("name", editProduct.name.trim());
+
       formData.append("description", editProduct.description?.trim() || "");
+
       formData.append("category_id", editProduct.category_id);
+
       formData.append("price", editProduct.price);
+
       formData.append("discount", editProduct.discount || 0);
+
       formData.append("stock", editProduct.stock);
 
       if (editProduct.newImage) {
@@ -278,7 +455,7 @@ function AdminProducts() {
 
       const response = await axios.put(
         `${VITE_API_URL}/api/products/${editProduct.id}`,
-        formData
+        formData,
       );
 
       console.log("Product updated:", response.data);
@@ -287,7 +464,8 @@ function AdminProducts() {
 
       setEditProduct(null);
 
-      await fetchProducts();
+      // Refresh current page
+      await fetchProducts(currentPage);
     } catch (error) {
       console.error("Error updating product:", error);
 
@@ -297,25 +475,25 @@ function AdminProducts() {
     }
   };
 
-  /* =========================================================
-     OPEN DELETE MODAL
-  ========================================================= */
+  // =========================================================
+  // OPEN DELETE MODAL
+  // =========================================================
 
   const openDeleteModal = (product) => {
     setDeleteProduct(product);
   };
 
-  /* =========================================================
-     CLOSE DELETE MODAL
-  ========================================================= */
+  // =========================================================
+  // CLOSE DELETE MODAL
+  // =========================================================
 
   const closeDeleteModal = () => {
     setDeleteProduct(null);
   };
 
-  /* =========================================================
-     DELETE PRODUCT
-  ========================================================= */
+  // =========================================================
+  // DELETE PRODUCT
+  // =========================================================
 
   const handleDelete = async () => {
     if (!deleteProduct) {
@@ -325,42 +503,38 @@ function AdminProducts() {
     try {
       await axios.delete(`${VITE_API_URL}/api/products/${deleteProduct.id}`);
 
-      setProducts((previous) =>
-        previous.filter((product) => product.id !== deleteProduct.id)
-      );
-
       toast.success("Product deleted successfully.");
 
       setDeleteProduct(null);
+
+      // Calculate which page should be displayed after delete
+      let pageToLoad = currentPage;
+
+      // If deleting the last item on the current page,
+      // move to the previous page.
+      if (products.length === 1 && currentPage > 1) {
+        pageToLoad = currentPage - 1;
+      }
+
+      await fetchProducts(pageToLoad);
     } catch (error) {
       console.error("Error deleting product:", error);
 
-      toast.error("Failed to delete product.");
+      toast.error(error.response?.data?.message || "Failed to delete product.");
     }
   };
 
-  /* =========================================================
-     HANDLE IMAGE
-  ========================================================= */
-
-  const handleImageChange = (e) => {
-    setForm((previous) => ({
-      ...previous,
-      image: e.target.files[0] || null,
-    }));
-  };
-
-  /* =========================================================
-     FORMAT PRICE
-  ========================================================= */
+  // =========================================================
+  // FORMAT PRICE
+  // =========================================================
 
   const formatPrice = (price) => {
     return `₹${Number(price).toLocaleString("en-IN")}`;
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <div className="admin-products">
@@ -383,7 +557,9 @@ function AdminProducts() {
             setShowForm(nextValue);
 
             if (nextValue) {
-              setSearchParams({ add: "true" });
+              setSearchParams({
+                add: "true",
+              });
             } else {
               setSearchParams({});
             }
@@ -503,6 +679,7 @@ function AdminProducts() {
                   onChange={handleChange}
                   placeholder="0"
                   min="0"
+                  step="1"
                 />
               </div>
 
@@ -554,15 +731,23 @@ function AdminProducts() {
             <h2>All Products</h2>
 
             <span>
-              {products.length} product
-              {products.length !== 1 ? "s" : ""}
+              {totalProducts} product
+              {totalProducts !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
 
+        {/* ===================================================
+            LOADING
+        =================================================== */}
+
         {loading ? (
           <div className="products-loading">Loading products...</div>
         ) : products.length === 0 ? (
+          /* =================================================
+             EMPTY
+          ================================================= */
+
           <div className="products-empty">
             <div className="empty-icon">📦</div>
 
@@ -571,105 +756,200 @@ function AdminProducts() {
             <p>Add your first HomeNeeds product.</p>
           </div>
         ) : (
-          <div className="products-table-wrapper">
-            <table className="products-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Discount</th>
-                  <th>Stock</th>
-                  <th>Rating</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+          /* =================================================
+             TABLE
+          ================================================= */
 
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td>
-                      <div className="product-info">
-                        <div className="admin-product-image">
-                          {product.image ? (
-                            <img src={product.image} alt={product.name} />
-                          ) : (
-                            <span>📦</span>
-                          )}
-                        </div>
-
-                        <div className="product-name">
-                          <strong>{product.name}</strong>
-
-                          <span>ID: #{product.id}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="category-badge">
-                        {product.category || "Uncategorized"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <strong className="product-price">
-                        {formatPrice(product.price)}
-                      </strong>
-                    </td>
-
-                    <td>
-                      {Number(product.discount) > 0 ? (
-                        <span className="discount-badge">
-                          {product.discount}%
-                        </span>
-                      ) : (
-                        <span className="no-discount">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span
-                        className={
-                          Number(product.stock) <= 5
-                            ? "stock-badge low"
-                            : "stock-badge"
-                        }
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="rating">
-                        ★ {product.rating || "0.0"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="product-action-buttons">
-                        <button
-                          type="button"
-                          className="edit-product-btn"
-                          onClick={() => openEditModal(product)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          type="button"
-                          className="delete-product-btn"
-                          onClick={() => openDeleteModal(product)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="products-table-wrapper">
+              <table className="products-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Discount</th>
+                    <th>Stock</th>
+                    <th>Rating</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product.id}>
+                      {/* PRODUCT */}
+
+                      <td>
+                        <div className="product-info">
+                          <div className="admin-product-image">
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} />
+                            ) : (
+                              <span>📦</span>
+                            )}
+                          </div>
+
+                          <div className="product-name">
+                            <strong>{product.name}</strong>
+
+                            <span>ID: #{product.id}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* CATEGORY */}
+
+                      <td>
+                        <span className="category-badge">
+                          {product.category || "Uncategorized"}
+                        </span>
+                      </td>
+
+                      {/* PRICE */}
+
+                      <td>
+                        <strong className="product-price">
+                          {formatPrice(product.price)}
+                        </strong>
+                      </td>
+
+                      {/* DISCOUNT */}
+
+                      <td>
+                        {Number(product.discount) > 0 ? (
+                          <span className="discount-badge">
+                            {product.discount}%
+                          </span>
+                        ) : (
+                          <span className="no-discount">—</span>
+                        )}
+                      </td>
+
+                      {/* STOCK */}
+
+                      <td>
+                        <span
+                          className={
+                            Number(product.stock) <= 5
+                              ? "stock-badge low"
+                              : "stock-badge"
+                          }
+                        >
+                          {product.stock}
+                        </span>
+                      </td>
+
+                      {/* RATING */}
+
+                      <td>
+                        <span className="rating">
+                          ★ {product.rating || "0.0"}
+                        </span>
+                      </td>
+
+                      {/* ACTION */}
+
+                      <td>
+                        <div className="product-action-buttons">
+                          <button
+                            type="button"
+                            className="edit-product-btn"
+                            onClick={() => openEditModal(product)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="delete-product-btn"
+                            onClick={() => openDeleteModal(product)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* =================================================
+                PAGINATION
+            ================================================= */}
+
+            {totalPages > 1 && (
+              <div className="products-pagination">
+                {/* PREVIOUS */}
+
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === 1 || loading}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  Previous
+                </button>
+
+                {/* PAGE NUMBERS */}
+
+                <div className="pagination-pages">
+                  {getPageNumbers().map((page, index) => {
+                    if (page === "...") {
+                      return (
+                        <span key={`dots-${index}`} className="pagination-dots">
+                          ...
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        className={
+                          page === currentPage
+                            ? "pagination-page active"
+                            : "pagination-page"
+                        }
+                        disabled={loading}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* NEXT */}
+
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === totalPages || loading}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
+            {/* =================================================
+                PAGINATION INFO
+            ================================================= */}
+
+            {totalProducts > 0 && (
+              <div className="pagination-info">
+                Showing{" "}
+                <strong>{(currentPage - 1) * PRODUCTS_PER_PAGE + 1}</strong> to{" "}
+                <strong>
+                  {Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)}
+                </strong>{" "}
+                of <strong>{totalProducts}</strong> products
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -699,6 +979,8 @@ function AdminProducts() {
 
             <form onSubmit={handleUpdate}>
               <div className="edit-form-grid">
+                {/* NAME */}
+
                 <div className="form-group full-width">
                   <label>Product Name</label>
 
@@ -711,6 +993,8 @@ function AdminProducts() {
                   />
                 </div>
 
+                {/* DESCRIPTION */}
+
                 <div className="form-group full-width">
                   <label>Description</label>
 
@@ -721,6 +1005,8 @@ function AdminProducts() {
                     rows="4"
                   />
                 </div>
+
+                {/* CATEGORY */}
 
                 <div className="form-group">
                   <label>Category</label>
@@ -741,6 +1027,8 @@ function AdminProducts() {
                   </select>
                 </div>
 
+                {/* PRICE */}
+
                 <div className="form-group">
                   <label>Price (₹)</label>
 
@@ -759,6 +1047,8 @@ function AdminProducts() {
                   </div>
                 </div>
 
+                {/* DISCOUNT */}
+
                 <div className="form-group">
                   <label>Discount (%)</label>
 
@@ -766,7 +1056,7 @@ function AdminProducts() {
                     <input
                       type="number"
                       name="discount"
-                      value={editProduct.discount || 0}
+                      value={editProduct.discount ?? 0}
                       onChange={handleEditChange}
                       min="0"
                       max="100"
@@ -776,6 +1066,8 @@ function AdminProducts() {
                     <span>%</span>
                   </div>
                 </div>
+
+                {/* STOCK */}
 
                 <div className="form-group">
                   <label>Stock Quantity</label>
@@ -792,6 +1084,8 @@ function AdminProducts() {
 
                   <small>Increase stock when new items arrive.</small>
                 </div>
+
+                {/* IMAGE */}
 
                 <div className="form-group full-width">
                   <label>Product Image</label>
@@ -811,6 +1105,8 @@ function AdminProducts() {
                   )}
                 </div>
               </div>
+
+              {/* EDIT ACTIONS */}
 
               <div className="edit-modal-actions">
                 <button
@@ -858,11 +1154,19 @@ function AdminProducts() {
             </div>
 
             <div className="delete-modal-actions">
-              <button className="delete-cancel-btn" onClick={closeDeleteModal}>
+              <button
+                type="button"
+                className="delete-cancel-btn"
+                onClick={closeDeleteModal}
+              >
                 Cancel
               </button>
 
-              <button className="delete-confirm-btn" onClick={handleDelete}>
+              <button
+                type="button"
+                className="delete-confirm-btn"
+                onClick={handleDelete}
+              >
                 Delete Product
               </button>
             </div>

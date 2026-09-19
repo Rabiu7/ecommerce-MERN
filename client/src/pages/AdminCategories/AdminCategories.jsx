@@ -13,8 +13,7 @@ import { toast } from "react-toastify";
 
 import "./AdminCategories.css";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -51,7 +50,7 @@ function AdminCategories() {
       console.error("Error fetching categories:", error);
 
       toast.error(
-        error.response?.data?.message || "Failed to load categories."
+        error.response?.data?.message || "Failed to load categories.",
       );
     } finally {
       setLoading(false);
@@ -77,7 +76,7 @@ function AdminCategories() {
           console.error("Error fetching categories:", error);
 
           toast.error(
-            error.response?.data?.message || "Failed to load categories."
+            error.response?.data?.message || "Failed to load categories.",
           );
         }
       } finally {
@@ -235,7 +234,7 @@ function AdminCategories() {
         // UPDATE
         const response = await axios.put(
           `${VITE_API_URL}/api/categories/${editingId}`,
-          formData
+          formData,
         );
 
         console.log("Category updated:", response.data);
@@ -245,7 +244,7 @@ function AdminCategories() {
         // CREATE
         const response = await axios.post(
           `${VITE_API_URL}/api/categories`,
-          formData
+          formData,
         );
 
         console.log("Category created:", response.data);
@@ -271,7 +270,7 @@ function AdminCategories() {
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this category?"
+      "Are you sure you want to delete this category?",
     );
 
     if (!confirmed) {
@@ -282,7 +281,7 @@ function AdminCategories() {
       await axios.delete(`${VITE_API_URL}/api/categories/${id}`);
 
       setCategories((previous) =>
-        previous.filter((category) => category.id !== id)
+        previous.filter((category) => category.id !== id),
       );
 
       toast.success("Category deleted successfully.");
@@ -290,7 +289,7 @@ function AdminCategories() {
       console.error("Error deleting category:", error);
 
       toast.error(
-        error.response?.data?.message || "Failed to delete category."
+        error.response?.data?.message || "Failed to delete category.",
       );
     }
   };
@@ -302,7 +301,7 @@ function AdminCategories() {
   const filteredCategories = categories.filter(
     (category) =>
       category.name?.toLowerCase().includes(search.toLowerCase()) ||
-      category.description?.toLowerCase().includes(search.toLowerCase())
+      category.description?.toLowerCase().includes(search.toLowerCase()),
   );
 
   /* =========================================================
@@ -575,8 +574,8 @@ function AdminCategories() {
                       ? "Updating..."
                       : "Creating..."
                     : editingId
-                    ? "Update Category"
-                    : "Create Category"}
+                      ? "Update Category"
+                      : "Create Category"}
                 </button>
               </div>
             </form>

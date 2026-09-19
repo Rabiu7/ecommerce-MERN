@@ -16,8 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Wishlist() {
   const { user } = useAuth();
@@ -95,7 +94,7 @@ function Wishlist() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -104,8 +103,8 @@ function Wishlist() {
 
       setWishlist((prev) =>
         prev.filter(
-          (item) => Number(item.product_id || item.id) !== Number(productId)
-        )
+          (item) => Number(item.product_id || item.id) !== Number(productId),
+        ),
       );
 
       toast.success("Removed from wishlist");

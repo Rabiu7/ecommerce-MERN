@@ -15,8 +15,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminOrderDetails() {
   const { orderId } = useParams();
@@ -132,7 +131,7 @@ function AdminOrderDetails() {
       const allOrders = Array.isArray(data.orders) ? data.orders : [];
 
       const foundOrder = allOrders.find(
-        (item) => String(item.id) === String(orderId)
+        (item) => String(item.id) === String(orderId),
       );
 
       if (!foundOrder) {
@@ -146,7 +145,7 @@ function AdminOrderDetails() {
       setError(
         error.message === "Order not found"
           ? "The requested order could not be found."
-          : "Failed to load order details. Please try again."
+          : "Failed to load order details. Please try again.",
       );
     } finally {
       setLoading(false);

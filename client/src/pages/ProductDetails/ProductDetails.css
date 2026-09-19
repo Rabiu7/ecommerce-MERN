@@ -128,7 +128,9 @@
 
   background: #eeeae2;
 
-  transition: transform 0.8s ease, filter 0.5s ease;
+  transition:
+    transform 0.8s ease,
+    filter 0.5s ease;
 }
 
 .product-details-image:hover img {
@@ -375,7 +377,10 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease,
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.3s ease,
     box-shadow 0.3s ease;
 }
 
@@ -431,7 +436,9 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 .quantity button:hover {
@@ -490,8 +497,12 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease,
-    transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .cart-btn {
@@ -637,6 +648,45 @@
   font-weight: 500;
 
   color: #a27b3f;
+}
+
+/* =========================================================
+   RELATED PRODUCTS PAGINATION
+========================================================= */
+
+.related-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.related-pagination button {
+  padding: 10px 20px;
+  border: 1px solid #a27b3f;
+  background: transparent;
+  color: #a27b3f;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.related-pagination button:hover:not(:disabled) {
+  background: #a27b3f;
+  color: white;
+}
+
+.related-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.related-pagination span {
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
 }
 
 /* =========================================================

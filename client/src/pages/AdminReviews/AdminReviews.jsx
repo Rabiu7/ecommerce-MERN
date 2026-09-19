@@ -3,8 +3,7 @@ import "./AdminReviews.css";
 import { useEffect, useState } from "react";
 import { FiCheck, FiTrash2, FiStar, FiX } from "react-icons/fi";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -82,8 +81,8 @@ function AdminReviews() {
                 ...review,
                 is_verified: currentStatus ? 0 : 1,
               }
-            : review
-        )
+            : review,
+        ),
       );
     } catch (error) {
       console.error("Verify review error:", error);
@@ -127,7 +126,7 @@ function AdminReviews() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -138,7 +137,7 @@ function AdminReviews() {
 
       // Remove deleted review from the screen
       setReviews((prevReviews) =>
-        prevReviews.filter((review) => review.id !== deleteReview.id)
+        prevReviews.filter((review) => review.id !== deleteReview.id),
       );
 
       // Close confirmation modal

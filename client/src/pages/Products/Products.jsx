@@ -1,43 +1,133 @@
 import "./Products.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import ProductCard from "../../components/ProductCard/ProductCard";
-import { getProducts } from "../../services/productService";
+
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Products() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("featured");
-
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // =========================================================
+  // PRODUCTS
+  // =========================================================
+
+  const [products, setProducts] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  // =========================================================
+  // FILTERS
+  // =========================================================
+
+  const [search, setSearch] = useState("");
+
+  const [sort, setSort] = useState("featured");
+
+  const [categories, setCategories] = useState(["All"]);
+
+  // =========================================================
+  // PAGINATION
+  // =========================================================
+
+  const [page, setPage] = useState(1);
+
+  const [pagination, setPagination] = useState(null);
+
+  const limit = 12;
+
+  // =========================================================
+  // CATEGORY FROM URL
+  // =========================================================
+
   const category = searchParams.get("category") || "All";
+
+  // =========================================================
+  // LOAD CATEGORIES
+  // =========================================================
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${VITE_API_URL}/api/categories`);
+
+        if (!response.ok) {
+          throw new Error("Unable to load categories");
+        }
+
+        const data = await response.json();
+
+        setCategories(["All", ...data.map((item) => item.name)]);
+      } catch (error) {
+        console.error("Category loading error:", error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // =========================================================
+  // LOAD PRODUCTS
+  // =========================================================
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const data = await getProducts();
-        setProducts(data);
+        setLoading(true);
+
+        const params = new URLSearchParams();
+
+        params.set("page", page);
+        params.set("limit", limit);
+
+        if (search.trim()) {
+          params.set("search", search.trim());
+        }
+
+        if (category !== "All") {
+          params.set("category", category);
+        }
+
+        params.set("sort", sort);
+
+        const response = await fetch(
+          `${VITE_API_URL}/api/products/paginated?${params.toString()}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Unable to load products");
+        }
+
+        const data = await response.json();
+
+        console.log("Products response:", data);
+
+        setProducts(data.products || []);
+
+        setPagination(data.pagination || null);
       } catch (error) {
-        console.log(error);
+        console.error("Product loading error:", error);
+
+        setProducts([]);
+
+        setPagination(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadProducts();
-  }, []);
+  }, [page, search, category, sort]);
 
-  const categories = [
-    "All",
-    ...new Set(products.map((product) => product.category)),
-  ];
+  // =========================================================
+  // CATEGORY CHANGE
+  // =========================================================
 
   const handleCategoryChange = (cat) => {
+    setPage(1);
+
     if (cat === "All") {
       setSearchParams({});
     } else {
@@ -47,43 +137,67 @@ function Products() {
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    let data = [...products];
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
-    if (search) {
-      data = data.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value);
+
+    // Start from first page
+    setPage(1);
+  };
+
+  // =========================================================
+  // SORT
+  // =========================================================
+
+  const handleSortChange = (event) => {
+    setSort(event.target.value);
+
+    // Start from first page
+    setPage(1);
+  };
+
+  // =========================================================
+  // PREVIOUS PAGE
+  // =========================================================
+
+  const previousPage = () => {
+    if (pagination?.hasPreviousPage && !loading) {
+      setPage((previousPage) => previousPage - 1);
     }
+  };
 
-    if (category !== "All") {
-      data = data.filter(
-        (item) => (item.category || "").toLowerCase() === category.toLowerCase()
-      );
+  // =========================================================
+  // NEXT PAGE
+  // =========================================================
+
+  const nextPage = () => {
+    if (pagination?.hasNextPage && !loading) {
+      setPage((previousPage) => previousPage + 1);
     }
+  };
 
-    if (sort === "low") {
-      data.sort((a, b) => Number(a.price) - Number(b.price));
-    }
+  // =========================================================
+  // LOADING
+  // =========================================================
 
-    if (sort === "high") {
-      data.sort((a, b) => Number(b.price) - Number(a.price));
-    }
-
-    if (sort === "rating") {
-      data.sort((a, b) => Number(b.rating) - Number(a.rating));
-    }
-
-    return data;
-  }, [products, search, category, sort]);
-
-  if (loading) {
+  if (loading && products.length === 0) {
     return <div className="products-loading">Loading Products...</div>;
   }
+
+  // =========================================================
+  // PAGE
+  // =========================================================
 
   return (
     <section className="products-page">
       <div className="container">
+        {/* ===================================================
+            PAGE TITLE
+        =================================================== */}
+
         <div className="page-title">
           <span>OUR COLLECTION</span>
 
@@ -95,6 +209,10 @@ function Products() {
         </div>
 
         <div className="products-layout">
+          {/* =================================================
+              SIDEBAR
+          ================================================= */}
+
           <aside className="sidebar">
             <h3>Categories</h3>
 
@@ -113,29 +231,44 @@ function Products() {
 
             <hr />
 
-            <h3>{filteredProducts.length} Products</h3>
+            <h3>{pagination?.totalProducts || 0} Products</h3>
           </aside>
 
+          {/* =================================================
+              PRODUCTS CONTENT
+          ================================================= */}
+
           <div className="products-content">
+            {/* =================================================
+                TOOLBAR
+            ================================================= */}
+
             <div className="toolbar">
               <input
                 type="text"
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={handleSearchChange}
               />
 
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              <select value={sort} onChange={handleSortChange}>
                 <option value="featured">Featured</option>
+
                 <option value="low">Price: Low → High</option>
+
                 <option value="high">Price: High → Low</option>
+
                 <option value="rating">Highest Rated</option>
               </select>
             </div>
 
+            {/* =================================================
+                PRODUCTS GRID
+            ================================================= */}
+
             <div className="products-grid">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
+              {products.length > 0 ? (
+                products.map((product) => (
                   <ProductCard
                     key={product.id}
                     id={product.id}
@@ -155,6 +288,34 @@ function Products() {
                 </div>
               )}
             </div>
+
+            {/* =================================================
+                PAGINATION
+            ================================================= */}
+
+            {pagination && pagination.totalPages > 1 && (
+              <div className="products-pagination">
+                <button
+                  type="button"
+                  onClick={previousPage}
+                  disabled={!pagination.hasPreviousPage || loading}
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {pagination.currentPage} of {pagination.totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={nextPage}
+                  disabled={!pagination.hasNextPage || loading}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

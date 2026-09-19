@@ -17,8 +17,7 @@ import {
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function Payment() {
   const navigate = useNavigate();
@@ -185,7 +184,7 @@ function Payment() {
 
       if (!cashfreeReady || !window.Cashfree) {
         toast.error(
-          "Cashfree payment gateway is still loading. Please try again."
+          "Cashfree payment gateway is still loading. Please try again.",
         );
 
         setProcessing(false);
@@ -509,8 +508,8 @@ function Payment() {
               {processing
                 ? "Processing..."
                 : paymentMethod === "COD"
-                ? `Place COD Order • ₹${Number(amount).toFixed(2)}`
-                : `Continue to Cashfree • ₹${Number(amount).toFixed(2)}`}
+                  ? `Place COD Order • ₹${Number(amount).toFixed(2)}`
+                  : `Continue to Cashfree • ₹${Number(amount).toFixed(2)}`}
             </button>
 
             <div className="payment-trust">

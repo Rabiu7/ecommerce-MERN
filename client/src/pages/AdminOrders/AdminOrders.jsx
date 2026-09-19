@@ -13,8 +13,7 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function AdminOrders() {
   const navigate = useNavigate();
@@ -209,7 +208,7 @@ function AdminOrders() {
 
   const currentOrders = filteredOrders.slice(
     startIndex,
-    startIndex + ordersPerPage
+    startIndex + ordersPerPage,
   );
 
   /* =========================================================
@@ -221,27 +220,27 @@ function AdminOrders() {
       all: orders.length,
 
       pending: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "pending"
+        (order) => order.order_status?.toLowerCase() === "pending",
       ).length,
 
       confirmed: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "confirmed"
+        (order) => order.order_status?.toLowerCase() === "confirmed",
       ).length,
 
       processing: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "processing"
+        (order) => order.order_status?.toLowerCase() === "processing",
       ).length,
 
       shipped: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "shipped"
+        (order) => order.order_status?.toLowerCase() === "shipped",
       ).length,
 
       delivered: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "delivered"
+        (order) => order.order_status?.toLowerCase() === "delivered",
       ).length,
 
       cancelled: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "cancelled"
+        (order) => order.order_status?.toLowerCase() === "cancelled",
       ).length,
     };
   }, [orders]);
@@ -565,7 +564,7 @@ function AdminOrders() {
 
                           <span
                             className={`payment-status ${String(
-                              order.payment_status || "pending"
+                              order.payment_status || "pending",
                             ).toLowerCase()}`}
                           >
                             {order.payment_status || "pending"}
@@ -578,7 +577,7 @@ function AdminOrders() {
                       <td>
                         <span
                           className={`admin-order-status ${String(
-                            order.order_status || "pending"
+                            order.order_status || "pending",
                           )
                             .toLowerCase()
                             .replace(/\s+/g, "-")}`}

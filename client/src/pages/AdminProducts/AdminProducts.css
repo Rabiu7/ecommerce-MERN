@@ -68,7 +68,10 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .add-product-btn span {
@@ -213,7 +216,9 @@
 
   outline: none;
 
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .form-group textarea {
@@ -317,7 +322,10 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
     transform 0.3s ease;
 }
 
@@ -645,7 +653,10 @@
 
   cursor: pointer;
 
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .delete-product-btn:hover {
@@ -704,6 +715,69 @@
   color: #99938a;
 
   font-size: 12px;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.products-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(161, 125, 71, 0.12);
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.products-pagination button {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(161, 125, 71, 0.25);
+  border-radius: 10px;
+  background: #faf9f7;
+  color: #6d5738;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.products-pagination button:hover:not(:disabled) {
+  background: #a17d47;
+  color: #fff;
+  border-color: #a17d47;
+}
+
+.products-pagination button.active {
+  background: #a17d47;
+  color: #fff;
+  border-color: #a17d47;
+}
+
+.products-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .products-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pagination-pages {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* =========================================================
@@ -836,7 +910,8 @@
 
   text-align: center;
 
-  box-shadow: 0 25px 70px rgba(23, 33, 47, 0.18),
+  box-shadow:
+    0 25px 70px rgba(23, 33, 47, 0.18),
     0 5px 20px rgba(23, 33, 47, 0.08);
 
   animation: deleteModalIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
@@ -956,8 +1031,12 @@
 
   cursor: pointer;
 
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease,
-    color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 /* =========================================================
@@ -1081,7 +1160,8 @@
 
   border-radius: 20px;
 
-  box-shadow: 0 24px 70px rgba(40, 30, 20, 0.18),
+  box-shadow:
+    0 24px 70px rgba(40, 30, 20, 0.18),
     0 4px 15px rgba(40, 30, 20, 0.08);
 
   animation: editModalIn 0.25s ease;

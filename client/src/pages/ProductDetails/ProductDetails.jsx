@@ -11,8 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 
 import ProductCard from "../../components/ProductCard/ProductCard";
 
-const VITE_API_URL =
-  import.meta.env.VITE_API_URL || "http://192.168.2.122:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -23,6 +22,9 @@ function ProductDetails() {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  const [relatedPage, setRelatedPage] = useState(1);
+  const [relatedPagination, setRelatedPagination] = useState(null);
 
   // =========================================================
   // STOCK REMINDER STATES
@@ -37,6 +39,8 @@ function ProductDetails() {
 
   const fetchProduct = useCallback(async () => {
     try {
+      setLoading(true);
+
       const response = await fetch(`${VITE_API_URL}/api/products/${id}`);
 
       if (!response.ok) {
@@ -45,39 +49,72 @@ function ProductDetails() {
 
       const data = await response.json();
 
+      console.log("Product data:", data);
+
       setProduct(data);
-
-      // Fetch all products for related products
-      const productsResponse = await fetch(`${VITE_API_URL}/api/products`);
-
-      if (!productsResponse.ok) {
-        throw new Error("Unable to load related products");
-      }
-
-      const productsData = await productsResponse.json();
-
-      const related = productsData.filter(
-        (item) =>
-          Number(item.category_id) === Number(data.category_id) &&
-          Number(item.id) !== Number(data.id)
-      );
-
-      setRelatedProducts(related);
     } catch (error) {
       console.error("Error loading product:", error);
+
+      setProduct(null);
+
       toast.error("Unable to load product");
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  useEffect(() => {
-    const loadProduct = async () => {
-      await fetchProduct();
-    };
+  // =========================================================
+  // FETCH RELATED PRODUCTS
+  // =========================================================
 
-    loadProduct();
+  const fetchRelatedProducts = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${VITE_API_URL}/api/products/${id}/related?page=${relatedPage}&limit=4`,
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to load related products");
+      }
+
+      const data = await response.json();
+
+      console.log("Related products response:", data);
+
+      setRelatedProducts(data.products || []);
+
+      setRelatedPagination(data.pagination || null);
+    } catch (error) {
+      console.error("Error loading related products:", error);
+
+      setRelatedProducts([]);
+      setRelatedPagination(null);
+    }
+  }, [id, relatedPage]);
+
+  // =========================================================
+  // LOAD PRODUCT
+  // =========================================================
+
+  useEffect(() => {
+    fetchProduct();
   }, [fetchProduct]);
+
+  // =========================================================
+  // LOAD RELATED PRODUCTS
+  // =========================================================
+
+  useEffect(() => {
+    fetchRelatedProducts();
+  }, [fetchRelatedProducts]);
+
+  // =========================================================
+  // RESET RELATED PAGE WHEN PRODUCT CHANGES
+  // =========================================================
+
+  useEffect(() => {
+    setRelatedPage(1);
+  }, [id]);
 
   // =========================================================
   // CHECK WHETHER USER ALREADY SUBSCRIBED FOR STOCK REMINDER
@@ -108,7 +145,7 @@ function ProductDetails() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -240,7 +277,7 @@ function ProductDetails() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         const data = await response.json();
@@ -278,7 +315,7 @@ function ProductDetails() {
         setIsReminderSet(true);
 
         toast.success(
-          data.message || "You are subscribed for stock notification."
+          data.message || "You are subscribed for stock notification.",
         );
       } else {
         toast.error(data.message || "Unable to set reminder.");
@@ -289,6 +326,22 @@ function ProductDetails() {
       toast.error("Unable to update stock reminder.");
     } finally {
       setReminderLoading(false);
+    }
+  };
+
+  // =========================================================
+  // RELATED PRODUCT PAGINATION
+  // =========================================================
+
+  const previousRelatedPage = () => {
+    if (relatedPagination?.hasPreviousPage) {
+      setRelatedPage((previousPage) => previousPage - 1);
+    }
+  };
+
+  const nextRelatedPage = () => {
+    if (relatedPagination?.hasNextPage) {
+      setRelatedPage((previousPage) => previousPage + 1);
     }
   };
 
@@ -396,8 +449,8 @@ function ProductDetails() {
                       {reminderLoading
                         ? "Please wait..."
                         : isReminderSet
-                        ? "✓ You're on the list"
-                        : "Remind Me"}
+                          ? "✓ You're on the list"
+                          : "Remind Me"}
                     </button>
                   </div>
                 )}
@@ -456,11 +509,9 @@ function ProductDetails() {
           </div>
         </div>
       </section>
-
       {/* =======================================================
           RELATED PRODUCTS
       ======================================================= */}
-
       {relatedProducts.length > 0 && (
         <section className="related-products">
           <div className="related-products-container">
@@ -473,6 +524,10 @@ function ProductDetails() {
                 <p>Discover more products from this category.</p>
               </div>
             </div>
+
+            {/* =====================================================
+          RELATED PRODUCTS
+      ===================================================== */}
 
             <div className="related-grid">
               {relatedProducts.map((item) => (
@@ -488,6 +543,35 @@ function ProductDetails() {
                 />
               ))}
             </div>
+
+            {/* =====================================================
+          PAGINATION
+      ===================================================== */}
+
+            {relatedPagination && relatedPagination.totalPages > 1 && (
+              <div className="related-pagination">
+                <button
+                  type="button"
+                  onClick={previousRelatedPage}
+                  disabled={!relatedPagination.hasPreviousPage}
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {relatedPagination.currentPage} of{" "}
+                  {relatedPagination.totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={nextRelatedPage}
+                  disabled={!relatedPagination.hasNextPage}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </section>
       )}

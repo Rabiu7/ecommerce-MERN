@@ -454,6 +454,40 @@
   color: #a27b3f;
 }
 
+.products-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.products-pagination button {
+  padding: 10px 20px;
+  border: 1px solid #a27b3f;
+  background: transparent;
+  color: #a27b3f;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.products-pagination button:hover:not(:disabled) {
+  background: #a27b3f;
+  color: white;
+}
+
+.products-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.products-pagination span {
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
+}
+
 /* =========================================================
    ANIMATIONS
 ========================================================= */
