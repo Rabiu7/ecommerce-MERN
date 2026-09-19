@@ -11,7 +11,7 @@ const app = express();
 // =========================================================
 
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://ecommerce-mern-hazel.vercel.app"],
+  origin: ["http://localhost:5173", "https://www.mashaallahcreations.in"],
   credentials: true,
 };
 
