@@ -114,9 +114,11 @@ function createLocalOrder(
 // GET COMPLETE ORDER
 // =========================================================
 
-function getCompleteOrder(orderId, userId, callback) {
-  Order.getOrderById(orderId, userId, (err, orders) => {
-    if (err) return callback(err);
+const getCompletePublicOrder = (publicOrderId, userId, callback) => {
+  Order.getOrderByPublicId(publicOrderId, userId, (err, orders) => {
+    if (err) {
+      return callback(err);
+    }
 
     if (!orders || orders.length === 0) {
       return callback(null, null);
@@ -124,17 +126,17 @@ function getCompleteOrder(orderId, userId, callback) {
 
     const order = orders[0];
 
-    Order.getOrderItems(orderId, (itemErr, items) => {
-      if (itemErr) return callback(itemErr);
+    Order.getOrderItems(order.id, (itemErr, items) => {
+      if (itemErr) {
+        return callback(itemErr);
+      }
 
-      callback(null, {
-        ...order,
-        shipping_address: parseShippingAddress(order.shipping_address),
-        items: items || [],
-      });
+      order.items = items || [];
+
+      callback(null, order);
     });
   });
-}
+};
 
 // =========================================================
 // CHECKOUT
@@ -991,20 +993,21 @@ exports.cashfreeWebhook = async (req, res) => {
 
 exports.getOrder = (req, res) => {
   const userId = req.user.id;
+  const publicOrderId = req.params.id;
 
-  const orderId = req.params.id;
-
-  getCompleteOrder(orderId, userId, (err, order) => {
+  getCompletePublicOrder(publicOrderId, userId, (err, order) => {
     if (err) {
-      console.error("Get Complete Order Error:", err);
+      console.error("Get Customer Order Error:", err);
 
       return res.status(500).json({
+        success: false,
         message: "Failed to fetch order",
       });
     }
 
     if (!order) {
       return res.status(404).json({
+        success: false,
         message: "Order not found",
       });
     }

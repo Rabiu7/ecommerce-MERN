@@ -431,6 +431,7 @@ const Order = {
     let sql = `
     SELECT
       o.id,
+      o.public_order_id,
       o.user_id,
       o.total_amount,
       o.payment_method,
@@ -455,11 +456,11 @@ const Order = {
 
     const params = [];
 
-    // Search customer name, email, phone or order ID
     if (search) {
       sql += `
       AND (
-        u.name LIKE ?
+        o.public_order_id LIKE ?
+        OR u.name LIKE ?
         OR u.email LIKE ?
         OR u.phone LIKE ?
         OR o.cashfree_order_id LIKE ?
@@ -475,12 +476,12 @@ const Order = {
         searchValue,
         searchValue,
         searchValue,
+        searchValue,
       );
     }
 
-    // Filter by order status
     if (status && status !== "all") {
-      sql += ` AND o.order_status = ?`;
+      sql += ` AND LOWER(o.order_status) = LOWER(?)`;
       params.push(status);
     }
 

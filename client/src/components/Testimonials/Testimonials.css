@@ -145,6 +145,17 @@
   overflow: hidden;
 }
 
+.testimonial-grid-centered {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 24px;
+}
+
+.testimonial-grid-centered .testimonial-card {
+  width: 100%;
+  max-width: 360px;
+}
 /* =========================================================
    REVIEW CARD
 ========================================================= */

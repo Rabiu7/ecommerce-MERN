@@ -248,7 +248,7 @@ function AdminOrderDetails() {
         <div>
           <span className="order-details-label">ORDER DETAILS</span>
 
-          <h1>Order #{order.id}</h1>
+          <h1>Order #{order.public_order_id}</h1>
 
           <p>Placed on {formatDateTime(order.created_at)}</p>
         </div>
@@ -268,7 +268,6 @@ function AdminOrderDetails() {
         {/* ===================================================
             CUSTOMER
         =================================================== */}
-
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">
@@ -316,11 +315,9 @@ function AdminOrderDetails() {
             </div>
           </div>
         </div>
-
         {/* ===================================================
             PAYMENT
         =================================================== */}
-
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">
@@ -370,14 +367,12 @@ function AdminOrderDetails() {
             </div>
           </div>
         </div>
-
         {/* ===================================================
             SHIPPING / ADDRESS
         =================================================== */}
-
-        <div className="order-detail-card">
+        <div className="order-detail-card shipping-card">
           <div className="order-card-header">
-            <div className="order-card-icon">
+            <div className="order-card-icon shipping-icon">
               <FiMapPin />
             </div>
 
@@ -387,42 +382,94 @@ function AdminOrderDetails() {
             </div>
           </div>
 
-          <div className="order-address">
-            {order.shipping_address &&
-            typeof order.shipping_address === "object" ? (
-              <>
-                <strong>
-                  {order.shipping_address.fullName ||
-                    order.customer_name ||
-                    "-"}
-                </strong>
+          {order.shipping_address &&
+          typeof order.shipping_address === "object" ? (
+            <div className="shipping-address-content">
+              {/* CUSTOMER */}
+              <div className="shipping-customer">
+                <div className="shipping-customer-avatar">
+                  {getInitials(
+                    order.shipping_address.fullName || order.customer_name,
+                  )}
+                </div>
 
-                <span>{order.shipping_address.address || "-"}</span>
+                <div>
+                  <strong>
+                    {order.shipping_address.fullName ||
+                      order.customer_name ||
+                      "Customer"}
+                  </strong>
 
-                <span>
-                  {order.shipping_address.city || "-"}
-                  {order.shipping_address.state
-                    ? `, ${order.shipping_address.state}`
-                    : ""}
+                  <span>Shipping recipient</span>
+                </div>
+              </div>
+
+              {/* ADDRESS */}
+              <div className="shipping-address-box">
+                <span className="shipping-address-label">
+                  <FiMapPin />
+                  Delivery Address
                 </span>
 
-                <span>Pincode: {order.shipping_address.pincode || "-"}</span>
+                <div className="shipping-address-text">
+                  <strong>{order.shipping_address.address || "-"}</strong>
 
-                <span>
-                  Phone:{" "}
-                  {order.shipping_address.phone || order.customer_phone || "-"}
-                </span>
-              </>
-            ) : (
-              <span>No delivery address available.</span>
-            )}
-          </div>
+                  <span>
+                    {order.shipping_address.city || "-"}
+                    {order.shipping_address.state
+                      ? `, ${order.shipping_address.state}`
+                      : ""}
+                  </span>
+
+                  <span>Pincode: {order.shipping_address.pincode || "-"}</span>
+                </div>
+              </div>
+
+              {/* CONTACT */}
+              <div className="shipping-contact">
+                <div className="shipping-contact-item">
+                  <span className="shipping-contact-icon">
+                    <FiPhone />
+                  </span>
+
+                  <div>
+                    <span>Phone</span>
+
+                    <strong>
+                      {order.shipping_address.phone ||
+                        order.customer_phone ||
+                        "-"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="shipping-contact-item">
+                  <span className="shipping-contact-icon">
+                    <FiMail />
+                  </span>
+
+                  <div>
+                    <span>Email</span>
+
+                    <strong>{order.customer_email || "-"}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="shipping-empty">
+              <FiMapPin />
+
+              <strong>No delivery address available</strong>
+
+              <span>Shipping information was not provided for this order.</span>
+            </div>
+          )}
         </div>
 
         {/* ===================================================
             ORDER SUMMARY
         =================================================== */}
-
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">

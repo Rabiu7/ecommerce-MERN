@@ -500,9 +500,20 @@ function AdminOrders() {
 
         {loading ? (
           <div className="orders-table-loading">
-            <div className="orders-loading-spinner"></div>
-
-            <p>Loading orders...</p>
+            {" "}
+            <div className="orders-loading-card">
+              {" "}
+              <div className="orders-loading-spinner"></div>{" "}
+              <div className="orders-loading-content">
+                {" "}
+                <h3>Loading Orders</h3>{" "}
+                <p>Please wait while we fetch your orders...</p>{" "}
+              </div>{" "}
+              <div className="orders-loading-dots">
+                {" "}
+                <span></span> <span></span> <span></span>{" "}
+              </div>{" "}
+            </div>{" "}
           </div>
         ) : orders.length === 0 ? (
           <div className="orders-empty">
@@ -546,12 +557,12 @@ function AdminOrders() {
 
                 <tbody>
                   {orders.map((order) => (
-                    <tr key={order.id}>
+                    <tr key={order.public_order_id}>
                       {/* ORDER */}
 
                       <td>
                         <div className="admin-order-id">
-                          <strong>#{order.id}</strong>
+                          <strong>#{order.public_order_id}</strong>
 
                           {order.cashfree_order_id && (
                             <span>{order.cashfree_order_id}</span>

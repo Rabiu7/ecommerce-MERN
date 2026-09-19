@@ -21,16 +21,23 @@ function OrderDetails() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedProducts, setReviewedProducts] = useState({});
 
+  // =========================================================
+  // LOAD ORDER
+  // =========================================================
+
   useEffect(() => {
     const loadOrder = async () => {
       try {
         setLoading(true);
 
-        const response = await fetch(`${VITE_API_URL}/api/orders/${id}`, {
-          headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
+        const response = await fetch(
+          `${VITE_API_URL}/api/orders/${encodeURIComponent(id)}`,
+          {
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
           },
-        });
+        );
 
         const data = await response.json();
 
@@ -41,6 +48,10 @@ function OrderDetails() {
         }
 
         setOrder(data.order);
+
+        // -----------------------------------------------------
+        // CHECK WHICH PRODUCTS WERE ALREADY REVIEWED
+        // -----------------------------------------------------
 
         if (data.order?.items) {
           const results = {};
@@ -75,13 +86,21 @@ function OrderDetails() {
         }
       } catch (error) {
         console.error("Order Details Error:", error);
+
+        setOrder(null);
       } finally {
         setLoading(false);
       }
     };
 
-    loadOrder();
+    if (id) {
+      loadOrder();
+    }
   }, [id]);
+
+  // =========================================================
+  // OPEN REVIEW MODAL
+  // =========================================================
 
   const openReviewModal = (item) => {
     setReviewProduct(item);
@@ -89,16 +108,28 @@ function OrderDetails() {
     setComment("");
   };
 
+  // =========================================================
+  // CLOSE REVIEW MODAL
+  // =========================================================
+
   const closeReviewModal = () => {
-    if (submittingReview) return;
+    if (submittingReview) {
+      return;
+    }
 
     setReviewProduct(null);
     setRating(0);
     setComment("");
   };
 
+  // =========================================================
+  // SUBMIT REVIEW
+  // =========================================================
+
   const submitReview = async () => {
-    if (!reviewProduct) return;
+    if (!reviewProduct) {
+      return;
+    }
 
     if (rating === 0) {
       toast.error("Please select a rating.");
@@ -127,8 +158,8 @@ function OrderDetails() {
         throw new Error(data.message || "Failed to submit review");
       }
 
-      setReviewedProducts((prev) => ({
-        ...prev,
+      setReviewedProducts((previous) => ({
+        ...previous,
         [reviewProduct.product_id]: true,
       }));
 
@@ -137,11 +168,16 @@ function OrderDetails() {
       toast.success("Review submitted successfully!");
     } catch (error) {
       console.error("Submit Review Error:", error);
+
       toast.error(error.message || "Failed to submit review");
     } finally {
       setSubmittingReview(false);
     }
   };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
@@ -165,6 +201,10 @@ function OrderDetails() {
     );
   }
 
+  // =========================================================
+  // ORDER NOT FOUND
+  // =========================================================
+
   if (!order) {
     return (
       <section className="order-details-page">
@@ -177,6 +217,10 @@ function OrderDetails() {
     );
   }
 
+  // =========================================================
+  // ORDER DATA
+  // =========================================================
+
   const address = order.shipping_address || {};
 
   const isDelivered =
@@ -185,16 +229,26 @@ function OrderDetails() {
   return (
     <section className="order-details-page">
       <div className="order-details-container">
+        {/* ===================================================
+            BACK BUTTON
+        =================================================== */}
+
         <button className="back-btn" onClick={() => navigate("/orders")}>
           <FiArrowLeft />
           Back to Orders
         </button>
 
+        {/* ===================================================
+            ORDER HEADER
+        =================================================== */}
+
         <div className="order-details-header">
           <div>
             <span>ORDER DETAILS</span>
 
-            <h1>Order #{order.id}</h1>
+            {/* PUBLIC ORDER ID ONLY */}
+
+            <h1>Order #{order.public_order_id}</h1>
 
             <p>
               Placed on {new Date(order.created_at).toLocaleDateString("en-IN")}
@@ -204,29 +258,41 @@ function OrderDetails() {
           <div className="order-status">{order.order_status}</div>
         </div>
 
+        {/* ===================================================
+            PAYMENT INFORMATION
+        =================================================== */}
+
         <div className="order-details-box">
           <h2>Payment Information</h2>
 
           <div className="details-row">
             <span>Payment Method</span>
+
             <strong>{order.payment_method}</strong>
           </div>
 
           <div className="details-row">
             <span>Payment Status</span>
+
             <strong>{order.payment_status}</strong>
           </div>
 
           <div className="details-row">
             <span>Order Status</span>
+
             <strong>{order.order_status}</strong>
           </div>
 
           <div className="details-row">
             <span>Total</span>
+
             <strong>₹{Number(order.total_amount || 0).toFixed(2)}</strong>
           </div>
         </div>
+
+        {/* ===================================================
+            ORDERED ITEMS
+        =================================================== */}
 
         <div className="order-details-box">
           <h2>
@@ -234,11 +300,16 @@ function OrderDetails() {
             Ordered Items
           </h2>
 
-          {(order.items || []).map((item) => {
+          {(order.items || []).map((item, index) => {
             const alreadyReviewed = reviewedProducts[item.product_id];
 
             return (
-              <div className="detail-product" key={item.id}>
+              <div
+                className="detail-product"
+                key={`${item.product_id}-${index}`}
+              >
+                {/* PRODUCT IMAGE */}
+
                 <div className="detail-product-image">
                   {item.image ? (
                     <img src={item.image} alt={item.name || "Product"} />
@@ -247,6 +318,8 @@ function OrderDetails() {
                   )}
                 </div>
 
+                {/* PRODUCT INFORMATION */}
+
                 <div className="detail-product-info">
                   <h3>{item.name || "Product"}</h3>
 
@@ -254,6 +327,8 @@ function OrderDetails() {
 
                   <p>Price: ₹{Number(item.price || 0).toFixed(2)}</p>
                 </div>
+
+                {/* PRODUCT TOTAL + REVIEW */}
 
                 <div className="detail-product-right">
                   <strong>
@@ -284,6 +359,10 @@ function OrderDetails() {
           })}
         </div>
 
+        {/* ===================================================
+            DELIVERY ADDRESS
+        =================================================== */}
+
         <div className="order-details-box">
           <h2>Delivery Address</h2>
 
@@ -295,7 +374,9 @@ function OrderDetails() {
 
           <p>
             {address.city || ""}
+
             {address.city && address.state ? ", " : ""}
+
             {address.state || ""}
           </p>
 
@@ -305,12 +386,22 @@ function OrderDetails() {
         </div>
       </div>
 
+      {/* =====================================================
+          REVIEW MODAL
+      ===================================================== */}
+
       {reviewProduct && (
         <div className="review-modal-overlay" onClick={closeReviewModal}>
-          <div className="review-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="review-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* MODAL HEADER */}
+
             <div className="review-modal-header">
               <div>
                 <span>SHARE YOUR EXPERIENCE</span>
+
                 <h2>Write a Review</h2>
               </div>
 
@@ -323,6 +414,8 @@ function OrderDetails() {
               </button>
             </div>
 
+            {/* REVIEW PRODUCT */}
+
             <div className="review-product">
               <div className="review-product-image">
                 {reviewProduct.image ? (
@@ -334,9 +427,12 @@ function OrderDetails() {
 
               <div>
                 <h3>{reviewProduct.name}</h3>
+
                 <p>Your feedback helps other customers.</p>
               </div>
             </div>
+
+            {/* RATING */}
 
             <div className="review-rating-section">
               <label>Your Rating</label>
@@ -356,13 +452,20 @@ function OrderDetails() {
 
               <p className="rating-text">
                 {rating === 0 && "Select your rating"}
+
                 {rating === 1 && "Poor"}
+
                 {rating === 2 && "Fair"}
+
                 {rating === 3 && "Good"}
+
                 {rating === 4 && "Very Good"}
+
                 {rating === 5 && "Excellent"}
               </p>
             </div>
+
+            {/* COMMENT */}
 
             <div className="review-comment-section">
               <label htmlFor="review-comment">Your Review</label>
@@ -370,7 +473,7 @@ function OrderDetails() {
               <textarea
                 id="review-comment"
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={(event) => setComment(event.target.value)}
                 placeholder="Tell us about your experience with this product..."
                 maxLength={500}
                 rows={5}
@@ -378,6 +481,8 @@ function OrderDetails() {
 
               <div className="review-character-count">{comment.length}/500</div>
             </div>
+
+            {/* ACTIONS */}
 
             <div className="review-modal-actions">
               <button

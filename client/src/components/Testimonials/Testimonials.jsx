@@ -70,7 +70,9 @@ function Testimonials() {
    */
   const visibleReviews = [];
 
-  for (let i = 0; i < 3; i++) {
+  const visibleCount = Math.min(3, reviews.length);
+
+  for (let i = 0; i < visibleCount; i++) {
     const index = (currentIndex + i) % reviews.length;
 
     visibleReviews.push(reviews[index]);
@@ -95,7 +97,9 @@ function Testimonials() {
         {/* REVIEWS */}
 
         <div
-          className={`testimonial-grid ${isAnimating ? "reviews-slide" : ""}`}
+          className={`testimonial-grid ${
+            visibleReviews.length < 3 ? "testimonial-grid-centered" : ""
+          } ${isAnimating ? "reviews-slide" : ""}`}
         >
           {visibleReviews.map((review, index) => (
             <div
