@@ -1,6 +1,6 @@
 import "./AdminOrders.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +18,12 @@ const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 function AdminOrders() {
   const navigate = useNavigate();
 
+  // =========================================================
+  // STATE
+  // =========================================================
+
+  // Orders returned by the backend.
+  // This will contain ONLY the current page's orders.
   const [orders, setOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,26 +36,66 @@ function AdminOrders() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Number of orders requested from backend per page.
   const ordersPerPage = 10;
 
-  /* =========================================================
-     FETCH ORDERS
-  ========================================================= */
+  // Backend pagination information.
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    limit: ordersPerPage,
+    totalOrders: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
-  const fetchOrders = async () => {
+  // Backend status summary counts.
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0,
+    pending: 0,
+    confirmed: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
+    failed: 0,
+  });
+
+  // Used to debounce search requests.
+  const searchTimerRef = useRef(null);
+
+  // =========================================================
+  // FETCH ORDERS
+  // =========================================================
+
+  const fetchOrders = async (
+    page = currentPage,
+    search = searchTerm,
+    status = statusFilter,
+  ) => {
     try {
       setLoading(true);
       setError("");
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${VITE_API_URL}/api/admin/orders`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(ordersPerPage),
+        search: search.trim(),
+        status,
       });
+
+      const response = await fetch(
+        `${VITE_API_URL}/api/admin/orders?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch orders");
@@ -59,11 +105,42 @@ function AdminOrders() {
 
       console.log("Admin orders:", data);
 
+      // -------------------------------------------------------
+      // ORDERS
+      // -------------------------------------------------------
+
       setOrders(Array.isArray(data.orders) ? data.orders : []);
 
-      setCurrentPage(1);
+      // -------------------------------------------------------
+      // PAGINATION
+      // -------------------------------------------------------
+
+      if (data.pagination) {
+        setPagination(data.pagination);
+      }
+
+      // -------------------------------------------------------
+      // STATUS COUNTS
+      // -------------------------------------------------------
+
+      if (data.statusCounts) {
+        setStatusCounts({
+          all: Number(data.statusCounts.all) || 0,
+          pending: Number(data.statusCounts.pending) || 0,
+          confirmed: Number(data.statusCounts.confirmed) || 0,
+          processing: Number(data.statusCounts.processing) || 0,
+          shipped: Number(data.statusCounts.shipped) || 0,
+          delivered: Number(data.statusCounts.delivered) || 0,
+          cancelled: Number(data.statusCounts.cancelled) || 0,
+          failed: Number(data.statusCounts.failed) || 0,
+        });
+      }
+
+      setCurrentPage(data.pagination?.currentPage || page);
     } catch (error) {
       console.error("Admin orders error:", error);
+
+      setOrders([]);
 
       setError("Failed to load orders. Please try again.");
     } finally {
@@ -71,62 +148,90 @@ function AdminOrders() {
     }
   };
 
-  /* =========================================================
-     INITIAL LOAD
-  ========================================================= */
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
   useEffect(() => {
-    let cancelled = false;
+    fetchOrders(1, "", "all");
 
-    const loadOrders = async () => {
-      try {
-        const token = localStorage.getItem("token");
+    // We only want this request when the page initially loads.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-        const response = await fetch(`${VITE_API_URL}/api/admin/orders`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+  // =========================================================
+  // CLEAN SEARCH TIMER
+  // =========================================================
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch orders");
-        }
-
-        const data = await response.json();
-
-        console.log("Admin orders:", data);
-
-        if (!cancelled) {
-          setOrders(Array.isArray(data.orders) ? data.orders : []);
-
-          setCurrentPage(1);
-          setError("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Admin orders error:", error);
-
-          setError("Failed to load orders. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadOrders();
-
+  useEffect(() => {
     return () => {
-      cancelled = true;
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
     };
   }, []);
 
-  /* =========================================================
-     FORMAT DATE
-  ========================================================= */
+  // =========================================================
+  // SEARCH CHANGE
+  // =========================================================
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+
+    setSearchTerm(value);
+
+    // Always go back to page 1 for a new search.
+    setCurrentPage(1);
+
+    // Clear previous timer.
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    // Wait 300ms before sending request.
+    searchTimerRef.current = setTimeout(() => {
+      fetchOrders(1, value, statusFilter);
+    }, 300);
+  };
+
+  // =========================================================
+  // STATUS CHANGE
+  // =========================================================
+
+  const handleStatusChange = (event) => {
+    const newStatus = event.target.value;
+
+    setStatusFilter(newStatus);
+
+    // Status change should always start from page 1.
+    setCurrentPage(1);
+
+    fetchOrders(1, searchTerm, newStatus);
+  };
+
+  // =========================================================
+  // SUMMARY STATUS CLICK
+  // =========================================================
+
+  const handleSummaryStatusChange = (status) => {
+    setStatusFilter(status);
+
+    setCurrentPage(1);
+
+    fetchOrders(1, searchTerm, status);
+  };
+
+  // =========================================================
+  // REFRESH
+  // =========================================================
+
+  const handleRefresh = () => {
+    fetchOrders(currentPage, searchTerm, statusFilter);
+  };
+
+  // =========================================================
+  // FORMAT DATE
+  // =========================================================
 
   const formatDate = (date) => {
     if (!date) {
@@ -140,9 +245,9 @@ function AdminOrders() {
     });
   };
 
-  /* =========================================================
-     FORMAT AMOUNT
-  ========================================================= */
+  // =========================================================
+  // FORMAT AMOUNT
+  // =========================================================
 
   const formatAmount = (amount) => {
     return Number(amount || 0).toLocaleString("en-IN", {
@@ -151,9 +256,9 @@ function AdminOrders() {
     });
   };
 
-  /* =========================================================
-     GET INITIALS
-  ========================================================= */
+  // =========================================================
+  // GET INITIALS
+  // =========================================================
 
   const getInitials = (name) => {
     if (!name) {
@@ -168,108 +273,33 @@ function AdminOrders() {
       .toUpperCase();
   };
 
-  /* =========================================================
-     FILTER ORDERS
-  ========================================================= */
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const search = searchTerm.toLowerCase().trim();
-
-      const matchesSearch =
-        !search ||
-        String(order.id).toLowerCase().includes(search) ||
-        String(order.customer_name || "")
-          .toLowerCase()
-          .includes(search) ||
-        String(order.customer_email || "")
-          .toLowerCase()
-          .includes(search) ||
-        String(order.customer_phone || "")
-          .toLowerCase()
-          .includes(search);
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        String(order.order_status || "").toLowerCase() ===
-          statusFilter.toLowerCase();
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [orders, searchTerm, statusFilter]);
-
-  /* =========================================================
-     PAGINATION
-  ========================================================= */
-
-  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
-
-  const startIndex = (currentPage - 1) * ordersPerPage;
-
-  const currentOrders = filteredOrders.slice(
-    startIndex,
-    startIndex + ordersPerPage,
-  );
-
-  /* =========================================================
-     STATUS COUNTS
-  ========================================================= */
-
-  const statusCounts = useMemo(() => {
-    return {
-      all: orders.length,
-
-      pending: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "pending",
-      ).length,
-
-      confirmed: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "confirmed",
-      ).length,
-
-      processing: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "processing",
-      ).length,
-
-      shipped: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "shipped",
-      ).length,
-
-      delivered: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "delivered",
-      ).length,
-
-      cancelled: orders.filter(
-        (order) => order.order_status?.toLowerCase() === "cancelled",
-      ).length,
-    };
-  }, [orders]);
-
-  /* =========================================================
-     CHANGE PAGE
-  ========================================================= */
+  // =========================================================
+  // CHANGE PAGE
+  // =========================================================
 
   const changePage = (page) => {
-    if (page < 1 || page > totalPages) {
+    if (page < 1 || page > pagination.totalPages) {
       return;
     }
 
     setCurrentPage(page);
+
+    fetchOrders(page, searchTerm, statusFilter);
   };
 
-  /* =========================================================
-     VIEW ORDER
-  ========================================================= */
+  // =========================================================
+  // VIEW ORDER
+  // =========================================================
 
   const viewOrder = (orderId) => {
     navigate(`/admin/orders/${orderId}`);
   };
 
-  /* =========================================================
-     LOADING
-  ========================================================= */
+  // =========================================================
+  // LOADING
+  // =========================================================
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <div className="admin-orders-page">
         <div className="admin-orders-loading">
@@ -281,9 +311,9 @@ function AdminOrders() {
     );
   }
 
-  /* =========================================================
-     PAGE
-  ========================================================= */
+  // =========================================================
+  // PAGE
+  // =========================================================
 
   return (
     <div className="admin-orders-page">
@@ -303,9 +333,10 @@ function AdminOrders() {
         <button
           type="button"
           className="orders-refresh-btn"
-          onClick={fetchOrders}
+          onClick={handleRefresh}
+          disabled={loading}
         >
-          <FiRefreshCw />
+          <FiRefreshCw className={loading ? "orders-refresh-spin" : ""} />
 
           <span>Refresh</span>
         </button>
@@ -319,7 +350,7 @@ function AdminOrders() {
         <div className="admin-orders-error">
           <span>{error}</span>
 
-          <button type="button" onClick={fetchOrders}>
+          <button type="button" onClick={handleRefresh}>
             Try Again
           </button>
         </div>
@@ -330,90 +361,84 @@ function AdminOrders() {
       ===================================================== */}
 
       <div className="orders-summary">
+        {/* ALL */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "all" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("all");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("all")}
         >
           <span>All Orders</span>
 
           <strong>{statusCounts.all}</strong>
         </button>
 
+        {/* PENDING */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "pending" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("pending");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("pending")}
         >
           <span>Pending</span>
 
           <strong>{statusCounts.pending}</strong>
         </button>
 
+        {/* PROCESSING */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "processing" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("processing");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("processing")}
         >
           <span>Processing</span>
 
           <strong>{statusCounts.processing}</strong>
         </button>
 
+        {/* SHIPPED */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "shipped" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("shipped");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("shipped")}
         >
           <span>Shipped</span>
 
           <strong>{statusCounts.shipped}</strong>
         </button>
 
+        {/* DELIVERED */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "delivered" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("delivered");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("delivered")}
         >
           <span>Delivered</span>
 
           <strong>{statusCounts.delivered}</strong>
         </button>
 
+        {/* CANCELLED */}
+
         <button
           type="button"
           className={`order-summary-card ${
             statusFilter === "cancelled" ? "active" : ""
           }`}
-          onClick={() => {
-            setStatusFilter("cancelled");
-            setCurrentPage(1);
-          }}
+          onClick={() => handleSummaryStatusChange("cancelled")}
         >
           <span>Cancelled</span>
 
@@ -431,6 +456,8 @@ function AdminOrders() {
         =================================================== */}
 
         <div className="orders-toolbar">
+          {/* SEARCH */}
+
           <div className="orders-search">
             <FiSearch />
 
@@ -438,22 +465,16 @@ function AdminOrders() {
               type="text"
               placeholder="Search by order ID, customer, email or phone..."
               value={searchTerm}
-              onChange={(event) => {
-                setSearchTerm(event.target.value);
-
-                setCurrentPage(1);
-              }}
+              onChange={handleSearchChange}
             />
           </div>
+
+          {/* STATUS */}
 
           <select
             className="orders-status-filter"
             value={statusFilter}
-            onChange={(event) => {
-              setStatusFilter(event.target.value);
-
-              setCurrentPage(1);
-            }}
+            onChange={handleStatusChange}
           >
             <option value="all">All Statuses</option>
 
@@ -477,7 +498,13 @@ function AdminOrders() {
             TABLE
         =================================================== */}
 
-        {currentOrders.length === 0 ? (
+        {loading ? (
+          <div className="orders-table-loading">
+            <div className="orders-loading-spinner"></div>
+
+            <p>Loading orders...</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="orders-empty">
             <div className="orders-empty-icon">
               <FiShoppingBag />
@@ -493,6 +520,10 @@ function AdminOrders() {
           </div>
         ) : (
           <>
+            {/* =================================================
+                TABLE
+            ================================================= */}
+
             <div className="orders-table-wrapper">
               <table className="admin-orders-table">
                 <thead>
@@ -514,7 +545,7 @@ function AdminOrders() {
                 </thead>
 
                 <tbody>
-                  {currentOrders.map((order) => (
+                  {orders.map((order) => (
                     <tr key={order.id}>
                       {/* ORDER */}
 
@@ -622,32 +653,45 @@ function AdminOrders() {
               <span>
                 Showing{" "}
                 <strong>
-                  {filteredOrders.length === 0 ? 0 : startIndex + 1}
+                  {pagination.totalOrders === 0
+                    ? 0
+                    : (pagination.currentPage - 1) * pagination.limit + 1}
                 </strong>{" "}
                 to{" "}
                 <strong>
-                  {Math.min(startIndex + ordersPerPage, filteredOrders.length)}
+                  {pagination.totalOrders === 0
+                    ? 0
+                    : Math.min(
+                        pagination.currentPage * pagination.limit,
+                        pagination.totalOrders,
+                      )}
                 </strong>{" "}
-                of <strong>{filteredOrders.length}</strong> orders
+                of <strong>{pagination.totalOrders}</strong> orders
               </span>
 
               <div className="pagination-controls">
+                {/* PREVIOUS */}
+
                 <button
                   type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => changePage(currentPage - 1)}
+                  disabled={!pagination.hasPreviousPage || loading}
+                  onClick={() => changePage(pagination.currentPage - 1)}
                 >
                   <FiChevronLeft />
                 </button>
 
+                {/* CURRENT PAGE */}
+
                 <span>
-                  {currentPage} / {totalPages || 1}
+                  {pagination.currentPage} / {pagination.totalPages || 1}
                 </span>
+
+                {/* NEXT */}
 
                 <button
                   type="button"
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() => changePage(currentPage + 1)}
+                  disabled={!pagination.hasNextPage || loading}
+                  onClick={() => changePage(pagination.currentPage + 1)}
                 >
                   <FiChevronRight />
                 </button>

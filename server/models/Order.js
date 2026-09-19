@@ -260,34 +260,188 @@ const Order = {
   },
 
   // =========================================================
-  // ADMIN - GET ALL ORDERS
+  // ADMIN - GET ALL ORDERS WITH PAGINATION
   // =========================================================
 
-  getAllOrders(callback) {
-    const sql = `
-      SELECT
-        o.id,
-        o.user_id,
-        o.total_amount,
-        o.payment_method,
-        o.payment_status,
-        o.order_status,
-        o.shipping_address,
-        o.cashfree_order_id,
-        o.cashfree_payment_id,
-        o.created_at,
+  getAllOrders(page, limit, search, status, callback) {
+    const offset = (page - 1) * limit;
 
-        u.name AS customer_name,
-        u.email AS customer_email,
-        u.phone AS customer_phone
+    let sql = `
+    SELECT
+      o.id,
+      o.user_id,
+      o.total_amount,
+      o.payment_method,
+      o.payment_status,
+      o.order_status,
+      o.shipping_address,
+      o.cashfree_order_id,
+      o.cashfree_payment_id,
+      o.created_at,
 
-      FROM orders o
+      u.name AS customer_name,
+      u.email AS customer_email,
+      u.phone AS customer_phone
 
-      LEFT JOIN users u
-        ON u.id = o.user_id
+    FROM orders o
 
-      ORDER BY o.created_at DESC
+    LEFT JOIN users u
+      ON u.id = o.user_id
+
+    WHERE 1 = 1
+  `;
+
+    const params = [];
+
+    // Search customer name, email, phone or order ID
+    if (search) {
+      sql += `
+      AND (
+        u.name LIKE ?
+        OR u.email LIKE ?
+        OR u.phone LIKE ?
+        OR o.cashfree_order_id LIKE ?
+        OR CAST(o.id AS CHAR) LIKE ?
+      )
     `;
+
+      const searchValue = `%${search}%`;
+
+      params.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+      );
+    }
+
+    // Filter by order status
+    if (status && status !== "all") {
+      sql += ` AND o.order_status = ?`;
+      params.push(status);
+    }
+
+    sql += `
+    ORDER BY o.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+
+    params.push(limit, offset);
+
+    db.query(sql, params, callback);
+  },
+
+  // =========================================================
+  // ADMIN - GET ORDER COUNT
+  // =========================================================
+
+  getOrdersCount(search, status, callback) {
+    let sql = `
+    SELECT COUNT(*) AS total
+
+    FROM orders o
+
+    LEFT JOIN users u
+      ON u.id = o.user_id
+
+    WHERE 1 = 1
+  `;
+
+    const params = [];
+
+    // Same search conditions as getAllOrders()
+    if (search) {
+      sql += `
+      AND (
+        u.name LIKE ?
+        OR u.email LIKE ?
+        OR u.phone LIKE ?
+        OR o.cashfree_order_id LIKE ?
+        OR CAST(o.id AS CHAR) LIKE ?
+      )
+    `;
+
+      const searchValue = `%${search}%`;
+
+      params.push(
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+        searchValue,
+      );
+    }
+
+    // Same status condition as getAllOrders()
+    if (status && status !== "all") {
+      sql += ` AND o.order_status = ?`;
+      params.push(status);
+    }
+
+    db.query(sql, params, callback);
+  },
+
+  // =========================================================
+  // ADMIN - GET ORDER STATUS COUNTS
+  // =========================================================
+
+  getOrderStatusCounts(callback) {
+    const sql = `
+    SELECT
+      COUNT(*) AS all_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'pending'
+          THEN 1 ELSE 0
+        END
+      ) AS pending_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'confirmed'
+          THEN 1 ELSE 0
+        END
+      ) AS confirmed_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'processing'
+          THEN 1 ELSE 0
+        END
+      ) AS processing_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'shipped'
+          THEN 1 ELSE 0
+        END
+      ) AS shipped_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'delivered'
+          THEN 1 ELSE 0
+        END
+      ) AS delivered_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'cancelled'
+          THEN 1 ELSE 0
+        END
+      ) AS cancelled_count,
+
+      SUM(
+        CASE
+          WHEN LOWER(order_status) = 'failed'
+          THEN 1 ELSE 0
+        END
+      ) AS failed_count
+
+    FROM orders
+  `;
 
     db.query(sql, callback);
   },
