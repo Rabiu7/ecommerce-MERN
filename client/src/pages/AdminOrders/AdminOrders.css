@@ -986,6 +986,58 @@
 }
 
 /* =========================================================
+   ORDER STATUS DROPDOWN
+========================================================= */
+
+.admin-order-status-select {
+  min-width: 120px;
+  padding: 7px 28px 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  appearance: auto;
+}
+
+.admin-order-status-select:focus {
+  border-color: #a27b3f;
+  box-shadow: 0 0 0 2px rgba(162, 123, 63, 0.1);
+}
+
+/* Status-specific text colors */
+
+.admin-order-status-select.pending {
+  color: #9a6700;
+}
+
+.admin-order-status-select.confirmed {
+  color: #2563eb;
+}
+
+.admin-order-status-select.processing {
+  color: #7c3aed;
+}
+
+.admin-order-status-select.shipped {
+  color: #0891b2;
+}
+
+.admin-order-status-select.delivered {
+  color: #15803d;
+}
+
+.admin-order-status-select.cancelled {
+  color: #dc2626;
+}
+
+.admin-order-status-select.failed {
+  color: #dc2626;
+}
+
+/* =========================================================
    ANIMATIONS
 ========================================================= */
 

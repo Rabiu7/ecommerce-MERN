@@ -930,6 +930,144 @@
 }
 
 /* =========================================================
+   ORDER PRODUCTS
+========================================================= */
+
+.order-products-card {
+  grid-column: 1 / -1;
+}
+
+.order-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.order-product-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.order-product-item:last-child {
+  border-bottom: none;
+}
+
+.order-product-image-wrapper {
+  width: 82px;
+  height: 82px;
+  min-width: 82px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f7f5f1;
+  border: 1px solid #eee;
+}
+
+.order-product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.order-product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #a27b3f;
+  font-size: 26px;
+}
+
+.order-product-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-product-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #292929;
+  margin-bottom: 8px;
+}
+
+.order-product-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: #777;
+  font-size: 13px;
+}
+
+.order-product-total {
+  min-width: 110px;
+  text-align: right;
+  font-size: 16px;
+  font-weight: 700;
+  color: #292929;
+}
+
+.order-products-empty {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #888;
+  text-align: center;
+}
+
+.order-products-empty svg {
+  font-size: 30px;
+  color: #a27b3f;
+}
+
+.order-products-empty strong {
+  color: #555;
+  font-size: 15px;
+}
+
+.order-products-empty span {
+  font-size: 13px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+  .order-product-item {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .order-product-image-wrapper {
+    width: 65px;
+    height: 65px;
+    min-width: 65px;
+  }
+
+  .order-product-name {
+    font-size: 14px;
+  }
+
+  .order-product-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .order-product-total {
+    min-width: auto;
+    font-size: 14px;
+  }
+}
+
+/* =========================================================
    RESPONSIVE
 ========================================================= */
 

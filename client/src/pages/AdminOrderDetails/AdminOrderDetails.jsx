@@ -13,6 +13,7 @@ import {
   FiShoppingBag,
   FiAlertCircle,
   FiRefreshCw,
+  FiPackage,
 } from "react-icons/fi";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -25,9 +26,9 @@ function AdminOrderDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* =========================================================
-     FORMAT DATE
-  ========================================================= */
+  // =========================================================
+  // FORMAT DATE
+  // =========================================================
 
   const formatDate = (date) => {
     if (!date) {
@@ -47,9 +48,9 @@ function AdminOrderDetails() {
     });
   };
 
-  /* =========================================================
-     FORMAT DATE + TIME
-  ========================================================= */
+  // =========================================================
+  // FORMAT DATE + TIME
+  // =========================================================
 
   const formatDateTime = (date) => {
     if (!date) {
@@ -71,9 +72,9 @@ function AdminOrderDetails() {
     });
   };
 
-  /* =========================================================
-     FORMAT AMOUNT
-  ========================================================= */
+  // =========================================================
+  // FORMAT AMOUNT
+  // =========================================================
 
   const formatAmount = (amount) => {
     return Number(amount || 0).toLocaleString("en-IN", {
@@ -82,9 +83,9 @@ function AdminOrderDetails() {
     });
   };
 
-  /* =========================================================
-     GET INITIALS
-  ========================================================= */
+  // =========================================================
+  // GET INITIALS
+  // =========================================================
 
   const getInitials = (name) => {
     if (!name) {
@@ -100,12 +101,36 @@ function AdminOrderDetails() {
       .toUpperCase();
   };
 
-  /* =========================================================
-     LOAD ORDER
-     
-     We use the existing /api/admin/orders endpoint.
-     No new backend API is required for this page.
-  ========================================================= */
+  // =========================================================
+  // PRODUCT IMAGE URL
+  // =========================================================
+
+  const getProductImage = (image) => {
+    if (!image) {
+      return null;
+    }
+
+    // If database already contains a complete URL
+    if (
+      image.startsWith("http://") ||
+      image.startsWith("https://") ||
+      image.startsWith("data:")
+    ) {
+      return image;
+    }
+
+    // If image is stored as /uploads/...
+    if (image.startsWith("/")) {
+      return `${VITE_API_URL}${image}`;
+    }
+
+    // Otherwise assume the backend serves uploads from /uploads/
+    return `${VITE_API_URL}/uploads/${image}`;
+  };
+
+  // =========================================================
+  // LOAD SINGLE ORDER
+  // =========================================================
 
   const fetchOrder = async () => {
     try {
@@ -114,31 +139,42 @@ function AdminOrderDetails() {
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${VITE_API_URL}/api/admin/orders`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      /*
+       * IMPORTANT:
+       * Use the single-order endpoint.
+       *
+       * This endpoint already loads:
+       * - order details
+       * - customer details
+       * - order items
+       * - product name
+       * - product image
+       */
+      const response = await fetch(
+        `${VITE_API_URL}/api/admin/orders/${orderId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch orders");
+        throw new Error("Failed to fetch order");
       }
 
       const data = await response.json();
 
-      const allOrders = Array.isArray(data.orders) ? data.orders : [];
-
-      const foundOrder = allOrders.find(
-        (item) => String(item.id) === String(orderId),
-      );
-
-      if (!foundOrder) {
+      if (!data.success || !data.order) {
         throw new Error("Order not found");
       }
 
-      setOrder(foundOrder);
+      console.log("Admin order details:", data.order);
+      console.log("Order products:", data.order.items);
+
+      setOrder(data.order);
     } catch (error) {
       console.error("Admin order details error:", error);
 
@@ -152,25 +188,25 @@ function AdminOrderDetails() {
     }
   };
 
-  /* =========================================================
-     INITIAL LOAD
-  ========================================================= */
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
   useEffect(() => {
     fetchOrder();
   }, [orderId]);
 
-  /* =========================================================
-     BACK
-  ========================================================= */
+  // =========================================================
+  // BACK
+  // =========================================================
 
   const goBack = () => {
     navigate("/admin/orders");
   };
 
-  /* =========================================================
-     LOADING
-  ========================================================= */
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
@@ -184,9 +220,9 @@ function AdminOrderDetails() {
     );
   }
 
-  /* =========================================================
-     ERROR
-  ========================================================= */
+  // =========================================================
+  // ERROR
+  // =========================================================
 
   if (error || !order) {
     return (
@@ -225,6 +261,8 @@ function AdminOrderDetails() {
     .replace(/\s+/g, "-");
 
   const paymentStatus = String(order.payment_status || "pending").toLowerCase();
+
+  const orderItems = Array.isArray(order.items) ? order.items : [];
 
   return (
     <div className="admin-order-details-page">
@@ -268,6 +306,7 @@ function AdminOrderDetails() {
         {/* ===================================================
             CUSTOMER
         =================================================== */}
+
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">
@@ -315,9 +354,11 @@ function AdminOrderDetails() {
             </div>
           </div>
         </div>
+
         {/* ===================================================
             PAYMENT
         =================================================== */}
+
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">
@@ -367,9 +408,11 @@ function AdminOrderDetails() {
             </div>
           </div>
         </div>
+
         {/* ===================================================
             SHIPPING / ADDRESS
         =================================================== */}
+
         <div className="order-detail-card shipping-card">
           <div className="order-card-header">
             <div className="order-card-icon shipping-icon">
@@ -378,6 +421,7 @@ function AdminOrderDetails() {
 
             <div>
               <h2>Delivery Address</h2>
+
               <p>Customer shipping information</p>
             </div>
           </div>
@@ -386,6 +430,7 @@ function AdminOrderDetails() {
           typeof order.shipping_address === "object" ? (
             <div className="shipping-address-content">
               {/* CUSTOMER */}
+
               <div className="shipping-customer">
                 <div className="shipping-customer-avatar">
                   {getInitials(
@@ -405,6 +450,7 @@ function AdminOrderDetails() {
               </div>
 
               {/* ADDRESS */}
+
               <div className="shipping-address-box">
                 <span className="shipping-address-label">
                   <FiMapPin />
@@ -426,6 +472,7 @@ function AdminOrderDetails() {
               </div>
 
               {/* CONTACT */}
+
               <div className="shipping-contact">
                 <div className="shipping-contact-item">
                   <span className="shipping-contact-icon">
@@ -468,8 +515,101 @@ function AdminOrderDetails() {
         </div>
 
         {/* ===================================================
+            PRODUCTS
+        =================================================== */}
+
+        <div className="order-details-card order-products-card">
+          <div className="order-details-card-header">
+            <div className="order-details-card-icon">
+              <FiPackage />
+            </div>
+
+            <div>
+              <h2>Products</h2>
+
+              <p>
+                {orderItems.length}{" "}
+                {orderItems.length === 1 ? "product" : "products"} in this order
+              </p>
+            </div>
+          </div>
+
+          {orderItems.length > 0 ? (
+            <div className="order-products-list">
+              {orderItems.map((item) => {
+                const quantity = Number(item.quantity || 0);
+                const price = Number(item.price || 0);
+                const itemTotal = quantity * price;
+
+                const imageUrl = getProductImage(item.image);
+
+                return (
+                  <div className="order-product-item" key={item.id}>
+                    {/* PRODUCT IMAGE */}
+
+                    <div className="order-product-image-wrapper">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={item.name || "Product"}
+                          className="order-product-image"
+                          onError={(event) => {
+                            event.currentTarget.style.display = "none";
+
+                            event.currentTarget.nextElementSibling.style.display =
+                              "flex";
+                          }}
+                        />
+                      ) : null}
+
+                      <div
+                        className="order-product-image-placeholder"
+                        style={{
+                          display: imageUrl ? "none" : "flex",
+                        }}
+                      >
+                        <FiPackage />
+                      </div>
+                    </div>
+
+                    {/* PRODUCT DETAILS */}
+
+                    <div className="order-product-info">
+                      <strong className="order-product-name">
+                        {item.name || "Product unavailable"}
+                      </strong>
+
+                      <div className="order-product-meta">
+                        <span>Quantity: {quantity}</span>
+
+                        <span>Price: ₹{formatAmount(price)}</span>
+                      </div>
+                    </div>
+
+                    {/* ITEM TOTAL */}
+
+                    <div className="order-product-total">
+                      ₹{formatAmount(itemTotal)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="order-products-empty">
+              <FiPackage />
+
+              <strong>No products found</strong>
+
+              <span>No products are associated with this order.</span>
+            </div>
+          )}
+        </div>
+
+        {/* ===================================================
             ORDER SUMMARY
         =================================================== */}
+
         <div className="order-details-card">
           <div className="order-details-card-header">
             <div className="order-details-card-icon">
@@ -487,14 +627,17 @@ function AdminOrderDetails() {
             <div>
               <span>Order ID</span>
 
-              <strong>#{order.id}</strong>
+              <strong>#{order.public_order_id}</strong>
             </div>
 
             <div>
               <span>Items</span>
 
               <strong>
-                {order.item_count ?? order.items_count ?? order.quantity ?? "-"}
+                {orderItems.reduce(
+                  (total, item) => total + Number(item.quantity || 0),
+                  0,
+                )}
               </strong>
             </div>
 
@@ -520,7 +663,10 @@ function AdminOrderDetails() {
                 <div>
                   <span>Discount</span>
 
-                  <strong>-₹{formatAmount(order.discount_amount)}</strong>
+                  <strong>
+                    -₹
+                    {formatAmount(order.discount_amount)}
+                  </strong>
                 </div>
               )}
 

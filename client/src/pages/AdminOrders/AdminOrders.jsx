@@ -296,6 +296,55 @@ function AdminOrders() {
   };
 
   // =========================================================
+  // UPDATE ORDER STATUS
+  // =========================================================
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${VITE_API_URL}/api/admin/orders/${orderId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_status: newStatus,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update order status");
+      }
+
+      // Update only the changed order in the current page
+      setOrders((previousOrders) =>
+        previousOrders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                order_status: newStatus,
+              }
+            : order,
+        ),
+      );
+
+      // Refresh counts also
+      fetchOrders(currentPage, searchTerm, statusFilter);
+    } catch (error) {
+      console.error("Update order status error:", error);
+
+      setError(error.message || "Failed to update order status.");
+    }
+  };
+
+  // =========================================================
   // LOADING
   // =========================================================
 
@@ -396,7 +445,7 @@ function AdminOrders() {
           className={`order-summary-card ${
             statusFilter === "processing" ? "active" : ""
           }`}
-          onClick={() => handleSummaryStatusChange("processing")}
+          onClick={() => handleSummaryStatusChange("Processing")}
         >
           <span>Processing</span>
 
@@ -410,7 +459,7 @@ function AdminOrders() {
           className={`order-summary-card ${
             statusFilter === "shipped" ? "active" : ""
           }`}
-          onClick={() => handleSummaryStatusChange("shipped")}
+          onClick={() => handleSummaryStatusChange("Shipped")}
         >
           <span>Shipped</span>
 
@@ -424,7 +473,7 @@ function AdminOrders() {
           className={`order-summary-card ${
             statusFilter === "delivered" ? "active" : ""
           }`}
-          onClick={() => handleSummaryStatusChange("delivered")}
+          onClick={() => handleSummaryStatusChange("Delivered")}
         >
           <span>Delivered</span>
 
@@ -438,7 +487,7 @@ function AdminOrders() {
           className={`order-summary-card ${
             statusFilter === "cancelled" ? "active" : ""
           }`}
-          onClick={() => handleSummaryStatusChange("cancelled")}
+          onClick={() => handleSummaryStatusChange("Cancelled")}
         >
           <span>Cancelled</span>
 
@@ -480,17 +529,17 @@ function AdminOrders() {
 
             <option value="pending">Pending</option>
 
-            <option value="confirmed">Confirmed</option>
+            <option value="Confirmed">Confirmed</option>
 
-            <option value="processing">Processing</option>
+            <option value="Processing">Processing</option>
 
-            <option value="shipped">Shipped</option>
+            <option value="Shipped">Shipped</option>
 
-            <option value="delivered">Delivered</option>
+            <option value="Delivered">Delivered</option>
 
-            <option value="cancelled">Cancelled</option>
+            <option value="Cancelled">Cancelled</option>
 
-            <option value="failed">Failed</option>
+            <option value="Failed">Failed</option>
           </select>
         </div>
 
@@ -617,17 +666,25 @@ function AdminOrders() {
                       {/* ORDER STATUS */}
 
                       <td>
-                        <span
-                          className={`admin-order-status ${String(
+                        <select
+                          className={`admin-order-status-select ${String(
                             order.order_status || "pending",
                           )
                             .toLowerCase()
                             .replace(/\s+/g, "-")}`}
+                          value={order.order_status || "pending"}
+                          onChange={(event) =>
+                            updateOrderStatus(order.id, event.target.value)
+                          }
                         >
-                          <span className="status-dot"></span>
-
-                          {order.order_status || "pending"}
-                        </span>
+                          <option value="pending">Pending</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Failed">Failed</option>
+                        </select>
                       </td>
 
                       {/* DATE */}
