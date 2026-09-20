@@ -99,6 +99,66 @@ function ProductDetails() {
   }, [product, publicId]);
 
   // =========================================================
+  // BREADCRUMB SEO
+  // =========================================================
+
+  useEffect(() => {
+    if (!product || !publicId) {
+      return;
+    }
+
+    const productUrl = `https://www.mashaallahcreations.in/products/${publicId}`;
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: "https://www.mashaallahcreations.in/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Products",
+          item: "https://www.mashaallahcreations.in/products",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: product.name,
+          item: productUrl,
+        },
+      ],
+    };
+
+    const existingSchema = document.getElementById("breadcrumb-schema");
+
+    if (existingSchema) {
+      existingSchema.remove();
+    }
+
+    const script = document.createElement("script");
+
+    script.id = "breadcrumb-schema";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(breadcrumbSchema);
+
+    document.head.appendChild(script);
+
+    return () => {
+      const schema = document.getElementById("breadcrumb-schema");
+
+      if (schema) {
+        schema.remove();
+      }
+    };
+  }, [product, publicId]);
+
+  // =========================================================
   // STOCK REMINDER STATES
   // =========================================================
 
