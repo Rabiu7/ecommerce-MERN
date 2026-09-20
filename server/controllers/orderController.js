@@ -114,11 +114,13 @@ function createLocalOrder(
 // GET COMPLETE ORDER
 // =========================================================
 
-const getCompletePublicOrder = (publicOrderId, userId, callback) => {
-  Order.getOrderByPublicId(publicOrderId, userId, (err, orders) => {
-    if (err) {
-      return callback(err);
-    }
+// =========================================================
+// GET COMPLETE ORDER BY INTERNAL ORDER ID
+// =========================================================
+
+const getCompleteOrder = (orderId, userId, callback) => {
+  Order.getOrderById(orderId, userId, (err, orders) => {
+    if (err) return callback(err);
 
     if (!orders || orders.length === 0) {
       return callback(null, null);
@@ -127,9 +129,31 @@ const getCompletePublicOrder = (publicOrderId, userId, callback) => {
     const order = orders[0];
 
     Order.getOrderItems(order.id, (itemErr, items) => {
-      if (itemErr) {
-        return callback(itemErr);
-      }
+      if (itemErr) return callback(itemErr);
+
+      order.items = items || [];
+
+      callback(null, order);
+    });
+  });
+};
+
+// =========================================================
+// GET COMPLETE ORDER BY PUBLIC ORDER ID
+// =========================================================
+
+const getCompletePublicOrder = (publicOrderId, userId, callback) => {
+  Order.getOrderByPublicId(publicOrderId, userId, (err, orders) => {
+    if (err) return callback(err);
+
+    if (!orders || orders.length === 0) {
+      return callback(null, null);
+    }
+
+    const order = orders[0];
+
+    Order.getOrderItems(order.id, (itemErr, items) => {
+      if (itemErr) return callback(itemErr);
 
       order.items = items || [];
 
