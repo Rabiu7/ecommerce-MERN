@@ -64,11 +64,8 @@ function ForgotPassword() {
         {/* BRAND */}
 
         <header className="forgot-password-brand">
-          <div className="forgot-password-logo">MAC</div>
-
-          <div className="forgot-password-brand-text">
-            <span>Masha Allah Creations</span>
-            <small>Customized gifts made with love.</small>
+          <div className="forgot-password-logo">
+            <img src="/logo.png" alt="Masha Allah Creations" />
           </div>
         </header>
 

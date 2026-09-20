@@ -90,11 +90,8 @@ function ResetPassword() {
         {/* BRAND */}
 
         <header className="reset-password-brand">
-          <div className="reset-password-logo">MAC</div>
-
-          <div className="reset-password-brand-text">
-            <span>Masha Allah Creations</span>
-            <small>Customized gifts made with love.</small>
+          <div className="reset-password-logo">
+            <img src="/logo.png" alt="Masha Allah Creations" />
           </div>
         </header>
 
