@@ -27,6 +27,59 @@ function ProductDetails() {
   const [relatedPagination, setRelatedPagination] = useState(null);
 
   // =========================================================
+  // PRODUCT SEO
+  // =========================================================
+
+  useEffect(() => {
+    if (!product || !publicId) {
+      return;
+    }
+
+    document.title = `${product.name} | Masha Allah Creations`;
+
+    const description =
+      product.description ||
+      `${product.name} - Customized gifts and beautiful handmade creations from Masha Allah Creations.`;
+
+    let metaDescription = document.querySelector('meta[name="description"]');
+
+    if (!metaDescription) {
+      metaDescription = document.createElement("meta");
+      metaDescription.name = "description";
+      document.head.appendChild(metaDescription);
+    }
+
+    metaDescription.setAttribute("content", description);
+
+    const canonicalUrl = `https://www.mashaallahcreations.in/products/${publicId}`;
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+
+    canonical.setAttribute("href", canonicalUrl);
+
+    return () => {
+      document.title = "Masha Allah Creations | Customized Gifts & Resin Art";
+
+      if (metaDescription) {
+        metaDescription.setAttribute(
+          "content",
+          "Masha Allah Creations offers customized gifts, resin art frames and beautiful handmade creations made with love.",
+        );
+      }
+
+      if (canonical) {
+        canonical.remove();
+      }
+    };
+  }, [product, publicId]);
+
+  // =========================================================
   // STOCK REMINDER STATES
   // =========================================================
 
