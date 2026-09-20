@@ -14,7 +14,7 @@ import ProductCard from "../../components/ProductCard/ProductCard";
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function ProductDetails() {
-  const { id } = useParams();
+  const { publicId } = useParams();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -41,7 +41,7 @@ function ProductDetails() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${VITE_API_URL}/api/products/${id}`);
+      const response = await fetch(`${VITE_API_URL}/api/products/${publicId}`);
 
       if (!response.ok) {
         throw new Error("Product not found");
@@ -61,7 +61,7 @@ function ProductDetails() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [publicId]);
 
   // =========================================================
   // FETCH RELATED PRODUCTS
@@ -70,7 +70,7 @@ function ProductDetails() {
   const fetchRelatedProducts = useCallback(async () => {
     try {
       const response = await fetch(
-        `${VITE_API_URL}/api/products/${id}/related?page=${relatedPage}&limit=4`,
+        `${VITE_API_URL}/api/products/${publicId}/related?page=${relatedPage}&limit=4`,
       );
 
       if (!response.ok) {
@@ -90,7 +90,7 @@ function ProductDetails() {
       setRelatedProducts([]);
       setRelatedPagination(null);
     }
-  }, [id, relatedPage]);
+  }, [publicId, relatedPage]);
 
   // =========================================================
   // LOAD PRODUCT
@@ -105,8 +105,10 @@ function ProductDetails() {
   // =========================================================
 
   useEffect(() => {
-    fetchRelatedProducts();
-  }, [fetchRelatedProducts]);
+    if (publicId) {
+      fetchRelatedProducts();
+    }
+  }, [fetchRelatedProducts, publicId]);
 
   // =========================================================
   // RESET RELATED PAGE WHEN PRODUCT CHANGES
@@ -114,7 +116,7 @@ function ProductDetails() {
 
   useEffect(() => {
     setRelatedPage(1);
-  }, [id]);
+  }, [publicId]);
 
   // =========================================================
   // CHECK WHETHER USER ALREADY SUBSCRIBED FOR STOCK REMINDER
@@ -509,9 +511,11 @@ function ProductDetails() {
           </div>
         </div>
       </section>
+
       {/* =======================================================
           RELATED PRODUCTS
       ======================================================= */}
+
       {relatedProducts.length > 0 && (
         <section className="related-products">
           <div className="related-products-container">
@@ -526,14 +530,15 @@ function ProductDetails() {
             </div>
 
             {/* =====================================================
-          RELATED PRODUCTS
-      ===================================================== */}
+                RELATED PRODUCTS
+            ===================================================== */}
 
             <div className="related-grid">
               {relatedProducts.map((item) => (
                 <ProductCard
                   key={item.id}
                   id={item.id}
+                  publicId={item.public_id}
                   image={item.image}
                   title={item.name}
                   category={item.category}
@@ -545,8 +550,8 @@ function ProductDetails() {
             </div>
 
             {/* =====================================================
-          PAGINATION
-      ===================================================== */}
+                PAGINATION
+            ===================================================== */}
 
             {relatedPagination && relatedPagination.totalPages > 1 && (
               <div className="related-pagination">

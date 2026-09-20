@@ -3,7 +3,13 @@ const Product = require("../models/Product");
 const db = require("../config/database");
 const transporter = require("../config/email");
 
+const crypto = require("crypto");
+
 const cloudinary = require("../config/cloudinary");
+
+const generatePublicId = () => {
+  return crypto.randomBytes(8).toString("base64url");
+};
 
 // =========================================================
 // GET ALL PRODUCTS
@@ -24,18 +30,34 @@ exports.getProducts = (req, res) => {
 // =========================================================
 
 exports.getProductById = (req, res) => {
-  const id = req.params.id;
+  const publicId = req.params.publicId;
 
-  Product.getById(id, (err, result) => {
+  console.log("=================================");
+  console.log("GET PRODUCT BY PUBLIC ID");
+  console.log("Requested ID:", publicId);
+  console.log("=================================");
+
+  Product.getByPublicId(publicId, (err, result) => {
     if (err) {
-      return res.status(500).json(err);
+      console.error("DATABASE ERROR:", err);
+
+      return res.status(500).json({
+        message: "Unable to load product.",
+        error: err.message,
+      });
     }
 
+    console.log("DATABASE RESULT:", result);
+
     if (result.length === 0) {
+      console.log("NO PRODUCT FOUND");
+
       return res.status(404).json({
         message: "Product not found",
       });
     }
+
+    console.log("PRODUCT FOUND:", result[0]);
 
     res.json(result[0]);
   });
@@ -74,6 +96,7 @@ exports.createProduct = async (req, res) => {
     // =====================================================
 
     const product = {
+      public_id: generatePublicId(),
       name,
       description,
       category_id,
@@ -100,6 +123,7 @@ exports.createProduct = async (req, res) => {
       res.status(201).json({
         message: "Product created successfully",
         id: dbResult.insertId,
+        public_id: product.public_id,
         image: imageUrl,
       });
     });
@@ -341,32 +365,6 @@ exports.getProductsPaginated = (req, res) => {
   });
 };
 
-exports.getRelatedProducts = (req, res) => {
-  const productId = req.params.id;
-
-  let limit = Number(req.query.limit) || 4;
-
-  if (limit < 1) {
-    limit = 4;
-  }
-
-  if (limit > 10) {
-    limit = 10;
-  }
-
-  Product.getRelated(productId, limit, (err, result) => {
-    if (err) {
-      console.error("Get related products error:", err);
-
-      return res.status(500).json({
-        message: "Unable to load related products",
-      });
-    }
-
-    res.json(result);
-  });
-};
-
 // =========================================================
 // DELETE PRODUCT
 // =========================================================
@@ -386,93 +384,39 @@ exports.deleteProduct = (req, res) => {
 };
 
 exports.getRelatedProducts = (req, res) => {
-  const productId = req.params.id;
+  const publicId = req.params.publicId;
 
-  let page = Number(req.query.page) || 1;
-  let limit = Number(req.query.limit) || 4;
-
-  // Validate page
-  if (page < 1) {
-    page = 1;
-  }
-
-  // Validate limit
-  if (limit < 1) {
-    limit = 4;
-  }
-
-  // Prevent very large requests
-  if (limit > 10) {
-    limit = 10;
-  }
-
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 4;
   const offset = (page - 1) * limit;
 
-  // =========================================================
-  // GET TOTAL RELATED PRODUCTS
-  // =========================================================
-
-  Product.getRelatedCount(productId, (countError, countResult) => {
-    if (countError) {
-      console.error("Get related product count error:", countError);
+  Product.getRelatedCount(publicId, (countErr, countResult) => {
+    if (countErr) {
+      console.error("Related count error:", countErr);
 
       return res.status(500).json({
-        message: "Unable to get related product count.",
+        message: "Unable to load related products.",
       });
     }
 
-    const totalProducts = Number(countResult[0].total);
+    const total = countResult[0].total;
 
-    const totalPages =
-      totalProducts === 0 ? 0 : Math.ceil(totalProducts / limit);
+    Product.getRelatedPaginated(publicId, limit, offset, (err, result) => {
+      if (err) {
+        console.error("Related products error:", err);
 
-    // =========================================================
-    // INVALID PAGE
-    // =========================================================
-
-    if (totalPages > 0 && page > totalPages) {
-      return res.status(404).json({
-        message: "Page not found.",
-      });
-    }
-
-    // =========================================================
-    // GET RELATED PRODUCTS FOR CURRENT PAGE
-    // =========================================================
-
-    Product.getRelatedPaginated(
-      productId,
-      limit,
-      offset,
-      (productsError, products) => {
-        if (productsError) {
-          console.error("Get related products error:", productsError);
-
-          return res.status(500).json({
-            message: "Unable to load related products.",
-          });
-        }
-
-        // =====================================================
-        // RESPONSE
-        // =====================================================
-
-        res.json({
-          products,
-
-          pagination: {
-            currentPage: page,
-            limit,
-            totalProducts,
-            totalPages,
-
-            hasNextPage: page < totalPages,
-
-            hasPreviousPage: page > 1,
-          },
+        return res.status(500).json({
+          message: "Unable to load related products.",
         });
-      },
-    );
+      }
+
+      res.json({
+        products: result,
+        total,
+        page,
+        limit,
+      });
+    });
   });
 };
 
@@ -515,14 +459,14 @@ exports.updateStock = (req, res) => {
       });
     }
 
+    const oldStock = Number(products[0].stock);
+    const productName = products[0].name;
+
     console.log("Stock update:", {
       productId,
       oldStock,
       newStock,
     });
-
-    const oldStock = Number(products[0].stock);
-    const productName = products[0].name;
 
     Product.updateStock(productId, newStock, (updateError) => {
       if (updateError) {

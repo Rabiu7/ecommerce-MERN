@@ -272,6 +272,7 @@ function Products() {
                   <ProductCard
                     key={product.id}
                     id={product.id}
+                    publicId={product.public_id}
                     image={product.image}
                     title={product.name}
                     category={product.category}

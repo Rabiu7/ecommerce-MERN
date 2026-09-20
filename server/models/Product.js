@@ -9,6 +9,7 @@ const Product = {
     const sql = `
       SELECT
         p.id,
+        p.public_id,
         p.name,
         p.description,
         p.price,
@@ -33,22 +34,23 @@ const Product = {
 
   getPaginated: (limit, offset, search, category, sort, callback) => {
     let sql = `
-    SELECT
-      p.id,
-      p.name,
-      p.description,
-      p.price,
-      p.discount,
-      p.stock,
-      p.image,
-      p.rating,
-      p.category_id AS category_id,
-      c.name AS category
-    FROM products p
-    LEFT JOIN categories c
-      ON p.category_id = c.id
-    WHERE 1 = 1
-  `;
+      SELECT
+        p.id,
+        p.public_id,
+        p.name,
+        p.description,
+        p.price,
+        p.discount,
+        p.stock,
+        p.image,
+        p.rating,
+        p.category_id AS category_id,
+        c.name AS category
+      FROM products p
+      LEFT JOIN categories c
+        ON p.category_id = c.id
+      WHERE 1 = 1
+    `;
 
     const params = [];
 
@@ -79,14 +81,18 @@ const Product = {
     db.query(sql, params, callback);
   },
 
+  // =========================================================
+  // GET PAGINATED PRODUCT COUNT
+  // =========================================================
+
   getPaginatedCount: (search, category, callback) => {
     let sql = `
-    SELECT COUNT(*) AS total
-    FROM products p
-    LEFT JOIN categories c
-      ON p.category_id = c.id
-    WHERE 1 = 1
-  `;
+      SELECT COUNT(*) AS total
+      FROM products p
+      LEFT JOIN categories c
+        ON p.category_id = c.id
+      WHERE 1 = 1
+    `;
 
     const params = [];
 
@@ -103,31 +109,87 @@ const Product = {
     db.query(sql, params, callback);
   },
 
-  getRelated: (productId, limit, callback) => {
-    const sql = `
-    SELECT
-      p2.id,
-      p2.name,
-      p2.description,
-      p2.price,
-      p2.discount,
-      p2.stock,
-      p2.image,
-      p2.rating,
-      p2.category_id AS category_id,
-      c.name AS category
-    FROM products p1
-    INNER JOIN products p2
-      ON p2.category_id = p1.category_id
-      AND p2.id != p1.id
-    LEFT JOIN categories c
-      ON p2.category_id = c.id
-    WHERE p1.id = ?
-    ORDER BY p2.created_at DESC
-    LIMIT ?
-  `;
+  // =========================================================
+  // GET SINGLE PRODUCT BY PUBLIC ID
+  // =========================================================
 
-    db.query(sql, [productId, limit], callback);
+  getByPublicId: (publicId, callback) => {
+    const sql = `
+      SELECT
+        p.id,
+        p.public_id,
+        p.name,
+        p.description,
+        p.price,
+        p.discount,
+        p.stock,
+        p.image,
+        p.rating,
+        p.category_id AS category_id,
+        c.name AS category
+      FROM products p
+      LEFT JOIN categories c
+        ON p.category_id = c.id
+      WHERE p.public_id = ?
+      LIMIT 1
+    `;
+
+    db.query(sql, [publicId], callback);
+  },
+
+  // =========================================================
+  // GET RELATED PRODUCT COUNT BY PUBLIC ID
+  // =========================================================
+
+  getRelatedCount: (publicId, callback) => {
+    const sql = `
+      SELECT COUNT(*) AS total
+      FROM products
+      WHERE category_id = (
+        SELECT category_id
+        FROM products
+        WHERE public_id = ?
+        LIMIT 1
+      )
+      AND public_id != ?
+    `;
+
+    db.query(sql, [publicId, publicId], callback);
+  },
+
+  // =========================================================
+  // GET RELATED PRODUCTS PAGINATED BY PUBLIC ID
+  // =========================================================
+
+  getRelatedPaginated: (publicId, limit, offset, callback) => {
+    const sql = `
+      SELECT
+        p.id,
+        p.public_id,
+        p.name,
+        p.description,
+        p.price,
+        p.discount,
+        p.stock,
+        p.image,
+        p.rating,
+        p.category_id AS category_id,
+        c.name AS category
+      FROM products p
+      LEFT JOIN categories c
+        ON p.category_id = c.id
+      WHERE p.category_id = (
+        SELECT category_id
+        FROM products
+        WHERE public_id = ?
+        LIMIT 1
+      )
+      AND p.public_id != ?
+      ORDER BY p.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    db.query(sql, [publicId, publicId, limit, offset], callback);
   },
 
   // =========================================================
@@ -143,76 +205,6 @@ const Product = {
     db.query(sql, callback);
   },
 
-  getRelatedCount: (productId, callback) => {
-    const sql = `
-    SELECT COUNT(*) AS total
-    FROM products
-    WHERE category_id = (
-      SELECT category_id
-      FROM products
-      WHERE id = ?
-    )
-    AND id != ?
-  `;
-
-    db.query(sql, [productId, productId], callback);
-  },
-
-  getRelatedPaginated: (productId, limit, offset, callback) => {
-    const sql = `
-    SELECT
-      p.id,
-      p.name,
-      p.description,
-      p.price,
-      p.discount,
-      p.stock,
-      p.image,
-      p.rating,
-      p.category_id AS category_id,
-      c.name AS category
-    FROM products p
-    LEFT JOIN categories c
-      ON p.category_id = c.id
-    WHERE p.category_id = (
-      SELECT category_id
-      FROM products
-      WHERE id = ?
-    )
-    AND p.id != ?
-    ORDER BY p.created_at DESC
-    LIMIT ? OFFSET ?
-  `;
-
-    db.query(sql, [productId, productId, limit, offset], callback);
-  },
-
-  // =========================================================
-  // GET SINGLE PRODUCT
-  // =========================================================
-
-  getById: (id, callback) => {
-    const sql = `
-      SELECT
-        p.id,
-        p.name,
-        p.description,
-        p.price,
-        p.discount,
-        p.stock,
-        p.image,
-        p.rating,
-        p.category_id AS category_id,
-        c.name AS category
-      FROM products p
-      LEFT JOIN categories c
-        ON p.category_id = c.id
-      WHERE p.id = ?
-    `;
-
-    db.query(sql, [id], callback);
-  },
-
   // =========================================================
   // CREATE PRODUCT
   // =========================================================
@@ -221,6 +213,7 @@ const Product = {
     const sql = `
       INSERT INTO products
       (
+        public_id,
         category_id,
         name,
         description,
@@ -229,12 +222,13 @@ const Product = {
         stock,
         image
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.query(
       sql,
       [
+        product.public_id,
         product.category_id,
         product.name,
         product.description,
@@ -253,17 +247,17 @@ const Product = {
 
   update: (id, product, callback) => {
     const sql = `
-    UPDATE products
-    SET
-      name = ?,
-      description = ?,
-      category_id = ?,
-      price = ?,
-      discount = ?,
-      stock = ?,
-      image = ?
-    WHERE id = ?
-  `;
+      UPDATE products
+      SET
+        name = ?,
+        description = ?,
+        category_id = ?,
+        price = ?,
+        discount = ?,
+        stock = ?,
+        image = ?
+      WHERE id = ?
+    `;
 
     db.query(
       sql,
@@ -279,6 +273,20 @@ const Product = {
       ],
       callback,
     );
+  },
+
+  // =========================================================
+  // UPDATE PRODUCT STOCK
+  // =========================================================
+
+  updateStock: (id, stock, callback) => {
+    const sql = `
+      UPDATE products
+      SET stock = ?
+      WHERE id = ?
+    `;
+
+    db.query(sql, [stock, id], callback);
   },
 
   // =========================================================

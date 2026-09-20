@@ -11,7 +11,16 @@ import { toast } from "react-toastify";
 
 const VITE_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-function ProductCard({ id, image, title, category, price, rating, stock }) {
+function ProductCard({
+  id,
+  publicId,
+  image,
+  title,
+  category,
+  price,
+  rating,
+  stock,
+}) {
   const { user, isAuthenticated, fetchCartCount } = useAuth();
   const navigate = useNavigate();
 
@@ -222,6 +231,9 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
 
   const productRating = Number(rating || 0);
 
+  /*
+   * STOCK REMINDER
+   */
   const handleReminder = async () => {
     if (!isAuthenticated) {
       toast.info("Please login to get notified.");
@@ -301,7 +313,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
     <article className="product-card">
       {/* IMAGE */}
       <div className="product-card-image">
-        <Link to={`/products/${id}`}>
+        <Link to={`/products/${publicId}`}>
           <img src={image} alt={title} loading="lazy" />
         </Link>
 
@@ -328,7 +340,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
         </div>
 
         {/* TITLE */}
-        <Link to={`/products/${id}`} className="product-card-title">
+        <Link to={`/products/${publicId}`} className="product-card-title">
           {title}
         </Link>
 
@@ -339,7 +351,6 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
           <span>{productRating > 0 ? productRating.toFixed(1) : "New"}</span>
         </div>
 
-        {/* PRICE + CART */}
         {/* PRICE + CART */}
         <div className="product-card-footer">
           <div className="product-card-price">
@@ -374,7 +385,7 @@ function ProductCard({ id, image, title, category, price, rating, stock }) {
         </div>
 
         {/* DETAILS */}
-        <Link to={`/products/${id}`} className="product-card-details">
+        <Link to={`/products/${publicId}`} className="product-card-details">
           View Details
         </Link>
       </div>
