@@ -39,6 +39,7 @@ const adminOrderRoutes = require("./routes/adminOrderRoutes");
 const adminCustomerRoutes = require("./routes/adminCustomerRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const stockReminderRoutes = require("./routes/stockReminderRoutes");
+const seoRoutes = require("./routes/seoRoutes");
 
 // Auth API
 app.use("/api/auth", authRoutes);
@@ -78,6 +79,8 @@ app.use("/api/admin/customers", adminCustomerRoutes);
 
 // Stock Reminder API
 app.use("/api/stock-reminders", stockReminderRoutes);
+
+app.use("/", seoRoutes);
 
 // =========================================================
 // TEST ROUTE
