@@ -35,46 +35,65 @@ function ProductDetails() {
       return;
     }
 
-    document.title = `${product.name} | Masha Allah Creations`;
+    const productUrl = `https://www.mashaallahcreations.in/products/${publicId}`;
 
-    const description =
-      product.description ||
-      `${product.name} - Customized gifts and beautiful handmade creations from Masha Allah Creations.`;
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
 
-    let metaDescription = document.querySelector('meta[name="description"]');
+      name: product.name,
 
-    if (!metaDescription) {
-      metaDescription = document.createElement("meta");
-      metaDescription.name = "description";
-      document.head.appendChild(metaDescription);
+      description: product.description || "",
+
+      image: product.image ? [product.image] : [],
+
+      url: productUrl,
+
+      brand: {
+        "@type": "Brand",
+        name: "Masha Allah Creations",
+      },
+
+      offers: {
+        "@type": "Offer",
+
+        url: productUrl,
+
+        priceCurrency: "INR",
+
+        price: Number(product.price).toFixed(2),
+
+        availability:
+          Number(product.stock) > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+
+        seller: {
+          "@type": "Organization",
+          name: "Masha Allah Creations",
+        },
+      },
+    };
+
+    const existingSchema = document.getElementById("product-schema");
+
+    if (existingSchema) {
+      existingSchema.remove();
     }
 
-    metaDescription.setAttribute("content", description);
+    const script = document.createElement("script");
 
-    const canonicalUrl = `https://www.mashaallahcreations.in/products/${publicId}`;
+    script.id = "product-schema";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(productSchema);
 
-    let canonical = document.querySelector('link[rel="canonical"]');
-
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.rel = "canonical";
-      document.head.appendChild(canonical);
-    }
-
-    canonical.setAttribute("href", canonicalUrl);
+    document.head.appendChild(script);
 
     return () => {
-      document.title = "Masha Allah Creations | Customized Gifts & Resin Art";
+      const schema = document.getElementById("product-schema");
 
-      if (metaDescription) {
-        metaDescription.setAttribute(
-          "content",
-          "Masha Allah Creations offers customized gifts, resin art frames and beautiful handmade creations made with love.",
-        );
-      }
-
-      if (canonical) {
-        canonical.remove();
+      if (schema) {
+        schema.remove();
       }
     };
   }, [product, publicId]);
