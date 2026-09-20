@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /orders
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://www.mashaallahcreations.in/sitemap.xml
