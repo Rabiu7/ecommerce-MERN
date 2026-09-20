@@ -124,7 +124,7 @@ function AdminLayout() {
           <div className="admin-header-title">
             <h2>Admin Panel</h2>
 
-            <span>Manage your HomeNeeds store</span>
+            <span>Manage your Masha Allah Creations</span>
           </div>
 
           <div className="admin-header-user">

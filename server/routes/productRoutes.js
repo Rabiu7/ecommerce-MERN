@@ -25,7 +25,16 @@ router.get("/:publicId", getProductById);
 
 router.post("/", upload.single("image"), createProduct);
 
-router.put("/:id", upload.single("image"), updateProduct);
+router.put(
+  "/:id",
+  (req, res, next) => {
+    console.log("🔥 PUT /api/products/:id ROUTE HIT");
+    console.log("Product ID:", req.params.id);
+    next();
+  },
+  upload.single("image"),
+  updateProduct,
+);
 
 router.put("/:id/stock", updateStock);
 

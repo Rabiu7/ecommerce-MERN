@@ -90,7 +90,7 @@ function AdminLogin() {
 
             <h2>Welcome Back</h2>
 
-            <p>Sign in to manage your HomeNeeds store.</p>
+            <p>Sign in to manage your Masha Allah Creations.</p>
           </div>
 
           <form className="admin-login-form" onSubmit={handleSubmit}>

@@ -218,6 +218,13 @@ exports.updateProduct = async (req, res) => {
       const oldStock = Number(products[0].stock);
       const oldImage = products[0].image;
 
+      console.log("=================================");
+      console.log("UPDATE PRODUCT");
+      console.log("Product ID:", productId);
+      console.log("Old Stock:", oldStock);
+      console.log("New Stock:", newStock);
+      console.log("=================================");
+
       // =====================================================
       // IMAGE
       // =====================================================
@@ -261,7 +268,18 @@ exports.updateProduct = async (req, res) => {
         // ===================================================
 
         if (oldStock <= 0 && newStock > 0) {
+          console.log("=================================");
+          console.log("PRODUCT RESTOCKED");
+          console.log("Product ID:", productId);
+          console.log("Product Name:", product.name);
+          console.log("Old Stock:", oldStock);
+          console.log("New Stock:", newStock);
+          console.log("Calling sendStockReminderEmails...");
+          console.log("=================================");
+
           sendStockReminderEmails(productId, product.name);
+        } else {
+          console.log("Stock reminder NOT triggered.");
         }
 
         return res.status(200).json({
@@ -425,6 +443,9 @@ exports.getRelatedProducts = (req, res) => {
 // =========================================================
 
 exports.updateStock = (req, res) => {
+  console.log("🔥 UPDATE STOCK API CALLED");
+  console.log("Product ID:", req.params.id);
+  console.log("Request body:", req.body);
   const productId = req.params.id;
   const newStock = Number(req.body.stock);
 
@@ -494,7 +515,7 @@ exports.updateStock = (req, res) => {
 // SEND STOCK REMINDER EMAILS
 // =========================================================
 
-const sendStockReminderEmails = (productId, productName) => {
+const sendStockReminderEmails = async (productId, productName) => {
   const sql = `
     SELECT
       sr.id AS reminder_id,
@@ -518,10 +539,14 @@ const sendStockReminderEmails = (productId, productName) => {
       return;
     }
 
-    for (const reminder of reminders) {
-      console.log("Sending stock reminder to:", reminder.email);
+    console.log(
+      `Found ${reminders.length} pending stock reminder(s) for product ${productId}`,
+    );
 
+    for (const reminder of reminders) {
       try {
+        console.log(`Sending stock reminder to: ${reminder.email}`);
+
         await transporter.sendMail({
           from: `"Masha Allah Creations" <${process.env.EMAIL_USER}>`,
           to: reminder.email,
@@ -533,9 +558,13 @@ const sendStockReminderEmails = (productId, productName) => {
               margin: 0 auto;
               padding: 30px;
               color: #333;
+              line-height: 1.6;
             ">
 
-              <h2 style="margin-bottom: 20px;">
+              <h2 style="
+                color: #a27b3f;
+                margin-bottom: 20px;
+              ">
                 Good news, ${reminder.name}! 🎉
               </h2>
 
@@ -544,16 +573,34 @@ const sendStockReminderEmails = (productId, productName) => {
                 <strong>back in stock</strong>.
               </p>
 
-              <h3>
+              <h3 style="margin-top: 25px;">
                 ${productName}
               </h3>
 
               <p>
-                You can now visit Masha Allah Creations
+                You can now visit
+                <strong>Masha Allah Creations</strong>
                 and place your order.
               </p>
 
-              <p style="margin-top: 30px;">
+              <div style="margin: 30px 0;">
+                <a
+                  href="${process.env.FRONTEND_URL}"
+                  style="
+                    display: inline-block;
+                    padding: 12px 24px;
+                    background: #a27b3f;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: bold;
+                  "
+                >
+                  Shop Now
+                </a>
+              </div>
+
+              <p>
                 Thank you for choosing
                 <strong>Masha Allah Creations</strong>.
               </p>
@@ -562,7 +609,9 @@ const sendStockReminderEmails = (productId, productName) => {
           `,
         });
 
-        console.log("Stock reminder sent to:", reminder.email);
+        console.log(
+          `Stock reminder email sent successfully to: ${reminder.email}`,
+        );
 
         const updateReminderSql = `
           UPDATE stock_reminders
@@ -572,13 +621,21 @@ const sendStockReminderEmails = (productId, productName) => {
           WHERE id = ?
         `;
 
-        db.query(updateReminderSql, [reminder.reminder_id], (updateError) => {
-          if (updateError) {
-            console.error("Update reminder notification error:", updateError);
-          }
-        });
+        db.query(
+          updateReminderSql,
+          [reminder.reminder_id],
+          (updateError, updateResult) => {
+            if (updateError) {
+              console.error(
+                `Failed to update reminder ${reminder.reminder_id}:`,
+                updateError,
+              );
+              return;
+            }
 
-        console.log(`Stock reminder email sent to ${reminder.email}`);
+            console.log(`Reminder ${reminder.reminder_id} marked as notified.`);
+          },
+        );
       } catch (emailError) {
         console.error(
           `Failed to send stock reminder to ${reminder.email}:`,

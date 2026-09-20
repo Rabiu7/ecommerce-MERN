@@ -110,11 +110,13 @@ function Register() {
         {/* HEADER */}
 
         <header className="register-header">
-          <div className="register-logo">HN</div>
+          <div className="register-logo">
+            <img src="/logo.png" alt="Masha Allah Creations" />
+          </div>
 
           <div className="register-brand">
-            <span>HomeNeeds</span>
-            <small>Everything your home needs.</small>
+            <span>Masha Allah Creations</span>
+            <small>Beautiful creations, made with love.</small>
           </div>
         </header>
 
@@ -339,7 +341,7 @@ function Register() {
         </form>
 
         <footer className="register-footer">
-          <span>© HomeNeeds Store</span>
+          <span>© Masha Allah Creations</span>
           <span>Simple. Useful. Beautiful.</span>
         </footer>
       </div>

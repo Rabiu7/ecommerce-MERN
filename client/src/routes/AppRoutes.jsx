@@ -20,6 +20,8 @@ import Profile from "../pages/Profile/Profile";
 import EditProfile from "../pages/EditProfile/EditProfile";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
+import ResetPassword from "../pages/ResetPassword/ResetPassword";
+import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
 import Payment from "../pages/Payment/Payment";
 import OrderSuccess from "../pages/OrderSuccess/OrderSuccess";
 import OrderDetails from "../pages/OrderDetails/OrderDetails";
@@ -52,6 +54,8 @@ function AppRoutes() {
         <Route path="/products/:publicId" element={<ProductDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/wishlist" element={<Wishlist />} />
         {/* Protected Customer Routes */}
         <Route

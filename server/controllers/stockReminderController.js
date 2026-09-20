@@ -62,27 +62,58 @@ exports.addReminder = (req, res) => {
       }
 
       if (existing.length > 0) {
-        return res.status(200).json({
-          message: "You are already subscribed for this product.",
+        const existingReminder = existing[0];
+
+        // Already waiting for this product
+        if (Number(existingReminder.notified) === 0) {
+          return res.status(200).json({
+            message: "You are already subscribed for this product.",
+          });
+        }
+
+        // Previous notification was already sent.
+        // Reset the same reminder for the next restock.
+        const resetSql = `
+    UPDATE stock_reminders
+    SET
+      notified = 0,
+      notified_at = NULL,
+      created_at = NOW()
+    WHERE id = ?
+  `;
+
+        return db.query(resetSql, [existingReminder.id], (resetError) => {
+          if (resetError) {
+            console.error("Reset stock reminder error:", resetError);
+
+            return res.status(500).json({
+              message: "Failed to set stock reminder.",
+            });
+          }
+
+          return res.status(200).json({
+            message: "We'll remind you when this product is back in stock.",
+          });
         });
       }
 
+      // No previous reminder exists → create one
       const insertSql = `
-          INSERT INTO stock_reminders
-          (
-            user_id,
-            product_id,
-            notified
-          )
-          VALUES (?, ?, 0)
-        `;
+  INSERT INTO stock_reminders
+  (
+    user_id,
+    product_id,
+    notified
+  )
+  VALUES (?, ?, 0)
+`;
 
       db.query(insertSql, [user_id, product_id], (insertError) => {
         if (insertError) {
-          console.error("Reminder insert error:", insertError);
+          console.error("Add stock reminder error:", insertError);
 
           return res.status(500).json({
-            message: "Unable to set stock reminder.",
+            message: "Failed to set stock reminder.",
           });
         }
 
@@ -121,7 +152,7 @@ exports.checkReminder = (req, res) => {
     }
 
     res.json({
-      subscribed: result.length > 0,
+      subscribed: result.length > 0 && Number(result[0].notified) === 0,
       notified: result.length > 0 ? Number(result[0].notified) === 1 : false,
     });
   });

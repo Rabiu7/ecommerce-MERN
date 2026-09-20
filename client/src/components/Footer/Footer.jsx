@@ -126,7 +126,7 @@ function Footer() {
       {/* COPYRIGHT */}
       <div className="footer-bottom">
         <p>
-          © 2026 <strong>HomeNeeds Store</strong>. All Rights Reserved.
+          © 2026 <strong>Masha Allah Creations</strong>. All Rights Reserved.
         </p>
       </div>
     </footer>

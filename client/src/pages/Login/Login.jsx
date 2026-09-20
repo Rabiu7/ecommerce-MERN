@@ -73,11 +73,8 @@ function Login() {
         {/* BRAND */}
 
         <header className="login-brand">
-          <div className="login-logo">HN</div>
-
-          <div className="login-brand-text">
-            <span>HomeNeeds</span>
-            <small>Everything your home needs.</small>
+          <div className="login-logo">
+            <img src="/logo.png" alt="Masha Allah Creations" />
           </div>
         </header>
 
@@ -88,7 +85,9 @@ function Login() {
 
           <h1>Sign in to your account</h1>
 
-          <p>Continue shopping and manage your HomeNeeds account.</p>
+          <p>
+            Continue shopping and manage your Masha Allah Creations account.
+          </p>
         </div>
 
         {/* LOGIN CARD */}
@@ -208,7 +207,7 @@ function Login() {
           {/* REGISTER */}
 
           <div className="new-account">
-            <p>Don't have a HomeNeeds account?</p>
+            <p>Don't have an account?</p>
 
             <Link to="/register">
               Create Account
@@ -230,7 +229,7 @@ function Login() {
           </div>
         </div>
 
-        <div className="copyright">© HomeNeeds Store</div>
+        <div className="copyright">© Masha Allah Creations</div>
       </div>
     </main>
   );

@@ -347,7 +347,7 @@ function Admin() {
         {/* FOOTER */}
 
         <footer className="dashboard-footer">
-          <span>HomeNeeds Store</span>
+          <span>Masha Allah Creations</span>
           <span>Admin Dashboard</span>
         </footer>
       </div>
