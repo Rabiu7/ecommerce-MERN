@@ -13,6 +13,8 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
+import { GoogleLogin } from "@react-oauth/google";
+
 import { useAuth } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
 
@@ -39,6 +41,10 @@ function Login() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+
+  // =========================================================
+  // EMAIL / PASSWORD LOGIN
+  // =========================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,10 +73,68 @@ function Login() {
     }
   };
 
+  // =========================================================
+  // GOOGLE LOGIN
+  // =========================================================
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      if (!credentialResponse?.credential) {
+        throw new Error("Google sign in failed.");
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/google`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Google sign in failed.");
+      }
+
+      login(data.user, data.token);
+
+      if (data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+
+      setError(
+        err.message || "Unable to sign in with Google. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google sign in failed. Please try again.");
+  };
+
   return (
     <main className="login-page">
       <div className="login-container">
-        {/* BRAND */}
+        {/* =====================================================
+            BRAND
+        ====================================================== */}
 
         <header className="login-brand">
           <div className="login-logo">
@@ -78,7 +142,9 @@ function Login() {
           </div>
         </header>
 
-        {/* INTRO */}
+        {/* =====================================================
+            INTRO
+        ====================================================== */}
 
         <div className="login-intro">
           <span className="login-label">WELCOME BACK</span>
@@ -90,10 +156,14 @@ function Login() {
           </p>
         </div>
 
-        {/* LOGIN CARD */}
+        {/* =====================================================
+            LOGIN CARD
+        ====================================================== */}
 
         <div className="login-card">
-          {/* ERROR */}
+          {/* =================================================
+              ERROR
+          ================================================== */}
 
           {error && (
             <div className="login-error">
@@ -103,10 +173,15 @@ function Login() {
 
               <div>
                 <strong>Unable to sign in</strong>
+
                 <span>{error}</span>
               </div>
             </div>
           )}
+
+          {/* =================================================
+              EMAIL / PASSWORD FORM
+          ================================================== */}
 
           <form className="login-form" onSubmit={handleSubmit}>
             {/* EMAIL */}
@@ -196,15 +271,37 @@ function Login() {
             </button>
           </form>
 
-          {/* DIVIDER */}
+          {/* =================================================
+              DIVIDER
+          ================================================== */}
 
           <div className="login-divider">
             <span></span>
+
             <strong>OR</strong>
+
             <span></span>
           </div>
 
-          {/* REGISTER */}
+          {/* =================================================
+              GOOGLE LOGIN
+          ================================================== */}
+
+          <div className="google-login-wrapper">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              text="continue_with"
+              shape="rectangular"
+              size="large"
+              width="100%"
+              theme="outline"
+            />
+          </div>
+
+          {/* =================================================
+              REGISTER
+          ================================================== */}
 
           <div className="new-account">
             <p>Don't have an account?</p>
@@ -216,7 +313,9 @@ function Login() {
           </div>
         </div>
 
-        {/* SECURITY NOTE */}
+        {/* =====================================================
+            SECURITY NOTE
+        ====================================================== */}
 
         <div className="login-footer">
           <div className="secure-badge">
@@ -225,9 +324,14 @@ function Login() {
 
           <div>
             <strong>Secure shopping experience</strong>
+
             <span>Your account information is protected.</span>
           </div>
         </div>
+
+        {/* =====================================================
+            COPYRIGHT
+        ====================================================== */}
 
         <div className="copyright">© Masha Allah Creations</div>
       </div>

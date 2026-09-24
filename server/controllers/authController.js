@@ -2,6 +2,10 @@ const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const User = require("../models/User");
 
 const crypto = require("crypto");
@@ -437,4 +441,160 @@ exports.login = (req, res) => {
       });
     },
   );
+};
+
+// GOOGLE LOGIN
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        message: "Google credential is required.",
+      });
+    }
+
+    // ---------------------------------------------------------
+    // VERIFY GOOGLE TOKEN
+    // ---------------------------------------------------------
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res.status(401).json({
+        message: "Invalid Google credential.",
+      });
+    }
+
+    const googleEmail = payload.email;
+    const googleName = payload.name || "Google User";
+
+    // Only allow verified Google email addresses
+    if (!payload.email_verified) {
+      return res.status(401).json({
+        message: "Google email address is not verified.",
+      });
+    }
+
+    // ---------------------------------------------------------
+    // FIND EXISTING USER
+    // ---------------------------------------------------------
+
+    User.findByEmail(
+      googleEmail,
+      async (err, result) => {
+        if (err) {
+          console.error("Google login database error:", err);
+
+          return res.status(500).json({
+            message: "Unable to sign in with Google.",
+          });
+        }
+
+        // -----------------------------------------------------
+        // EXISTING USER
+        // -----------------------------------------------------
+
+        if (result.length > 0) {
+          const user = result[0];
+
+          const token = jwt.sign(
+            {
+              id: user.id,
+              role: user.role,
+            },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "7d",
+            },
+          );
+
+          return res.json({
+            message: "Google login successful",
+
+            token,
+
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+            },
+          });
+        }
+
+        // -----------------------------------------------------
+        // NEW USER
+        // -----------------------------------------------------
+
+        // Generate an internal password because
+        // users.password is NOT NULL.
+        const randomPassword = crypto.randomBytes(32).toString("hex");
+
+        const hashedPassword = await bcrypt.hash(
+          randomPassword,
+          10,
+        );
+
+        User.create(
+          {
+            name: googleName,
+            email: googleEmail,
+            phone: null,
+            password: hashedPassword,
+          },
+          (createErr, createResult) => {
+            if (createErr) {
+              console.error(
+                "Google user creation error:",
+                createErr,
+              );
+
+              return res.status(500).json({
+                message: "Unable to create Google account.",
+              });
+            }
+
+            const userId = createResult.insertId;
+
+            const token = jwt.sign(
+              {
+                id: userId,
+                role: "customer",
+              },
+              process.env.JWT_SECRET,
+              {
+                expiresIn: "7d",
+              },
+            );
+
+            return res.json({
+              message: "Google account created successfully",
+
+              token,
+
+              user: {
+                id: userId,
+                name: googleName,
+                email: googleEmail,
+                role: "customer",
+              },
+            });
+          },
+        );
+      },
+    );
+  } catch (error) {
+    console.error("Google login error:", error);
+
+    return res.status(401).json({
+      message: "Unable to sign in with Google.",
+    });
+  }
 };

@@ -526,3 +526,61 @@
     padding: 24px 17px;
   }
 }
+
+/* =========================================================
+   GOOGLE LOGIN
+========================================================= */
+
+.google-login-wrapper {
+  width: 100%;
+  margin-top: 22px;
+  margin-bottom: 28px;
+
+  display: flex;
+  justify-content: center;
+}
+
+.google-login-wrapper > div {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.google-login-wrapper iframe {
+  max-width: 100%;
+}
+
+/* =========================================================
+   NEW ACCOUNT
+========================================================= */
+
+.new-account {
+  padding-top: 4px;
+  text-align: center;
+}
+
+.new-account p {
+  margin: 0 0 9px;
+  color: #999;
+  font-size: 10px;
+}
+
+.new-account a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: #a27b3f;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.new-account a:hover {
+  color: #8d6834;
+}
+
+.new-account a svg {
+  width: 13px;
+  height: 13px;
+}

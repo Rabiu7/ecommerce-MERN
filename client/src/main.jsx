@@ -14,26 +14,31 @@ import { CartProvider } from "./context/CartContext";
 
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ScrollToTop />
-      <AuthProvider>
-        <CartProvider>
-          <App />
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
+        <ScrollToTop />
 
-          <ToastContainer
-            position="bottom-right"
-            autoClose={2500}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            pauseOnHover
-            draggable
-            theme="light"
-          />
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <App />
+
+            <ToastContainer
+              position="bottom-right"
+              autoClose={2500}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              pauseOnHover
+              draggable
+              theme="light"
+            />
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </React.StrictMode>,
 );
