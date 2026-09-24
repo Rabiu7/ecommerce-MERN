@@ -145,7 +145,7 @@ function Navbar() {
     setSearchTerm("");
     setShowSuggestions(false);
 
-    navigate(`/products/${product.id}`);
+    navigate(`/products/${product.public_id}`);
   };
 
   // =========================================================
