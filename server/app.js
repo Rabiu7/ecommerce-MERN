@@ -1,12 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const dotenv = require("dotenv");
+
+const envFile = process.argv.includes("--ob") ? ".env.ob" : ".env";
+
+dotenv.config({
+  path: path.join(__dirname, envFile),
+});
 
 if (process.env.NODE_ENV === "production") {
   console.log = () => {};
 }
-
-dotenv.config();
 
 const app = express();
 
@@ -17,8 +22,9 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://localhost:5173",
+    "http://localhost:5174",
     "https://www.mashaallahcreations.in",
-    "http://192.168.2.122:5173",
+    "https://online-bazaar-frontend-five.vercel.app",
   ],
   credentials: true,
 };
