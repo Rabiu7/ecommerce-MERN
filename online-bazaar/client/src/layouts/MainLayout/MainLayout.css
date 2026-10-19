@@ -1,0 +1,4 @@
+.main-layout-content {
+  padding-top: var(--navbar-height, 200px);
+  min-height: 50vh;
+}

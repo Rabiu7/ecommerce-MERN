@@ -1,0 +1,44 @@
+.custom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #b89452;
+  color: #ffffff;
+  border: 1px solid #b89452;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.custom-btn:hover:not(:disabled) {
+  background: #98753c;
+  border-color: #98753c;
+  transform: translateY(-1px);
+}
+
+.custom-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.custom-btn:focus-visible {
+  outline: 2px solid #b89452;
+  outline-offset: 3px;
+}
+
+.custom-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.custom-btn.full-width {
+  width: 100%;
+}

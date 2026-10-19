@@ -1,0 +1,494 @@
+.offer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #fff8e8;
+  border: 1px solid #f0dfb7;
+  border-radius: 26px;
+}
+
+.offer-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 390px;
+}
+
+.offer-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 30px 46px 48px;
+}
+
+.offer-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #8e6419;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.offer-kicker-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  color: #7a5310;
+  background: #f8e6b7;
+  border: 1px solid #ecd49a;
+  border-radius: 50%;
+  font-size: 15px;
+}
+
+.offer-heading {
+  margin-top: 25px;
+}
+
+.offer-intro {
+  display: block;
+  margin-bottom: 8px;
+  color: #797264;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.offer-heading h2 {
+  margin: 0;
+  color: #29251d;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(42px, 5vw, 65px);
+  font-weight: 600;
+  letter-spacing: -1.8px;
+  line-height: 0.99;
+}
+
+.offer-heading h2 span {
+  color: #b97b13;
+  font-style: italic;
+}
+
+.offer-discount {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 18px;
+}
+
+.offer-discount > strong {
+  color: #b97b13;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 49px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.offer-discount > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 13px;
+  border-left: 1px solid #e3ce9d;
+}
+
+.offer-discount b {
+  color: #29251d;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.offer-discount small {
+  color: #797264;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.offer-description {
+  max-width: 390px;
+  margin: 18px 0 0;
+  color: #71695b;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 17px;
+  margin-top: 25px;
+}
+
+.offer-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  padding: 0 19px;
+  color: #29251d;
+  background: linear-gradient(135deg, #f7d76f 0%, #eab33a 55%, #d9951d 100%);
+  border: 1px solid #dfaa35;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    gap 0.2s ease;
+}
+
+.offer-button:hover {
+  gap: 22px;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(185, 123, 19, 0.18);
+}
+
+.offer-button:focus-visible {
+  outline: 2px solid #8e6419;
+  outline-offset: 4px;
+}
+
+.offer-button svg {
+  font-size: 17px;
+}
+
+.offer-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #797264;
+  font-size: 10px;
+}
+
+.offer-note svg {
+  color: #b97b13;
+  font-size: 13px;
+}
+
+.offer-decoration {
+  position: absolute;
+  bottom: 15px;
+  left: 48px;
+  color: rgba(185, 123, 19, 0.25);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.offer-image {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 30px 45px 5px;
+  isolation: isolate;
+}
+
+.offer-image::before {
+  position: absolute;
+  z-index: -2;
+  top: 8%;
+  right: 4%;
+  bottom: 8%;
+  left: 2%;
+  background: linear-gradient(145deg, #f8e5ad, #f0d17c);
+  border-radius: 48% 48% 20px 20px;
+  content: "";
+}
+
+.offer-image::after {
+  position: absolute;
+  z-index: -1;
+  top: 12%;
+  right: 10%;
+  width: 75px;
+  height: 75px;
+  border: 1px solid rgba(185, 123, 19, 0.3);
+  border-radius: 50%;
+  content: "";
+}
+
+.offer-image-frame {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  overflow: hidden;
+  background: #fffdf8;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 18px 38px rgba(105, 79, 24, 0.1);
+}
+
+.offer-image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transition: transform 0.5s ease;
+}
+
+.offer:hover .offer-image-frame img {
+  transform: scale(1.035);
+}
+
+.offer-image-badge {
+  position: absolute;
+  top: 15%;
+  left: -3px;
+  display: flex;
+  width: 95px;
+  height: 95px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #29251d;
+  background: #fffdf8;
+  border: 1px solid #e8d5a7;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(70, 51, 15, 0.12);
+  transform: rotate(-8deg);
+}
+
+.offer-badge-top,
+.offer-badge-bottom {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.offer-image-badge strong {
+  margin: 2px 0;
+  color: #b97b13;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 35px;
+  line-height: 1;
+}
+
+.offer-image-caption {
+  position: absolute;
+  right: 12px;
+  bottom: 17px;
+  color: #6f571f;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.offer-image-orbit {
+  position: absolute;
+  right: 4%;
+  bottom: 12%;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(185, 123, 19, 0.45);
+  border-radius: 50%;
+}
+
+@media (min-width: 1100px) {
+  .offer-container {
+    min-height: 420px;
+  }
+
+  .offer-content {
+    padding-left: 55px;
+  }
+
+  .offer-image-frame {
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  .offer-decoration {
+    left: 55px;
+  }
+}
+
+@media (max-width: 800px) {
+  .offer-container {
+    grid-template-columns: 1fr 0.85fr;
+    min-height: 350px;
+  }
+
+  .offer-content {
+    padding: 35px 10px 38px 28px;
+  }
+
+  .offer-heading {
+    margin-top: 20px;
+  }
+
+  .offer-heading h2 {
+    font-size: clamp(38px, 6vw, 52px);
+  }
+
+  .offer-description {
+    font-size: 12px;
+  }
+
+  .offer-image {
+    padding-right: 20px;
+  }
+
+  .offer-image-frame {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 16px;
+  }
+
+  .offer-image-badge {
+    left: -10px;
+    width: 78px;
+    height: 78px;
+  }
+
+  .offer-image-badge strong {
+    font-size: 29px;
+  }
+
+  .offer-decoration {
+    left: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .offer {
+    border-radius: 20px;
+  }
+
+  .offer-container {
+    grid-template-columns: 1fr;
+  }
+
+  .offer-content {
+    padding: 30px 23px 16px;
+  }
+
+  .offer-heading {
+    margin-top: 18px;
+  }
+
+  .offer-heading h2 {
+    font-size: clamp(43px, 11vw, 58px);
+  }
+
+  .offer-discount {
+    margin-top: 14px;
+  }
+
+  .offer-discount > strong {
+    font-size: 43px;
+  }
+
+  .offer-description {
+    max-width: 100%;
+    margin-top: 14px;
+    line-height: 1.8;
+  }
+
+  .offer-actions {
+    gap: 12px;
+    margin-top: 19px;
+  }
+
+  .offer-button {
+    min-height: 45px;
+  }
+
+  .offer-note {
+    font-size: 9px;
+  }
+
+  .offer-decoration {
+    display: none;
+  }
+
+  .offer-image {
+    min-height: 270px;
+    padding: 20px 32px 36px;
+  }
+
+  .offer-image::before {
+    top: 4%;
+    right: 9%;
+    bottom: 7%;
+    left: 9%;
+  }
+
+  .offer-image-frame {
+    width: 100%;
+    max-width: 360px;
+    height: 245px;
+    border-radius: 45% 45% 16px 16px;
+  }
+
+  .offer-image-badge {
+    top: 12%;
+    left: 14px;
+    width: 75px;
+    height: 75px;
+  }
+
+  .offer-image-caption {
+    right: 32px;
+    bottom: 16px;
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .offer-content {
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+
+  .offer-heading h2 {
+    font-size: 41px;
+  }
+
+  .offer-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .offer-image {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .offer-image-caption {
+    right: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offer-button,
+  .offer-image-frame img {
+    transition: none;
+  }
+
+  .offer-button:hover {
+    transform: none;
+  }
+
+  .offer:hover .offer-image-frame img {
+    transform: none;
+  }
+}

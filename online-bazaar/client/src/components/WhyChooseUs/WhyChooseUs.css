@@ -1,0 +1,268 @@
+.why {
+  width: 100%;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.why-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 225px;
+  padding: 25px 26px 20px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #eee6d5;
+  border-radius: 20px;
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.why-card::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #dfa324, #f5d064);
+  content: "";
+  transition: width 0.3s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-4px);
+  background: #fffdf8;
+  border-color: #e8cf8c;
+  box-shadow: 0 14px 32px rgba(105, 79, 24, 0.08);
+}
+
+.why-card:hover::before {
+  width: 100%;
+}
+
+.why-card-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.why-number {
+  padding-top: 5px;
+  color: #b97b13;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.why-label {
+  justify-self: start;
+  margin-top: 3px;
+  padding: 5px 9px;
+  color: #797264;
+  background: #fffaf0;
+  border: 1px solid #f2e6c8;
+  border-radius: 30px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.why-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #29251d;
+  background: linear-gradient(135deg, #fff2c7 0%, #f5d064 100%);
+  border: 1px solid rgba(223, 163, 36, 0.2);
+  border-radius: 15px;
+  font-size: 22px;
+  transition:
+    transform 0.25s ease,
+    border-radius 0.25s ease;
+}
+
+.why-card:hover .why-icon {
+  transform: rotate(-5deg);
+  border-radius: 18px;
+}
+
+.why-card-content {
+  margin-top: 23px;
+}
+
+.why-card-content h3 {
+  margin: 0 0 8px;
+  color: #29251d;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.why-card-content p {
+  max-width: 280px;
+  margin: 0;
+  color: #797264;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.why-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.why-card-line {
+  display: block;
+  width: 34px;
+  height: 1px;
+  background: #e6d8b7;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.why-card-arrow {
+  color: #b97b13;
+  font-size: 16px;
+  opacity: 0.75;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.why-card:hover .why-card-line {
+  width: 52px;
+  background: #dfa324;
+}
+
+.why-card:hover .why-card-arrow {
+  transform: translate(3px, -3px);
+  opacity: 1;
+}
+
+@media (min-width: 1100px) {
+  .why-grid {
+    gap: 20px;
+  }
+
+  .why-card {
+    min-height: 235px;
+    padding: 28px;
+  }
+}
+
+@media (max-width: 700px) {
+  .why-grid {
+    gap: 12px;
+  }
+
+  .why-card {
+    min-height: 215px;
+    padding: 19px 17px 16px;
+    border-radius: 17px;
+  }
+
+  .why-card-top {
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+  }
+
+  .why-number {
+    padding-top: 3px;
+  }
+
+  .why-label {
+    font-size: 8px;
+  }
+
+  .why-icon {
+    grid-column: 1 / -1;
+    width: 42px;
+    height: 42px;
+    margin-top: 5px;
+    border-radius: 13px;
+    font-size: 19px;
+  }
+
+  .why-card-content {
+    margin-top: 17px;
+  }
+
+  .why-card-content h3 {
+    font-size: 23px;
+  }
+
+  .why-card-content p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .why-card-bottom {
+    padding-top: 15px;
+  }
+}
+
+@media (max-width: 420px) {
+  .why-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .why-card {
+    min-height: auto;
+    padding: 20px;
+  }
+
+  .why-card-top {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+
+  .why-icon {
+    grid-column: auto;
+    grid-row: auto;
+    width: 43px;
+    height: 43px;
+    margin-top: 0;
+  }
+
+  .why-card-content {
+    margin-top: 18px;
+  }
+
+  .why-card-content h3 {
+    font-size: 25px;
+  }
+
+  .why-card-bottom {
+    padding-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why-card,
+  .why-card::before,
+  .why-icon,
+  .why-card-line,
+  .why-card-arrow {
+    transition: none;
+  }
+
+  .why-card:hover {
+    transform: none;
+  }
+}
